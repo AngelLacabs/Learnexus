@@ -152,13 +152,31 @@ if (isset($_SESSION['error'])) {
 
             <div class="mb-3">
               <label for="password" class="form-label fw-medium">Password *</label>
-              <input type="password" class="form-control form-control-lg" id="password" name="password" required>
+              <div class="input-group">
+                <input type="password" class="form-control form-control-lg" id="password" name="password" required
+                  autocomplete="new-password"
+                  autocapitalize="off"
+                  autocorrect="off"
+                  spellcheck="false">
+                <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                  <i class="bi bi-eye"></i>
+                </button>
+              </div>
               <small class="text-danger" id="passwordError" style="display: none;">Password is required</small>
             </div>
 
             <div class="mb-4">
               <label for="confirm_password" class="form-label fw-medium">Confirm Password *</label>
-              <input type="password" class="form-control form-control-lg" id="confirm_password" name="confirm_password" required>
+              <div class="input-group">
+                <input type="password" class="form-control form-control-lg" id="confirm_password" name="confirm_password" required
+                  autocomplete="new-password"
+                  autocapitalize="off"
+                  autocorrect="off"
+                  spellcheck="false">
+                <button class="btn btn-outline-secondary" type="button" id="toggleConfirmPassword">
+                  <i class="bi bi-eye"></i>
+                </button>
+              </div>
               <small class="text-danger" id="confirmPasswordError" style="display: none;">Passwords do not match</small>
             </div>
 
@@ -197,6 +215,41 @@ if (isset($_SESSION['error'])) {
 }
 .is-invalid {
   border-color: #dc3545 !important;
+}
+
+/* Hide browser's show password icon in all browsers */
+input[type="password"]::-webkit-credentials-auto-fill-button,
+input[type="password"]::-webkit-caps-lock-indicator,
+input[type="password"]::-webkit-credentials-auto-fill-button:active,
+input[type="password"]::-webkit-credentials-auto-fill-button:hover {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* For Microsoft Edge */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none !important;
+}
+
+/* For Firefox */
+input[type="password"][autocomplete="new-password"] {
+  filter: none;
+}
+
+/* Custom show/hide button */
+.input-group .btn {
+  border-left: 0;
+  background-color: #f8f9fa;
+}
+.input-group .btn:hover {
+  background-color: #e9ecef;
 }
 </style>
 
@@ -243,6 +296,21 @@ document.getElementById('nextBtn')?.addEventListener('click', function() {
 <?php if (!empty($role)): ?>
 document.addEventListener('DOMContentLoaded', function() {
   const form = document.getElementById('registrationForm');
+  
+  // Toggle password visibility
+  document.getElementById('togglePassword')?.addEventListener('click', function() {
+    const passwordInput = document.getElementById('password');
+    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+    passwordInput.setAttribute('type', type);
+    this.innerHTML = type === 'password' ? '<i class="bi bi-eye"></i>' : '<i class="bi bi-eye-slash"></i>';
+  });
+  
+  document.getElementById('toggleConfirmPassword')?.addEventListener('click', function() {
+    const confirmPasswordInput = document.getElementById('confirm_password');
+    const type = confirmPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+    confirmPasswordInput.setAttribute('type', type);
+    this.innerHTML = type === 'password' ? '<i class="bi bi-eye"></i>' : '<i class="bi bi-eye-slash"></i>';
+  });
   
   // Form submission - just submit directly
   form?.addEventListener('submit', function(e) {
