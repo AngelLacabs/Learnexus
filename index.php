@@ -18,6 +18,22 @@ if (isset($_SESSION['user_id'])) {
             exit();
     }
 }
+
+// Show success message if redirected from registration
+$successMessage = $_SESSION['success'] ?? null;
+if ($successMessage) {
+    echo '<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        Swal.fire({
+            icon: "success",
+            title: "Registration Successful",
+            html: "' . addslashes($successMessage) . '",
+            confirmButtonColor: "#3085d6"
+        });
+    });
+    </script>';
+    unset($_SESSION['success']);
+}
 ?>
 <div class="container-fluid vh-100">
   <div class="row h-100">

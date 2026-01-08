@@ -1,5 +1,4 @@
 <?php
-// login_process.php
 session_start();
 require_once 'database/db_connect.php';
 
@@ -8,20 +7,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $password = $_POST['password'];
 
     try {
-        // Check if identifier exists as email, studentNumber, or teacherNumber
         $stmt = $conn->prepare("SELECT * FROM users WHERE (email = ? OR studentNumber = ? OR teacherNumber = ?) AND status = 'active'");
         $stmt->execute([$identifier, $identifier, $identifier]);
         $user = $stmt->fetch();
 
         if ($user && password_verify($password, $user['passwordHash'])) {
-            // Login successful
             $_SESSION['user_id'] = $user['userID'];
             $_SESSION['email'] = $user['email'];
             $_SESSION['first_name'] = $user['firstName'];
             $_SESSION['last_name'] = $user['lastName'];
             $_SESSION['role'] = $user['role'];
             
-            // Store student/teacher number in session
             if ($user['role'] == 'student' && $user['studentNumber']) {
                 $_SESSION['student_number'] = $user['studentNumber'];
             }
@@ -29,7 +25,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $_SESSION['teacher_number'] = $user['teacherNumber'];
             }
             
-            // Redirect based on role
             switch ($user['role']) {
                 case 'student':
                     header('Location: student/dashboard.php');

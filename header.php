@@ -6,12 +6,10 @@
     <title><?php echo $page_title ?? 'Learnexus'; ?></title>
     <link rel="icon" type="image/png" href="images/Learnexus.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
-    <!-- Add custom CSS if needed -->
     <link rel="stylesheet" href="assets/css/style.css">
   </head>
   <body>
     <?php
-    // Display SweetAlert if there's an error message in session
     if (isset($_SESSION['error'])) {
         echo '<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>';
         echo '<script>
@@ -25,8 +23,6 @@
                 });
             });
         </script>';
-        // Clear the error message after displaying
         unset($_SESSION['error']);
     }
     ?>
-
