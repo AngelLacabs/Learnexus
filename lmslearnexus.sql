@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 09, 2026 at 10:16 AM
+-- Generation Time: Jan 09, 2026 at 06:35 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -20,6 +20,36 @@ SET time_zone = "+00:00";
 --
 -- Database: `lmslearnexus`
 --
+
+DELIMITER $$
+--
+-- Procedures
+--
+CREATE DEFINER=`root`@`localhost` PROCEDURE `reset_all_tables` ()   BEGIN
+    DECLARE _foreign_key_checks INT DEFAULT @@FOREIGN_KEY_CHECKS;
+    
+    SET FOREIGN_KEY_CHECKS = 0;
+    
+    TRUNCATE TABLE `vouchers`;
+    TRUNCATE TABLE `certificates`;
+    TRUNCATE TABLE `quiz_results`;
+    TRUNCATE TABLE `choices`;
+    TRUNCATE TABLE `questions`;
+    TRUNCATE TABLE `quizzes`;
+    TRUNCATE TABLE `contents`;
+    TRUNCATE TABLE `modules`;
+    TRUNCATE TABLE `payments`;
+    TRUNCATE TABLE `enrollments`;
+    TRUNCATE TABLE `courses`;
+    TRUNCATE TABLE `sms_feedback`;
+    TRUNCATE TABLE `sms_otp`;
+    TRUNCATE TABLE `email_otp`;
+    TRUNCATE TABLE `users`;
+    
+    SET FOREIGN_KEY_CHECKS = _foreign_key_checks;
+END$$
+
+DELIMITER ;
 
 -- --------------------------------------------------------
 
@@ -107,7 +137,7 @@ CREATE TABLE `email_otp` (
 --
 
 INSERT INTO `email_otp` (`emailOtpID`, `email`, `otpCode`, `userID`, `expiresAt`, `verified`, `createdAt`) VALUES
-(2, 'angelicalacaba0660@gmail.com', '329525', NULL, '2026-01-09 02:19:20', 0, '2026-01-09 09:14:20');
+(1, 'angelicalacaba0660@gmail.com', '427507', NULL, '2026-01-09 10:40:05', 0, '2026-01-09 17:30:05');
 
 -- --------------------------------------------------------
 
@@ -436,7 +466,7 @@ ALTER TABLE `courses`
 -- AUTO_INCREMENT for table `email_otp`
 --
 ALTER TABLE `email_otp`
-  MODIFY `emailOtpID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `emailOtpID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `enrollments`
