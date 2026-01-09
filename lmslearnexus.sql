@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 09, 2026 at 09:22 AM
+-- Generation Time: Jan 09, 2026 at 10:16 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -85,6 +85,29 @@ CREATE TABLE `courses` (
   `passingScore` int(11) DEFAULT 70,
   `createdAt` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `email_otp`
+--
+
+CREATE TABLE `email_otp` (
+  `emailOtpID` int(11) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `otpCode` varchar(6) NOT NULL,
+  `userID` int(11) DEFAULT NULL,
+  `expiresAt` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `verified` tinyint(1) DEFAULT 0,
+  `createdAt` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `email_otp`
+--
+
+INSERT INTO `email_otp` (`emailOtpID`, `email`, `otpCode`, `userID`, `expiresAt`, `verified`, `createdAt`) VALUES
+(2, 'angelicalacaba0660@gmail.com', '329525', NULL, '2026-01-09 02:19:20', 0, '2026-01-09 09:14:20');
 
 -- --------------------------------------------------------
 
@@ -230,21 +253,13 @@ CREATE TABLE `users` (
   `middleInitial` varchar(5) NOT NULL,
   `phone` varchar(20) DEFAULT NULL,
   `phoneVerified` tinyint(1) DEFAULT 0,
+  `emailVerified` tinyint(1) DEFAULT 0,
   `role` enum('student','instructor','admin') DEFAULT 'student',
   `status` enum('active','inactive','suspended') DEFAULT 'active',
   `createdAt` timestamp NOT NULL DEFAULT current_timestamp(),
   `studentNumber` varchar(50) DEFAULT NULL,
   `teacherNumber` varchar(50) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `users`
---
-
-INSERT INTO `users` (`userID`, `email`, `passwordHash`, `firstName`, `lastName`, `middleInitial`, `phone`, `phoneVerified`, `role`, `status`, `createdAt`, `studentNumber`, `teacherNumber`) VALUES
-(1, 'adasd@gmail.com', '$2y$10$4chSqbguyAR/0/iLd8Vii.dWI47/C1y6M5Y3p3CHy7arEGwKm2Nn6', 'Angel', 'Lacaba', '', '09999999999', 0, 'instructor', 'active', '2026-01-08 20:04:56', NULL, '123456'),
-(2, 'asjdbahsd@gmail.com', '$2y$10$fLiwKBPKxitIPpZfwygaCuwN4vMMcp2FM88kMYULMxlqEksLRXtR2', 'aaa', 'aaa', 'a', '21333224234', 0, 'instructor', 'active', '2026-01-08 20:31:25', NULL, '123456343'),
-(3, 'SFSFWSTS@gmail.com', '$2y$10$HBc6fuH/0NhqcGpK3s1gKeH2cYdSPaRkw/jQVqRUDnnL2ohxKgOjy', 'aaa', 'aaa', 'a', '21333224234', 0, 'instructor', 'active', '2026-01-08 20:40:37', NULL, '1223232423423');
 
 -- --------------------------------------------------------
 
@@ -298,6 +313,14 @@ ALTER TABLE `contents`
 ALTER TABLE `courses`
   ADD PRIMARY KEY (`courseID`),
   ADD KEY `idx_courses_teacher` (`teacherID`);
+
+--
+-- Indexes for table `email_otp`
+--
+ALTER TABLE `email_otp`
+  ADD PRIMARY KEY (`emailOtpID`),
+  ADD KEY `email` (`email`),
+  ADD KEY `userID` (`userID`);
 
 --
 -- Indexes for table `enrollments`
@@ -410,6 +433,12 @@ ALTER TABLE `courses`
   MODIFY `courseID` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `email_otp`
+--
+ALTER TABLE `email_otp`
+  MODIFY `emailOtpID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
 -- AUTO_INCREMENT for table `enrollments`
 --
 ALTER TABLE `enrollments`
@@ -461,7 +490,7 @@ ALTER TABLE `sms_otp`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `userID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `userID` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `vouchers`
@@ -498,6 +527,12 @@ ALTER TABLE `contents`
 --
 ALTER TABLE `courses`
   ADD CONSTRAINT `courses_ibfk_1` FOREIGN KEY (`teacherID`) REFERENCES `users` (`userID`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `email_otp`
+--
+ALTER TABLE `email_otp`
+  ADD CONSTRAINT `email_otp_ibfk_1` FOREIGN KEY (`userID`) REFERENCES `users` (`userID`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `enrollments`

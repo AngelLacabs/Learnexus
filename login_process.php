@@ -1,6 +1,8 @@
 <?php
 session_start();
 require_once 'database/db_connect.php';
+require_once 'helpers/OTPHelper.php';
+require_once 'config/email_config.php';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $identifier = trim($_POST['identifier']);
@@ -12,6 +14,25 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $user = $stmt->fetch();
 
         if ($user && password_verify($password, $user['passwordHash'])) {
+            // Check if email is verified
+            if (!$user['emailVerified']) {
+                $_SESSION['error'] = 'Please verify your email address before logging in.';
+                
+                // Send new OTP if not verified
+                $otpHelper = new OTPHelper($conn);
+                $otpCode = $otpHelper->createEmailOTP($user['email']);
+                
+                if ($otpCode) {
+                    $toName = $user['firstName'] . ' ' . $user['lastName'];
+                    sendEmailOTP($user['email'], $toName, $otpCode);
+                }
+                
+                $_SESSION['otp_email'] = $user['email'];
+                $_SESSION['pending_verification_user'] = $user['userID'];
+                header('Location: verify_email.php');
+                exit();
+            }
+            
             $_SESSION['user_id'] = $user['userID'];
             $_SESSION['email'] = $user['email'];
             $_SESSION['first_name'] = $user['firstName'];

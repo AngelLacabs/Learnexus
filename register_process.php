@@ -1,6 +1,8 @@
 <?php
 session_start();
 require_once 'database/db_connect.php';
+require_once 'helpers/otp_helper.php';
+require_once 'config/email_config.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     $_SESSION['error'] = 'Invalid request method.';
@@ -29,12 +31,15 @@ if ($role == 'student') {
     exit();
 }
 
-$_SESSION['register_data'] = [
+// Store registration data in session for OTP verification
+$_SESSION['pending_registration'] = [    // CHANGED FROM 'register_data' TO 'pending_registration'
     'firstName' => $firstName,
     'lastName' => $lastName,
     'middleInitial' => $middleInitial,
     'email' => $email,
     'phone' => $phone,
+    'password' => $password,
+    'role' => $role,
     'studentNumber' => $studentNumber,
     'teacherNumber' => $teacherNumber
 ];
@@ -105,26 +110,31 @@ try {
         }
     }
 
-    $passwordHash = password_hash($password, PASSWORD_DEFAULT);
-
-    if ($role == 'student') {
-        $stmt = $conn->prepare("INSERT INTO users (email, passwordHash, firstName, lastName, middleInitial, phone, role, studentNumber, createdAt) 
-                               VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())");
-        $stmt->execute([$email, $passwordHash, $firstName, $lastName, $middleInitial, $phone, $role, $studentNumber]);
-        $successMessage = 'Registration successful! You can now login with Student Number: ' . htmlspecialchars($studentNumber);
-    } else {
-        $stmt = $conn->prepare("INSERT INTO users (email, passwordHash, firstName, lastName, middleInitial, phone, role, teacherNumber, createdAt) 
-                               VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())");
-        $stmt->execute([$email, $passwordHash, $firstName, $lastName, $middleInitial, $phone, $role, $teacherNumber]);
-        $successMessage = 'Registration successful! You can now login with Teacher Number: ' . htmlspecialchars($teacherNumber);
-    }
-
-    $_SESSION['success'] = $successMessage;
-    unset($_SESSION['register_data']);
-    unset($_SESSION['error']);
+    // Generate and send OTP
+    $otpHelper = new OTPHelper($conn);
+    $otpCode = $otpHelper->createEmailOTP($email);
     
-    header('Location: index.php');
-    exit();
+    if ($otpCode) {
+        // Send email with OTP
+        $toName = $firstName . ' ' . $lastName;
+        $emailSent = sendEmailOTP($email, $toName, $otpCode);
+        
+        if ($emailSent) {
+            // Redirect to OTP verification page
+            $_SESSION['otp_email'] = $email;
+            $_SESSION['success'] = 'OTP has been sent to your email! Please check your inbox.';
+            header('Location: verify_email.php');
+            exit();
+        } else {
+            $_SESSION['error'] = 'Failed to send OTP email. Please try again.';
+            header('Location: register.php?role=' . urlencode($role));
+            exit();
+        }
+    } else {
+        $_SESSION['error'] = 'Failed to generate OTP. Please try again.';
+        header('Location: register.php?role=' . urlencode($role));
+        exit();
+    }
 
 } catch(PDOException $e) {
     error_log("Registration Error: " . $e->getMessage());
