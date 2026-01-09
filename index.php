@@ -26,9 +26,15 @@ if ($successMessage) {
     document.addEventListener("DOMContentLoaded", function() {
         Swal.fire({
             icon: "success",
-            title: "Registration Successful",
+            title: "Account Created Successfully!",
             html: "' . addslashes($successMessage) . '",
-            confirmButtonColor: "#3085d6"
+            confirmButtonColor: "#3085d6",
+            confirmButtonText: "OK",
+            timer: 3000,
+            timerProgressBar: true,
+            willClose: () => {
+                window.location.href = "index.php";
+            }
         });
     });
     </script>';

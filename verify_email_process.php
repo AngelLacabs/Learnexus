@@ -56,7 +56,7 @@ try {
             $pendingData['studentNumber']
         ]);
         $userId = $conn->lastInsertId();
-        $successMessage = 'Registration successful! You can now login with Student Number: ' . htmlspecialchars($pendingData['studentNumber']);
+        $successMessage = 'Your account has been successfully created!<br><br>Student Number: <strong>' . htmlspecialchars($pendingData['studentNumber']) . '</strong><br>You can now login to your account.';
     } else {
         $stmt = $conn->prepare("
             INSERT INTO users 
@@ -74,7 +74,7 @@ try {
             $pendingData['teacherNumber']
         ]);
         $userId = $conn->lastInsertId();
-        $successMessage = 'Registration successful! You can now login with Teacher Number: ' . htmlspecialchars($pendingData['teacherNumber']);
+        $successMessage = 'Your account has been successfully created!<br><br>Teacher Number: <strong>' . htmlspecialchars($pendingData['teacherNumber']) . '</strong><br>You can now login to your account.';
     }
     
     // Update OTP record with userID

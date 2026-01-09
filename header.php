@@ -7,11 +7,12 @@
     <link rel="icon" type="image/png" href="images/Learnexus.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
     <link rel="stylesheet" href="assets/css/style.css">
+    <!-- Always load SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   </head>
   <body>
     <?php
     if (isset($_SESSION['error'])) {
-        echo '<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>';
         echo '<script>
             document.addEventListener("DOMContentLoaded", function() {
                 Swal.fire({
