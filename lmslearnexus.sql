@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 08, 2026 at 06:07 PM
+-- Generation Time: Jan 09, 2026 at 09:22 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -189,6 +189,35 @@ CREATE TABLE `quiz_results` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `sms_feedback`
+--
+
+CREATE TABLE `sms_feedback` (
+  `feedbackID` int(11) NOT NULL,
+  `userPhone` varchar(20) NOT NULL,
+  `message` text NOT NULL,
+  `receivedAt` timestamp NOT NULL DEFAULT current_timestamp(),
+  `status` enum('unread','read','archived') DEFAULT 'unread'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `sms_otp`
+--
+
+CREATE TABLE `sms_otp` (
+  `otpID` int(11) NOT NULL,
+  `phone` varchar(20) NOT NULL,
+  `otpCode` varchar(6) NOT NULL,
+  `expiresAt` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `verified` tinyint(1) DEFAULT 0,
+  `createdAt` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `users`
 --
 
@@ -200,12 +229,22 @@ CREATE TABLE `users` (
   `lastName` varchar(100) NOT NULL,
   `middleInitial` varchar(5) NOT NULL,
   `phone` varchar(20) DEFAULT NULL,
+  `phoneVerified` tinyint(1) DEFAULT 0,
   `role` enum('student','instructor','admin') DEFAULT 'student',
   `status` enum('active','inactive','suspended') DEFAULT 'active',
   `createdAt` timestamp NOT NULL DEFAULT current_timestamp(),
   `studentNumber` varchar(50) DEFAULT NULL,
   `teacherNumber` varchar(50) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `users`
+--
+
+INSERT INTO `users` (`userID`, `email`, `passwordHash`, `firstName`, `lastName`, `middleInitial`, `phone`, `phoneVerified`, `role`, `status`, `createdAt`, `studentNumber`, `teacherNumber`) VALUES
+(1, 'adasd@gmail.com', '$2y$10$4chSqbguyAR/0/iLd8Vii.dWI47/C1y6M5Y3p3CHy7arEGwKm2Nn6', 'Angel', 'Lacaba', '', '09999999999', 0, 'instructor', 'active', '2026-01-08 20:04:56', NULL, '123456'),
+(2, 'asjdbahsd@gmail.com', '$2y$10$fLiwKBPKxitIPpZfwygaCuwN4vMMcp2FM88kMYULMxlqEksLRXtR2', 'aaa', 'aaa', 'a', '21333224234', 0, 'instructor', 'active', '2026-01-08 20:31:25', NULL, '123456343'),
+(3, 'SFSFWSTS@gmail.com', '$2y$10$HBc6fuH/0NhqcGpK3s1gKeH2cYdSPaRkw/jQVqRUDnnL2ohxKgOjy', 'aaa', 'aaa', 'a', '21333224234', 0, 'instructor', 'active', '2026-01-08 20:40:37', NULL, '1223232423423');
 
 -- --------------------------------------------------------
 
@@ -311,6 +350,18 @@ ALTER TABLE `quiz_results`
   ADD KEY `idx_quiz_results_user_quiz` (`userID`,`quizID`);
 
 --
+-- Indexes for table `sms_feedback`
+--
+ALTER TABLE `sms_feedback`
+  ADD PRIMARY KEY (`feedbackID`);
+
+--
+-- Indexes for table `sms_otp`
+--
+ALTER TABLE `sms_otp`
+  ADD PRIMARY KEY (`otpID`);
+
+--
 -- Indexes for table `users`
 --
 ALTER TABLE `users`
@@ -395,10 +446,22 @@ ALTER TABLE `quiz_results`
   MODIFY `resultID` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `sms_feedback`
+--
+ALTER TABLE `sms_feedback`
+  MODIFY `feedbackID` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `sms_otp`
+--
+ALTER TABLE `sms_otp`
+  MODIFY `otpID` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `userID` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `userID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `vouchers`
