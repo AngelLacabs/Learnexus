@@ -12,15 +12,13 @@ if (!isset($_SESSION['pending_registration']) || !isset($_SESSION['otp_email']))
 $email = $_SESSION['otp_email'];
 $pendingData = $_SESSION['pending_registration'];
 
-// Generate new OTP
 $otpHelper = new OTPHelper($conn);
 $otpCode = $otpHelper->resendEmailOTP($email);
 
 if ($otpCode) {
-    // Send new OTP email
     $toName = $pendingData['firstName'] . ' ' . $pendingData['lastName'];
     $emailSent = sendEmailOTP($email, $toName, $otpCode);
-    
+
     if ($emailSent) {
         $_SESSION['success'] = 'New OTP has been sent to your email!';
     } else {
@@ -32,4 +30,3 @@ if ($otpCode) {
 
 header('Location: verify_email.php');
 exit();
-?>

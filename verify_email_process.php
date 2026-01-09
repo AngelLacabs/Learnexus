@@ -18,14 +18,12 @@ $otpCode = trim($_POST['otp'] ?? '');
 $email = $_SESSION['otp_email'];
 $pendingData = $_SESSION['pending_registration'];
 
-// Validate OTP format
 if (empty($otpCode) || !preg_match('/^\d{6}$/', $otpCode)) {
     $_SESSION['error'] = 'Please enter a valid 6-digit OTP code.';
     header('Location: verify_email.php');
     exit();
 }
 
-// Verify OTP
 $otpHelper = new OTPHelper($conn);
 $verificationResult = $otpHelper->verifyEmailOTP($email, $otpCode);
 
@@ -35,10 +33,9 @@ if (!$verificationResult['success']) {
     exit();
 }
 
-// OTP verified successfully - Complete registration
 try {
     $passwordHash = password_hash($pendingData['password'], PASSWORD_DEFAULT);
-    
+
     if ($pendingData['role'] == 'student') {
         $stmt = $conn->prepare("
             INSERT INTO users 
@@ -76,29 +73,19 @@ try {
         $userId = $conn->lastInsertId();
         $successMessage = 'Your account has been successfully created!<br><br>Teacher Number: <strong>' . htmlspecialchars($pendingData['teacherNumber']) . '</strong><br>You can now login to your account.';
     }
-    
-    // Update OTP record with userID
-    $updateStmt = $conn->prepare("
-        UPDATE email_otp 
-        SET userID = ? 
-        WHERE email = ? 
-        AND otpCode = ?
-    ");
+
+    $updateStmt = $conn->prepare("UPDATE email_otp SET userID = ? WHERE email = ? AND otpCode = ?");
     $updateStmt->execute([$userId, $email, $otpCode]);
-    
-    // Clear session data
+
     unset($_SESSION['pending_registration']);
     unset($_SESSION['otp_email']);
-    
-    // Set success message and redirect to login
+
     $_SESSION['success'] = $successMessage;
     header('Location: index.php');
     exit();
-    
-} catch(PDOException $e) {
+} catch (PDOException $e) {
     error_log("Registration completion error: " . $e->getMessage());
     $_SESSION['error'] = 'Registration failed. Please try again.';
     header('Location: verify_email.php');
     exit();
 }
-?>

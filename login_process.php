@@ -14,38 +14,36 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $user = $stmt->fetch();
 
         if ($user && password_verify($password, $user['passwordHash'])) {
-            // Check if email is verified
             if (!$user['emailVerified']) {
                 $_SESSION['error'] = 'Please verify your email address before logging in.';
-                
-                // Send new OTP if not verified
+
                 $otpHelper = new OTPHelper($conn);
                 $otpCode = $otpHelper->createEmailOTP($user['email']);
-                
+
                 if ($otpCode) {
                     $toName = $user['firstName'] . ' ' . $user['lastName'];
                     sendEmailOTP($user['email'], $toName, $otpCode);
                 }
-                
+
                 $_SESSION['otp_email'] = $user['email'];
                 $_SESSION['pending_verification_user'] = $user['userID'];
                 header('Location: verify_email.php');
                 exit();
             }
-            
+
             $_SESSION['user_id'] = $user['userID'];
             $_SESSION['email'] = $user['email'];
             $_SESSION['first_name'] = $user['firstName'];
             $_SESSION['last_name'] = $user['lastName'];
             $_SESSION['role'] = $user['role'];
-            
+
             if ($user['role'] == 'student' && $user['studentNumber']) {
                 $_SESSION['student_number'] = $user['studentNumber'];
             }
             if ($user['role'] == 'instructor' && $user['teacherNumber']) {
                 $_SESSION['teacher_number'] = $user['teacherNumber'];
             }
-            
+
             switch ($user['role']) {
                 case 'student':
                     header('Location: student/dashboard.php');
@@ -66,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             header('Location: index.php');
             exit();
         }
-    } catch(PDOException $e) {
+    } catch (PDOException $e) {
         $_SESSION['error'] = 'Database error. Please try again later.';
         header('Location: index.php');
         exit();
@@ -75,4 +73,3 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     header('Location: index.php');
     exit();
 }
-?>

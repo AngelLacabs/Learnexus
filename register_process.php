@@ -31,8 +31,7 @@ if ($role == 'student') {
     exit();
 }
 
-// Store registration data in session for OTP verification
-$_SESSION['pending_registration'] = [    // CHANGED FROM 'register_data' TO 'pending_registration'
+$_SESSION['pending_registration'] = [
     'firstName' => $firstName,
     'lastName' => $lastName,
     'middleInitial' => $middleInitial,
@@ -83,7 +82,7 @@ if (!empty($errors)) {
 try {
     $stmt = $conn->prepare("SELECT userID FROM users WHERE email = ?");
     $stmt->execute([$email]);
-    
+
     if ($stmt->rowCount() > 0) {
         $_SESSION['error'] = 'Email already registered. Please use a different email or login.';
         header('Location: register.php?role=' . urlencode($role));
@@ -93,7 +92,7 @@ try {
     if ($role == 'student') {
         $stmt = $conn->prepare("SELECT userID FROM users WHERE studentNumber = ?");
         $stmt->execute([$studentNumber]);
-        
+
         if ($stmt->rowCount() > 0) {
             $_SESSION['error'] = 'Student Number already registered.';
             header('Location: register.php?role=' . urlencode($role));
@@ -102,7 +101,7 @@ try {
     } else {
         $stmt = $conn->prepare("SELECT userID FROM users WHERE teacherNumber = ?");
         $stmt->execute([$teacherNumber]);
-        
+
         if ($stmt->rowCount() > 0) {
             $_SESSION['error'] = 'Teacher Number already registered.';
             header('Location: register.php?role=' . urlencode($role));
@@ -110,17 +109,14 @@ try {
         }
     }
 
-    // Generate and send OTP
     $otpHelper = new OTPHelper($conn);
     $otpCode = $otpHelper->createEmailOTP($email);
-    
+
     if ($otpCode) {
-        // Send email with OTP
         $toName = $firstName . ' ' . $lastName;
         $emailSent = sendEmailOTP($email, $toName, $otpCode);
-        
+
         if ($emailSent) {
-            // Redirect to OTP verification page
             $_SESSION['otp_email'] = $email;
             $_SESSION['success'] = 'OTP has been sent to your email! Please check your inbox.';
             header('Location: verify_email.php');
@@ -135,11 +131,9 @@ try {
         header('Location: register.php?role=' . urlencode($role));
         exit();
     }
-
-} catch(PDOException $e) {
+} catch (PDOException $e) {
     error_log("Registration Error: " . $e->getMessage());
     $_SESSION['error'] = 'Registration failed due to a system error. Please try again later.';
     header('Location: register.php?role=' . urlencode($role));
     exit();
 }
-?>
