@@ -33,40 +33,10 @@ if ($stmt->fetch()) {
     exit();
 }
 
-// Handle payment
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $paymentMethod = $_POST['payment_method'] ?? '';
-    $cardNumber = $_POST['card_number'] ?? '';
-    $nameOnCard = $_POST['name_on_card'] ?? '';
-    
-    // Generate transaction reference
-    $transactionRef = '#' . strtoupper(uniqid());
-    
-    try {
-        // Create payment record
-        $stmt = $conn->prepare("
-            INSERT INTO payments (userID, courseID, amount, transactionReference, status, paymentDate, createdAt)
-            VALUES (?, ?, ?, ?, 'completed', NOW(), NOW())
-        ");
-        $stmt->execute([$userID, $courseID, $course['price'], $transactionRef]);
-        $paymentID = $conn->lastInsertId();
-        
-        // Create enrollment
-        $stmt = $conn->prepare("
-            INSERT INTO enrollments (userID, courseID, paymentID, progressPercentage, status, enrolledAt)
-            VALUES (?, ?, ?, 0, 'active', NOW())
-        ");
-        $stmt->execute([$userID, $courseID, $paymentID]);
-        
-        // Redirect to success
-        header('Location: payment_success.php?ref=' . urlencode($transactionRef) . '&course_id=' . $courseID);
-        exit();
-    } catch (Exception $e) {
-        // Redirect to failure
-        header('Location: payment_failed.php?course_id=' . $courseID);
-        exit();
-    }
-}
+// Get user info for pre-filling
+$stmt = $conn->prepare("SELECT firstName, lastName, email FROM users WHERE userID = ?");
+$stmt->execute([$userID]);
+$userInfo = $stmt->fetch();
 ?>
 <!DOCTYPE html>
 <html>
@@ -81,8 +51,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .order-summary { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
         .course-img { width: 100%; height: 150px; background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #999; }
         .payment-form { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        .payment-method { border: 2px solid #e0e0e0; padding: 20px; border-radius: 8px; cursor: pointer; text-align: center; }
-        .payment-method.active { border-color: #1e88e5; background: #f0f7ff; }
+        .paypal-badge {
+            background: #0070ba;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .paypal-badge i {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        #paypal-button-container {
+            margin-top: 20px;
+        }
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
     </style>
 </head>
 <body>
@@ -90,83 +78,240 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="checkout-grid">
             <div class="order-summary">
                 <h5>Order Summary</h5>
-                <div class="course-img mt-3">// photo</div>
+                <div class="course-img mt-3">
+                    <i class="bi bi-book" style="font-size: 48px;"></i>
+                </div>
                 <h6 class="mt-3"><?php echo htmlspecialchars($course['title']); ?></h6>
                 <p class="text-muted small">Instructor: <?php echo htmlspecialchars($course['instructorName']); ?></p>
                 <hr>
                 <div class="d-flex justify-content-between">
-                    <strong>Total</strong>
+                    <strong>Total Amount</strong>
                     <strong style="color: #1e88e5;">₱<?php echo number_format($course['price'], 2); ?></strong>
+                </div>
+                <div class="d-flex justify-content-between mt-2">
+                    <span class="text-muted small">USD Equivalent</span>
+                    <span class="text-muted small">$<?php echo number_format($course['price'] / 56, 2); ?></span>
                 </div>
             </div>
             
             <div class="payment-form">
                 <h4>Checkout</h4>
                 
-                <form method="POST">
-                    <h6 class="mt-4 mb-3">Select Payment Method</h6>
-                    <div class="row mb-4">
-                        <div class="col-4">
-                            <div class="payment-method active" onclick="selectPayment(this)" data-method="credit">
-                                <i class="bi bi-credit-card" style="font-size: 24px; color: #1e88e5;"></i>
-                                <p class="mb-0 mt-2">Credit Card</p>
-                            </div>
-                        </div>
-                        <div class="col-4">
-                            <div class="payment-method" onclick="selectPayment(this)" data-method="paypal">
-                                <i class="bi bi-paypal" style="font-size: 24px;"></i>
-                                <p class="mb-0 mt-2">Paypal</p>
-                            </div>
-                        </div>
-                        <div class="col-4">
-                            <div class="payment-method" onclick="selectPayment(this)" data-method="gcash">
-                                <i class="bi bi-wallet2" style="font-size: 24px;"></i>
-                                <p class="mb-0 mt-2">GCash</p>
-                            </div>
-                        </div>
-                    </div>
-                    <input type="hidden" name="payment_method" id="paymentMethod" value="credit">
-                    
+                <div class="paypal-badge">
+                    <i class="bi bi-paypal"></i>
+                    <h5 class="mb-0">Pay with PayPal</h5>
+                    <small>Safe and secure payment</small>
+                </div>
+                
+                <form id="payment-form">
                     <div class="mb-3">
-                        <label class="form-label">Card Number</label>
-                        <input type="text" name="card_number" class="form-control" placeholder="0000 0000 0000 0000" required>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-6 mb-3">
-                            <label class="form-label">Expiry Date</label>
-                            <input type="text" class="form-control" placeholder="MM / YY" required>
-                        </div>
-                        <div class="col-6 mb-3">
-                            <label class="form-label">CVC / CCC</label>
-                            <input type="text" class="form-control" placeholder="123" required>
-                        </div>
+                        <label class="form-label">Full Name <span class="text-danger">*</span></label>
+                        <input type="text" id="fullname" class="form-control" 
+                               value="<?php echo htmlspecialchars($userInfo['firstName'] . ' ' . $userInfo['lastName']); ?>" 
+                               required>
                     </div>
                     
                     <div class="mb-3">
-                        <label class="form-label">Name on Card</label>
-                        <input type="text" name="name_on_card" class="form-control" placeholder="John Doe" required>
+                        <label class="form-label">Email Address <span class="text-danger">*</span></label>
+                        <input type="email" id="email" class="form-control" 
+                               value="<?php echo htmlspecialchars($userInfo['email']); ?>" 
+                               required>
+                        <small class="form-text text-muted">We'll send the receipt to this email</small>
                     </div>
                     
                     <div class="mb-4">
-                        <label class="form-label">Billing Zip Code</label>
-                        <input type="text" class="form-control" placeholder="10001" required>
+                        <label class="form-label">Mobile Number <span class="text-danger">*</span></label>
+                        <input type="tel" id="mobile" class="form-control" placeholder="+63 XXX XXX XXXX" 
+                               pattern="[0-9+\s\-()]+" required>
+                        <small class="form-text text-muted">For order verification purposes</small>
                     </div>
                     
-                    <button type="submit" class="btn btn-primary w-100" style="padding: 12px;">
-                        Confirm Payment →
-                    </button>
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        Click the PayPal button below to complete your payment securely.
+                    </div>
+
+                    <div id="error-message" class="alert alert-danger" style="display: none;"></div>
+                    
+                    <!-- Loading Spinner -->
+                    <div class="loading-spinner">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Processing...</span>
+                        </div>
+                        <p class="mt-2">Processing your payment...</p>
+                    </div>
+                    
+                    <!-- PayPal Button Container -->
+                    <div id="paypal-button-container"></div>
+                    
+                    <div class="text-center mt-3">
+                        <small class="text-muted">
+                            <i class="bi bi-shield-check"></i> Your payment information is secure
+                        </small>
+                    </div>
                 </form>
             </div>
         </div>
     </div>
-    
+
+    <!-- PayPal SDK -->
+    <script src="https://www.paypal.com/sdk/js?client-id=AY6u4H6soXFMgZnUAuF6THuqPVIDeVmJ8X-bOXz-ZIwLAdeiJKyluuEtEmpKdS-I2zTD3aviw4EQHuPz&currency=USD"></script>
+
     <script>
-        function selectPayment(element) {
-            document.querySelectorAll('.payment-method').forEach(el => el.classList.remove('active'));
-            element.classList.add('active');
-            document.getElementById('paymentMethod').value = element.dataset.method;
+        const courseID = <?php echo $courseID; ?>;
+        const userID = <?php echo $userID; ?>;
+        const coursePrice = <?php echo $course['price']; ?>;
+        const usdAmount = (coursePrice / 56).toFixed(2);
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error-message');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            console.error(message);
         }
+
+        function hideError() {
+            document.getElementById('error-message').style.display = 'none';
+        }
+
+        function showLoading(show) {
+            document.querySelector('.loading-spinner').style.display = show ? 'block' : 'none';
+            document.getElementById('paypal-button-container').style.display = show ? 'none' : 'block';
+        }
+
+        function validateForm() {
+            hideError();
+            const name = document.getElementById('fullname').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const mobile = document.getElementById('mobile').value.trim();
+
+            if (!name || !email || !mobile) {
+                showError('Please fill in all required fields before proceeding to PayPal.');
+                return false;
+            }
+
+            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailPattern.test(email)) {
+                showError('Please enter a valid email address.');
+                return false;
+            }
+
+            return true;
+        }
+
+        paypal.Buttons({
+            style: {
+                color: 'gold',
+                shape: 'pill',
+                label: 'pay',
+                height: 50
+            },
+
+            createOrder: function() {
+                console.log('Creating order...');
+                
+                if (!validateForm()) {
+                    return Promise.reject('Form validation failed');
+                }
+
+                showLoading(true);
+
+                return fetch("paypal.php?action=create&amount=" + usdAmount)
+                    .then(res => {
+                        console.log('Response status:', res.status);
+                        return res.json();
+                    })
+                    .then(data => {
+                        console.log('Create order response:', data);
+                        showLoading(false);
+                        
+                        if (data.id) {
+                            return data.id;
+                        } else if (data.error) {
+                            throw new Error(data.error);
+                        } else {
+                            throw new Error('Failed to create PayPal order');
+                        }
+                    })
+                    .catch(error => {
+                        showLoading(false);
+                        showError('Error creating PayPal order: ' + error.message);
+                        console.error('Create order error:', error);
+                        return Promise.reject(error);
+                    });
+            },
+
+            onApprove: function(data) {
+                console.log('Payment approved, capturing...');
+                showLoading(true);
+
+                return fetch("paypal.php?action=capture&orderID=" + data.orderID)
+                    .then(res => {
+                        console.log('Capture response status:', res.status);
+                        return res.json();
+                    })
+                    .then(details => {
+                        console.log('Capture details:', details);
+
+                        if (details.error) {
+                            throw new Error(details.error);
+                        }
+
+                        const transactionRef = data.orderID;
+                        const name = document.getElementById('fullname').value;
+                        const email = document.getElementById('email').value;
+                        const mobile = document.getElementById('mobile').value;
+
+                        return fetch('process_enrollment.php', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                courseID: courseID,
+                                userID: userID,
+                                amount: coursePrice,
+                                transactionRef: transactionRef,
+                                payerName: details.payer.name.given_name + ' ' + details.payer.name.surname,
+                                payerEmail: details.payer.email_address,
+                                mobile: mobile
+                            })
+                        })
+                        .then(res => res.json())
+                        .then(result => {
+                            console.log('Enrollment result:', result);
+                            showLoading(false);
+                            
+                            if (result.success) {
+                                alert("Payment completed successfully! Welcome to the course.");
+                                window.location.href = 'payment_success.php?ref=' + transactionRef + '&course_id=' + courseID;
+                            } else {
+                                alert('Payment received but enrollment failed: ' + result.message + '\n\nTransaction ID: ' + transactionRef + '\n\nPlease contact support with this Transaction ID.');
+                                showError('Enrollment failed: ' + result.message);
+                                console.error('Enrollment error details:', result);
+                            }
+                        });
+                    })
+                    .catch(error => {
+                        showLoading(false);
+                        showError('Error processing payment: ' + error.message);
+                        console.error('Approve error:', error);
+                    });
+            },
+
+            onError: function(err) {
+                showLoading(false);
+                showError('An error occurred during the payment process. Please try again.');
+                console.error('PayPal error:', err);
+            },
+
+            onCancel: function(data) {
+                showLoading(false);
+                showError('Payment was cancelled. Please try again when ready.');
+                console.log('Payment cancelled:', data);
+            }
+
+        }).render('#paypal-button-container');
     </script>
 </body>
 </html>

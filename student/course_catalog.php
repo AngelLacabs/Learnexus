@@ -14,7 +14,9 @@ $searchQuery = $_GET['search'] ?? '';
 
 // Get all published courses that the student hasn't enrolled in
 $sql = "
-    SELECT c.*, CONCAT(u.firstName, ' ', u.lastName) as instructorName
+    SELECT c.*, 
+           CONCAT(u.firstName, ' ', u.lastName) as instructorName,
+           u.avatar as instructorAvatar
     FROM courses c
     JOIN users u ON c.teacherID = u.userID
     WHERE c.status = 'published'
@@ -22,6 +24,7 @@ $sql = "
         SELECT courseID FROM enrollments WHERE userID = ?
     )
 ";
+
 
 if (!empty($searchQuery)) {
     $sql .= " AND (c.title LIKE ? OR c.description LIKE ? OR c.category LIKE ?)";
@@ -336,8 +339,13 @@ foreach ($courses as $course) {
                             
                             <div class="course-footer">
                                 <div class="instructor-info">
-                                    <div class="instructor-avatar"></div>
-                                    <span><?php echo htmlspecialchars($course['instructorName']); ?></span>
+                                    <div class="instructor-avatar">
+    <?php if (!empty($course['instructorAvatar']) && file_exists($course['instructorAvatar'])): ?>
+        <img src="<?php echo htmlspecialchars($course['instructorAvatar']); ?>" alt="Avatar" style="width:24px;height:24px;border-radius:50%;">
+    <?php endif; ?>
+</div>
+<span><?php echo htmlspecialchars($course['instructorName']); ?></span>
+
                                 </div>
                                 <div class="course-price <?php echo $course['price'] == 0 ? 'free' : ''; ?>">
                                     <?php echo $course['price'] == 0 ? 'FREE' : '₱' . number_format($course['price'], 2); ?>

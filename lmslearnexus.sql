@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 11, 2026 at 11:22 AM
+-- Generation Time: Jan 11, 2026 at 08:26 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -121,7 +121,7 @@ CREATE TABLE `courses` (
 --
 
 INSERT INTO `courses` (`courseID`, `teacherID`, `title`, `description`, `price`, `category`, `status`, `passingScore`, `createdAt`) VALUES
-(2, 3, 'Data Administration', '', 100.00, 'Programming', 'draft', 70, '2026-01-11 10:21:25');
+(2, 3, 'Data Administration', '', 100.00, 'Programming', 'published', 70, '2026-01-11 10:21:25');
 
 -- --------------------------------------------------------
 
@@ -166,6 +166,13 @@ CREATE TABLE `enrollments` (
   `status` enum('active','completed','dropped','pending') DEFAULT 'active'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `enrollments`
+--
+
+INSERT INTO `enrollments` (`enrollmentID`, `userID`, `courseID`, `paymentID`, `progressPercentage`, `enrolledAt`, `completedAt`, `status`) VALUES
+(1, 2, 2, 3, 100.00, '2026-01-11 15:32:17', NULL, 'active');
+
 -- --------------------------------------------------------
 
 --
@@ -185,7 +192,27 @@ CREATE TABLE `lessons` (
 --
 
 INSERT INTO `lessons` (`lessonID`, `courseID`, `title`, `filename`, `uploadedAt`) VALUES
-(1, 2, 'lmslearnexus', '../uploads/lessons/lesson_696379a5d4894.pdf', '2026-01-11 10:21:25');
+(2, 2, 'Part 1', 'uploads/lessons/6963b390b09cf_Self Intro.pdf', '2026-01-11 14:28:32');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `lesson_completions`
+--
+
+CREATE TABLE `lesson_completions` (
+  `id` int(11) NOT NULL,
+  `userID` int(11) NOT NULL,
+  `lessonID` int(11) NOT NULL,
+  `completedAt` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `lesson_completions`
+--
+
+INSERT INTO `lesson_completions` (`id`, `userID`, `lessonID`, `completedAt`) VALUES
+(10, 2, 2, '2026-01-12 02:50:46');
 
 -- --------------------------------------------------------
 
@@ -220,6 +247,13 @@ CREATE TABLE `payments` (
   `createdAt` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `payments`
+--
+
+INSERT INTO `payments` (`paymentID`, `enrollmentID`, `userID`, `courseID`, `amount`, `transactionReference`, `status`, `paymentDate`, `createdAt`) VALUES
+(3, 1, 2, 2, 100.00, '3PD75966M49920535', 'completed', '2026-01-11 15:32:17', '2026-01-11 15:32:17');
+
 -- --------------------------------------------------------
 
 --
@@ -251,6 +285,39 @@ CREATE TABLE `quizzes` (
   `timeLimitMinutes` int(11) DEFAULT NULL,
   `createdAt` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `quizzes`
+--
+
+INSERT INTO `quizzes` (`quizID`, `courseID`, `title`, `description`, `allowRetake`, `passingScore`, `timeLimitMinutes`, `createdAt`) VALUES
+(1, 2, 'QUIZ 1', '', 1, 70, NULL, '2026-01-11 17:52:13');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `quiz_questions`
+--
+
+CREATE TABLE `quiz_questions` (
+  `questionID` int(11) NOT NULL,
+  `quizID` int(11) NOT NULL,
+  `question` text NOT NULL,
+  `option1` varchar(255) NOT NULL,
+  `option2` varchar(255) NOT NULL,
+  `option3` varchar(255) NOT NULL,
+  `option4` varchar(255) NOT NULL,
+  `correct_option` tinyint(4) NOT NULL,
+  `createdAt` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `quiz_questions`
+--
+
+INSERT INTO `quiz_questions` (`questionID`, `quizID`, `question`, `option1`, `option2`, `option3`, `option4`, `correct_option`, `createdAt`) VALUES
+(1, 1, 'ano ang pangalan ng website', 'Learnexus', 'kdhhd', 'sdhs', 'hdbxasd', 1, '2026-01-11 17:56:43'),
+(2, 1, 'Cute ka ba?', 'oo', 'syempre', 'yes', 'naman', 1, '2026-01-11 17:57:14');
 
 -- --------------------------------------------------------
 
@@ -416,6 +483,13 @@ ALTER TABLE `lessons`
   ADD KEY `courseID` (`courseID`);
 
 --
+-- Indexes for table `lesson_completions`
+--
+ALTER TABLE `lesson_completions`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_completion` (`userID`,`lessonID`);
+
+--
 -- Indexes for table `modules`
 --
 ALTER TABLE `modules`
@@ -446,6 +520,13 @@ ALTER TABLE `questions`
 ALTER TABLE `quizzes`
   ADD PRIMARY KEY (`quizID`),
   ADD KEY `courseID` (`courseID`);
+
+--
+-- Indexes for table `quiz_questions`
+--
+ALTER TABLE `quiz_questions`
+  ADD PRIMARY KEY (`questionID`),
+  ADD KEY `quizID` (`quizID`);
 
 --
 -- Indexes for table `quiz_results`
@@ -526,13 +607,19 @@ ALTER TABLE `email_otp`
 -- AUTO_INCREMENT for table `enrollments`
 --
 ALTER TABLE `enrollments`
-  MODIFY `enrollmentID` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `enrollmentID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `lessons`
 --
 ALTER TABLE `lessons`
-  MODIFY `lessonID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `lessonID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `lesson_completions`
+--
+ALTER TABLE `lesson_completions`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `modules`
@@ -544,7 +631,7 @@ ALTER TABLE `modules`
 -- AUTO_INCREMENT for table `payments`
 --
 ALTER TABLE `payments`
-  MODIFY `paymentID` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `paymentID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `questions`
@@ -556,7 +643,13 @@ ALTER TABLE `questions`
 -- AUTO_INCREMENT for table `quizzes`
 --
 ALTER TABLE `quizzes`
-  MODIFY `quizID` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `quizID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `quiz_questions`
+--
+ALTER TABLE `quiz_questions`
+  MODIFY `questionID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `quiz_results`
@@ -663,6 +756,12 @@ ALTER TABLE `questions`
 --
 ALTER TABLE `quizzes`
   ADD CONSTRAINT `quizzes_ibfk_1` FOREIGN KEY (`courseID`) REFERENCES `courses` (`courseID`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `quiz_questions`
+--
+ALTER TABLE `quiz_questions`
+  ADD CONSTRAINT `quiz_questions_ibfk_1` FOREIGN KEY (`quizID`) REFERENCES `quizzes` (`quizID`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `quiz_results`

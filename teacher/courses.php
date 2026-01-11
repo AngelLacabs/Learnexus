@@ -198,18 +198,17 @@ $page_title = "My Courses - Learnexus";
                             </div>
                         </div>
                         <div class="course-actions">
-                            <?php if ($course['status'] == 'published'): ?>
-                                <button class="btn-action btn-published">Already Published</button>
-                            <?php elseif ($course['status'] == 'archived'): ?>
-                                <button class="btn-action btn-ready" onclick="window.location.href='edit_course.php?id=<?php echo $course['courseID']; ?>'">
-                                    <i class="bi bi-download"></i> Ready to Publish
-                                </button>
-                            <?php else: ?>
-                                <button class="btn-action btn-continue" onclick="window.location.href='edit_course.php?id=<?php echo $course['courseID']; ?>'">
-                                    Continue Editing →
-                                </button>
-                            <?php endif; ?>
-                        </div>
+    <?php if ($course['status'] === 'published'): ?>
+        <button class="btn-action btn-published" onclick="toggleCourseStatus(<?php echo $course['courseID']; ?>, 'unpublish')">
+            Unpublish
+        </button>
+    <?php else: ?>
+        <button class="btn-action btn-continue" onclick="toggleCourseStatus(<?php echo $course['courseID']; ?>, 'publish')">
+            Publish Course
+        </button>
+    <?php endif; ?>
+</div>
+
                     </div>
                 </div>
             <?php endforeach; ?>
@@ -222,6 +221,27 @@ $page_title = "My Courses - Learnexus";
     </button>
 
 <script>
+function toggleCourseStatus(courseID, action) {
+    fetch('ajax_toggle_course_status.php', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            courseID: courseID,
+            action: action
+        })
+    })
+    .then(res => res.json())
+    .then(res => {
+        if (res.success) {
+            Swal.fire('Success', res.message, 'success')
+                .then(() => location.reload());
+        } else {
+            Swal.fire('Error', res.message, 'error');
+        }
+    })
+    .catch(() => Swal.fire('Error', 'Server error', 'error'));
+}
+
 // Tab filtering
 document.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', function() {
@@ -293,5 +313,6 @@ function showCreateCourseModal() {
     });
 }
 </script>
+
 </body>
 </html>

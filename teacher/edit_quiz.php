@@ -7,179 +7,145 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'instructor') {
     exit();
 }
 
-$quizID = $_GET['id'] ?? 0;
 $teacherID = $_SESSION['user_id'];
+$quizID = $_GET['id'] ?? 0;
 
-// Get quiz details
+// Fetch quiz and course info
 $stmt = $conn->prepare("
-    SELECT q.*, c.title as courseTitle
+    SELECT q.*, c.title AS courseTitle, c.courseID 
     FROM quizzes q
     JOIN courses c ON q.courseID = c.courseID
     WHERE q.quizID = ? AND c.teacherID = ?
 ");
 $stmt->execute([$quizID, $teacherID]);
-$quiz = $stmt->fetch();
+$quiz = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$quiz) {
-    header('Location: quizzes.php');
+    header('Location: courses.php');
     exit();
 }
 
-// Get questions
-$stmt = $conn->prepare("SELECT * FROM questions WHERE quizID = ? ORDER BY orderNumber");
-$stmt->execute([$quizID]);
-$questions = $stmt->fetchAll();
-
-// Get choices for each question
-$questionChoices = [];
-foreach ($questions as $q) {
-    $stmt = $conn->prepare("SELECT * FROM choices WHERE questionID = ? ORDER BY choiceLetter");
-    $stmt->execute([$q['questionID']]);
-    $questionChoices[$q['questionID']] = $stmt->fetchAll();
-}
-
-// Handle add question
+// Handle adding a question
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_question'])) {
-    $questionText = trim($_POST['questionText']);
-    $points = intval($_POST['points'] ?? 1);
-    $orderNumber = count($questions) + 1;
-    
-    $stmt = $conn->prepare("INSERT INTO questions (quizID, questionText, points, orderNumber) VALUES (?, ?, ?, ?)");
-    $stmt->execute([$quizID, $questionText, $points, $orderNumber]);
-    $questionID = $conn->lastInsertId();
-    
-    // Add choices
-    $choices = ['A', 'B', 'C', 'D'];
-    foreach ($choices as $letter) {
-        $choiceText = trim($_POST['choice_' . $letter] ?? '');
-        $isCorrect = ($_POST['correct_answer'] == $letter) ? 1 : 0;
-        
-        if ($choiceText) {
-            $stmt = $conn->prepare("INSERT INTO choices (questionID, choiceLetter, choiceText, isCorrect) VALUES (?, ?, ?, ?)");
-            $stmt->execute([$questionID, $letter, $choiceText, $isCorrect]);
-        }
-    }
-    
+    $questionText = trim($_POST['question_text']);
+    $correctOption = intval($_POST['correct_option']); // 1-4
+    $options = [
+        trim($_POST['option1']),
+        trim($_POST['option2']),
+        trim($_POST['option3']),
+        trim($_POST['option4'])
+    ];
+
+    $stmt = $conn->prepare("INSERT INTO quiz_questions (quizID, question, option1, option2, option3, option4, correct_option) VALUES (?, ?, ?, ?, ?, ?, ?)");
+    $stmt->execute([$quizID, $questionText, $options[0], $options[1], $options[2], $options[3], $correctOption]);
+
     header('Location: edit_quiz.php?id=' . $quizID);
     exit();
 }
+
+// Handle deleting a question
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_question'])) {
+    $questionID = intval($_POST['question_id']);
+    $stmt = $conn->prepare("DELETE FROM quiz_questions WHERE questionID = ? AND quizID = ?");
+    $stmt->execute([$questionID, $quizID]);
+    header('Location: edit_quiz.php?id=' . $quizID);
+    exit();
+}
+
+// Fetch all questions
+$stmt = $conn->prepare("SELECT * FROM quiz_questions WHERE quizID = ? ORDER BY questionID ASC");
+$stmt->execute([$quizID]);
+$questions = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
+
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Edit Quiz - Learnexus</title>
+    <title>Edit Quiz - <?php echo htmlspecialchars($quiz['title']); ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
-        .question-card {
-            background: white;
-            border: 2px solid #e0e0e0;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-        .correct-answer {
-            background: #e8f5e9;
-            border-left: 4px solid #43a047;
-        }
+        body { background: #f8f9fa; }
+        .top-nav { background: linear-gradient(180deg, #e8f0fe 0%, #f8f9fa 100%); padding: 15px 40px; }
+        .brand { font-size: 20px; font-weight: 700; color: #1a73e8; }
     </style>
 </head>
-<body style="background: #f8f9fa;">
-    <div class="container mt-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h2><?php echo htmlspecialchars($quiz['title']); ?></h2>
-                <p class="text-muted"><?php echo htmlspecialchars($quiz['courseTitle']); ?></p>
-            </div>
-            <div>
-                <button class="btn btn-outline-secondary"><i class="bi bi-link"></i></button>
-                <button class="btn btn-outline-secondary"><i class="bi bi-share"></i></button>
-                <button class="btn btn-outline-secondary"><i class="bi bi-printer"></i></button>
-                <button class="btn btn-outline-secondary"><i class="bi bi-files"></i></button>
-                <button class="btn btn-outline-danger"><i class="bi bi-trash"></i></button>
-            </div>
-        </div>
-
-        <!-- Display existing questions -->
-        <?php foreach ($questions as $index => $q): ?>
-            <div class="question-card">
-                <h5><?php echo ($index + 1); ?>. <?php echo htmlspecialchars($q['questionText']); ?></h5>
-                
-                <?php if (isset($questionChoices[$q['questionID']])): ?>
-                    <?php foreach ($questionChoices[$q['questionID']] as $choice): ?>
-                        <div class="p-2 mb-2 <?php echo $choice['isCorrect'] ? 'correct-answer' : 'border rounded'; ?>">
-                            <?php echo $choice['choiceLetter']; ?>. <?php echo htmlspecialchars($choice['choiceText']); ?>
-                        </div>
-                    <?php endforeach; ?>
-                <?php endif; ?>
-                
-                <?php 
-                $correctChoice = array_filter($questionChoices[$q['questionID']], fn($c) => $c['isCorrect']);
-                $correctChoice = reset($correctChoice);
-                ?>
-                <div class="mt-3">
-                    <strong>Correct: <?php echo $correctChoice['choiceLetter']; ?>. <?php echo htmlspecialchars($correctChoice['choiceText']); ?></strong>
-                </div>
-                
-                <div class="d-flex gap-2 mt-3">
-                    <button class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></button>
-                    <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
-                </div>
-            </div>
-        <?php endforeach; ?>
-
-        <!-- Add question form -->
-        <div class="card mt-4">
-            <div class="card-body">
-                <h5>Add Another Question</h5>
-                <form method="POST">
-                    <input type="hidden" name="add_question" value="1">
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Question *</label>
-                        <textarea name="questionText" class="form-control" rows="3" required></textarea>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Choice A *</label>
-                        <input type="text" name="choice_A" class="form-control" required>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Choice B *</label>
-                        <input type="text" name="choice_B" class="form-control" required>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Choice C *</label>
-                        <input type="text" name="choice_C" class="form-control" required>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Choice D *</label>
-                        <input type="text" name="choice_D" class="form-control" required>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Correct Answer *</label>
-                        <select name="correct_answer" class="form-control" required>
-                            <option value="A">A</option>
-                            <option value="B">B</option>
-                            <option value="C">C</option>
-                            <option value="D">D</option>
-                        </select>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Points</label>
-                        <input type="number" name="points" class="form-control" value="1" min="1">
-                    </div>
-                    
-                    <button type="submit" class="btn btn-primary">Add Another Question</button>
-                    <a href="quizzes.php" class="btn btn-secondary">Done</a>
-                </form>
-            </div>
+<body>
+    <div class="top-nav d-flex justify-content-between align-items-center">
+        <a href="dashboard.php" class="brand text-decoration-none">LEARNEXUS</a>
+        <div>
+            <a href="courses.php" class="me-3 text-decoration-none">Courses</a>
+            <a href="edit_course.php?id=<?php echo $quiz['courseID']; ?>" class="me-3 text-decoration-none">Back to Course</a>
         </div>
     </div>
+
+    <div class="container mt-5">
+        <h2>Edit Quiz: <?php echo htmlspecialchars($quiz['title']); ?></h2>
+        <p>Course: <?php echo htmlspecialchars($quiz['courseTitle']); ?></p>
+
+        <hr>
+        <h4>Add New Question</h4>
+        <form method="POST" class="mb-4">
+            <div class="mb-3">
+                <label class="form-label">Question Text</label>
+                <textarea name="question_text" class="form-control" required></textarea>
+            </div>
+            <div class="row mb-3">
+                <div class="col">
+                    <label>Option 1</label>
+                    <input type="text" name="option1" class="form-control" required>
+                </div>
+                <div class="col">
+                    <label>Option 2</label>
+                    <input type="text" name="option2" class="form-control" required>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col">
+                    <label>Option 3</label>
+                    <input type="text" name="option3" class="form-control" required>
+                </div>
+                <div class="col">
+                    <label>Option 4</label>
+                    <input type="text" name="option4" class="form-control" required>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Correct Option</label>
+                <select name="correct_option" class="form-control" required>
+                    <option value="1">Option 1</option>
+                    <option value="2">Option 2</option>
+                    <option value="3">Option 3</option>
+                    <option value="4">Option 4</option>
+                </select>
+            </div>
+            <button type="submit" name="add_question" class="btn btn-success">Add Question</button>
+        </form>
+
+        <hr>
+        <h4>Existing Questions</h4>
+        <?php if(count($questions) > 0): ?>
+            <ul class="list-group">
+                <?php foreach($questions as $q): ?>
+                    <li class="list-group-item">
+                        <strong><?php echo htmlspecialchars($q['question']); ?></strong>
+                        <ul>
+                            <li <?php if($q['correct_option']==1) echo 'class="text-success fw-bold"'; ?>>1. <?php echo htmlspecialchars($q['option1']); ?></li>
+                            <li <?php if($q['correct_option']==2) echo 'class="text-success fw-bold"'; ?>>2. <?php echo htmlspecialchars($q['option2']); ?></li>
+                            <li <?php if($q['correct_option']==3) echo 'class="text-success fw-bold"'; ?>>3. <?php echo htmlspecialchars($q['option3']); ?></li>
+                            <li <?php if($q['correct_option']==4) echo 'class="text-success fw-bold"'; ?>>4. <?php echo htmlspecialchars($q['option4']); ?></li>
+                        </ul>
+                        <form method="POST" onsubmit="return confirm('Delete this question?');">
+                            <input type="hidden" name="question_id" value="<?php echo $q['questionID']; ?>">
+                            <button type="submit" name="delete_question" class="btn btn-sm btn-danger">Delete Question</button>
+                        </form>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+        <?php else: ?>
+            <p>No questions added yet.</p>
+        <?php endif; ?>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
