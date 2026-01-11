@@ -74,7 +74,28 @@ function calculateCourseCompletion($courseID, $conn) {
 $weeklyGoalPercentage = 80;
 
 $page_title = "Instructor Dashboard - Learnexus";
+$page_title = "Instructor Dashboard - Learnexus";
+
+// Array of motivational phrases
+$motivationalPhrases = [
+    "Keep pushing forward—every step counts!",
+    "Believe in yourself and all that you are!",
+    "Success is the sum of small efforts repeated daily.",
+    "Your dedication today shapes tomorrow's success.",
+    "Stay focused and never give up!",
+    "Every day is a new opportunity to learn and grow.",
+    "Strive for progress, not perfection.",
+    "Great things take time. Keep going!",
+    "Consistency is the key to mastery.",
+    "You have the power to create amazing results!"
+];
+
+// Pick a phrase for today based on the day of the year
+$dayOfYear = date('z'); // 0-365
+$dailyMotivation = $motivationalPhrases[$dayOfYear % count($motivationalPhrases)];
+
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -449,10 +470,9 @@ $page_title = "Instructor Dashboard - Learnexus";
 
         <!-- Welcome Banner -->
         <div class="welcome-banner">
-            <h2>Welcome back, Instructor!</h2>
-            <p>You've completed <?php echo $weeklyGoalPercentage; ?>% of your weekly learning goal.</p>
-            <p>Keep up the great momentum!</p>
-        </div>
+    <h2><?php echo $dailyMotivation; ?></h2>
+</div>
+
 
         <!-- Stats Cards -->
         <div class="stats-container">
