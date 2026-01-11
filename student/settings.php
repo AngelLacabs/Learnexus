@@ -1,18 +1,13 @@
 <?php
-// ========================================
-// FILE: teacher/settings.php (and student/settings.php - same code)
-// User Settings Page
-// ========================================
 session_start();
 require_once '../database/db_connect.php';
 
-if (!isset($_SESSION['user_id'])) {
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
     header('Location: ../index.php');
     exit();
 }
 
 $userID = $_SESSION['user_id'];
-$role = $_SESSION['role'];
 
 // Get user data
 $stmt = $conn->prepare("SELECT * FROM users WHERE userID = ?");
@@ -53,6 +48,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_password'])) {
                 $stmt = $conn->prepare("UPDATE users SET passwordHash = ? WHERE userID = ?");
                 $stmt->execute([$newHash, $userID]);
                 $success = "Password updated successfully!";
+                
+                // Refresh user data
+                $stmt = $conn->prepare("SELECT * FROM users WHERE userID = ?");
+                $stmt->execute([$userID]);
+                $user = $stmt->fetch();
             } else {
                 $error = "Password must be at least 6 characters";
             }
@@ -69,170 +69,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_password'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Settings - Learnexus</title>
-    <link rel="icon" type="image/png" href="../images/Learnexus.png">
+    <title>Settings - Learnexus</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        body {
-            background-color: #f8f9fa;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-        
-        .top-nav {
-            background: linear-gradient(180deg, #e8f0fe 0%, #f8f9fa 100%);
-            padding: 15px 40px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        }
-        
-        .container-main {
-            max-width: 1000px;
-            margin: 40px auto;
-            padding: 0 40px;
-        }
-        
-        .settings-layout {
-            display: grid;
-            grid-template-columns: 250px 1fr;
-            gap: 30px;
-        }
-        
-        .settings-sidebar {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            height: fit-content;
-        }
-        
-        .avatar-section {
-            text-align: center;
-            padding: 20px 0;
-            border-bottom: 1px solid #e0e0e0;
-            margin-bottom: 20px;
-        }
-        
-        .avatar {
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 32px;
-            font-weight: 600;
-            margin: 0 auto 15px;
-        }
-        
-        .sidebar-menu {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        
-        .sidebar-menu li {
-            padding: 12px 15px;
-            cursor: pointer;
-            border-radius: 8px;
-            margin-bottom: 5px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            transition: background 0.2s;
-        }
-        
-        .sidebar-menu li:hover {
-            background: #f5f5f5;
-        }
-        
-        .sidebar-menu li.active {
-            background: #e3f2fd;
-            color: #1a73e8;
-        }
-        
-        .settings-content {
-            background: white;
-            border-radius: 12px;
-            padding: 30px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        }
-        
-        .section-title {
-            font-size: 20px;
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
-        
-        .section-subtitle {
-            color: #666;
-            font-size: 14px;
-            margin-bottom: 20px;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-label {
-            font-weight: 500;
-            margin-bottom: 8px;
-        }
-        
-        .form-control {
-            padding: 10px 15px;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-        }
-        
-        .btn-save {
-            background: #1e88e5;
-            color: white;
-            padding: 10px 30px;
-            border: none;
-            border-radius: 8px;
-            font-weight: 500;
-        }
-        
-        .btn-save:hover {
-            background: #1565c0;
-        }
-        
-        .btn-logout {
-            background: #f5f5f5;
-            color: #666;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 8px;
-            width: 100%;
-            margin-top: 20px;
-        }
+        body { background: #f8f9fa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        .top-nav { background: linear-gradient(180deg, #e8f0fe 0%, #f8f9fa 100%); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; }
+        .brand { font-size: 20px; font-weight: 700; color: #1a73e8; }
+        .nav-menu { display: flex; gap: 30px; }
+        .nav-link { color: #666; text-decoration: none; font-weight: 500; }
+        .nav-link:hover { color: #1a73e8; }
+        .container-main { max-width: 1000px; margin: 40px auto; padding: 0 40px; }
+        .settings-layout { display: grid; grid-template-columns: 250px 1fr; gap: 30px; }
+        .settings-sidebar { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); height: fit-content; }
+        .avatar-section { text-align: center; padding: 20px 0; border-bottom: 1px solid #e0e0e0; margin-bottom: 20px; }
+        .avatar { width: 80px; height: 80px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 32px; font-weight: 600; margin: 0 auto 15px; }
+        .sidebar-menu { list-style: none; padding: 0; margin: 0; }
+        .sidebar-menu li { padding: 12px 15px; cursor: pointer; border-radius: 8px; margin-bottom: 5px; display: flex; align-items: center; gap: 10px; transition: background 0.2s; }
+        .sidebar-menu li:hover { background: #f5f5f5; }
+        .sidebar-menu li.active { background: #e3f2fd; color: #1a73e8; }
+        .settings-content { background: white; border-radius: 12px; padding: 30px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .section-title { font-size: 20px; font-weight: 600; margin-bottom: 5px; }
+        .section-subtitle { color: #666; font-size: 14px; margin-bottom: 20px; }
+        .form-label { font-weight: 500; margin-bottom: 8px; }
+        .form-control { padding: 10px 15px; border: 1px solid #e0e0e0; border-radius: 8px; }
+        .btn-save { background: #1e88e5; color: white; padding: 10px 30px; border: none; border-radius: 8px; font-weight: 500; }
+        .btn-save:hover { background: #1565c0; }
+        .btn-logout { background: #f5f5f5; color: #666; padding: 10px 20px; border: none; border-radius: 8px; width: 100%; margin-top: 20px; }
     </style>
 </head>
 <body>
     <!-- Top Navigation -->
     <div class="top-nav">
-        <div style="font-size: 20px; font-weight: 700; color: #1a73e8;">LEARNEXUS</div>
-        <div>
-            <a href="dashboard.php" class="me-3 text-decoration-none text-muted">Dashboard</a>
-            <?php if ($role == 'instructor'): ?>
-                <a href="courses.php" class="me-3 text-decoration-none text-muted">Courses</a>
-                <a href="quizzes.php" class="me-3 text-decoration-none text-muted">Quizzes</a>
-                <a href="enrollees.php" class="me-3 text-decoration-none text-muted">Enrollees</a>
-            <?php else: ?>
-                <a href="my_courses.php" class="me-3 text-decoration-none text-muted">My Courses</a>
-                <a href="certificates.php" class="me-3 text-decoration-none text-muted">Certificates</a>
-            <?php endif; ?>
+        <div class="brand">LEARNEXUS</div>
+        <div class="nav-menu">
+            <a href="dashboard.php" class="nav-link">Dashboard</a>
+            <a href="course_catalog.php" class="nav-link">Course Catalog</a>
+            <a href="my_courses.php" class="nav-link">My Courses</a>
+            <a href="ai_tutor.php" class="nav-link">AI Tutor</a>
         </div>
-        <span style="font-weight: 600;"><?php echo htmlspecialchars($_SESSION['first_name']); ?></span>
     </div>
 
-    <!-- Main Content -->
     <div class="container-main">
         <div class="settings-layout">
             <!-- Sidebar -->
@@ -242,7 +120,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_password'])) {
                         <?php echo strtoupper(substr($_SESSION['first_name'], 0, 1)); ?>
                     </div>
                     <h6 class="mb-0"><?php echo htmlspecialchars($user['firstName'] . ' ' . $user['lastName']); ?></h6>
-                    <small class="text-muted"><?php echo htmlspecialchars($user['email']); ?></small>
+                    <small class="text-muted">Student ID: <?php echo htmlspecialchars($user['studentNumber']); ?></small>
                     <button class="btn btn-sm btn-outline-primary mt-2">Change Avatar</button>
                 </div>
                 
@@ -271,30 +149,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_password'])) {
                         <input type="hidden" name="update_info" value="1">
                         
                         <div class="row">
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label class="form-label">First Name</label>
-                                    <input type="text" name="firstName" class="form-control" 
-                                           value="<?php echo htmlspecialchars($user['firstName']); ?>" required>
-                                </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">First Name</label>
+                                <input type="text" name="firstName" class="form-control" 
+                                       value="<?php echo htmlspecialchars($user['firstName']); ?>" required>
                             </div>
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label class="form-label">M.I.</label>
-                                    <input type="text" name="middleInitial" class="form-control" maxlength="5"
-                                           value="<?php echo htmlspecialchars($user['middleInitial']); ?>">
-                                </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">M.I.</label>
+                                <input type="text" name="middleInitial" class="form-control" maxlength="5"
+                                       value="<?php echo htmlspecialchars($user['middleInitial']); ?>">
                             </div>
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label class="form-label">Last Name</label>
-                                    <input type="text" name="lastName" class="form-control" 
-                                           value="<?php echo htmlspecialchars($user['lastName']); ?>" required>
-                                </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Last Name</label>
+                                <input type="text" name="lastName" class="form-control" 
+                                       value="<?php echo htmlspecialchars($user['lastName']); ?>" required>
                             </div>
                         </div>
                         
-                        <div class="form-group">
+                        <div class="mb-3">
                             <label class="form-label">Email address</label>
                             <input type="email" name="email" class="form-control" 
                                    value="<?php echo htmlspecialchars($user['email']); ?>" required>
@@ -303,12 +175,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_password'])) {
                             </small>
                         </div>
                         
-                        <div class="form-group">
+                        <div class="mb-3">
                             <label class="form-label">Phone</label>
                             <input type="text" name="phone" class="form-control" maxlength="11"
                                    value="<?php echo htmlspecialchars($user['phone']); ?>">
                             <small class="text-muted">
-                                <i class="bi bi-telephone"></i> SMS notifications will be sent to this number
+                                <i class="bi bi-telephone"></i> SMS notifications
                             </small>
                         </div>
                         
@@ -324,35 +196,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_password'])) {
                     <form method="POST">
                         <input type="hidden" name="update_password" value="1">
                         
-                        <div class="form-group">
+                        <div class="mb-3">
                             <label class="form-label">Current Password</label>
                             <div class="input-group">
-                                <input type="password" name="currentPassword" class="form-control" id="currentPass" required>
-                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('currentPass')">
+                                <input type="password" name="currentPassword" class="form-control" required>
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword(this)">
                                     <i class="bi bi-eye"></i>
                                 </button>
                             </div>
                         </div>
                         
-                        <div class="form-group">
+                        <div class="mb-3">
                             <label class="form-label">New Password</label>
-                            <div class="input-group">
-                                <input type="password" name="newPassword" class="form-control" id="newPass" required>
-                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('newPass')">
-                                    <i class="bi bi-eye"></i>
-                                </button>
-                            </div>
+                            <input type="password" name="newPassword" class="form-control" required>
                             <small class="text-muted">Min. 6 characters</small>
                         </div>
                         
-                        <div class="form-group">
+                        <div class="mb-3">
                             <label class="form-label">Confirm Password</label>
-                            <div class="input-group">
-                                <input type="password" name="confirmPassword" class="form-control" id="confirmPass" required>
-                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('confirmPass')">
-                                    <i class="bi bi-eye"></i>
-                                </button>
-                            </div>
+                            <input type="password" name="confirmPassword" class="form-control" required>
                         </div>
                         
                         <button type="submit" class="btn-save">Update Password</button>
@@ -363,7 +225,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_password'])) {
     </div>
 
     <script>
-        // Tab switching
         document.querySelectorAll('.sidebar-menu li').forEach(item => {
             item.addEventListener('click', function() {
                 document.querySelectorAll('.sidebar-menu li').forEach(li => li.classList.remove('active'));
@@ -377,13 +238,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_password'])) {
             });
         });
 
-        // Toggle password visibility
-        function togglePassword(id) {
-            const input = document.getElementById(id);
+        function togglePassword(button) {
+            const input = button.previousElementSibling;
             input.type = input.type === 'password' ? 'text' : 'password';
         }
 
-        // Success message
         <?php if (isset($success)): ?>
         Swal.fire({
             icon: 'success',

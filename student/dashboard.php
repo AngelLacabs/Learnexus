@@ -432,19 +432,19 @@ $page_title = "Dashboard - Learnexus";
                 <input type="text" placeholder="Search for courses, assignments...">
             </div>
             
-            <div class="user-section">
-                <div class="notification-icon">
-                    <i class="bi bi-bell"></i>
-                    <span class="notification-badge">3</span>
-                </div>
-                
-                <div class="user-info">
-                    <span style="font-weight: 600; color: #333;"><?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?></span>
-                    <div class="user-avatar">
-                        <?php echo strtoupper(substr($_SESSION['first_name'], 0, 1)); ?>
-                    </div>
-                </div>
-            </div>
+           <div class="user-section">
+    <div class="notification-icon">
+        <i class="bi bi-bell"></i>
+        <span class="notification-badge">3</span>
+    </div>
+    
+    <div class="user-info" onclick="window.location.href='settings.php'" style="cursor: pointer;">
+        <span style="font-weight: 600; color: #333;"><?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?></span>
+        <div class="user-avatar">
+            <?php echo strtoupper(substr($_SESSION['first_name'], 0, 1)); ?>
+        </div>
+    </div>
+</div>
         </div>
 
         <!-- Welcome Banner -->
