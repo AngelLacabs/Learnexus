@@ -8,6 +8,11 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'instructor') {
 }
 
 $teacherID = $_SESSION['user_id'];
+// Get instructor data including avatar
+$stmt = $conn->prepare("SELECT * FROM users WHERE userID = ?");
+$stmt->execute([$teacherID]);
+$user = $stmt->fetch();
+
 
 // Get all quizzes by teacher with course info
 $stmt = $conn->prepare("
@@ -224,12 +229,25 @@ $courses = $stmt->fetchAll();
             background: #1565c0;
             transform: scale(1.05);
         }
+        .user-avatar, .user-section a {
+    cursor: pointer;
+    .user-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+}
+
     </style>
 </head>
 <body>
     <!-- Top Navigation -->
     <div class="top-nav">
-        <div class="brand">LEARNEXUS</div>
+         <a href="dashboard.php" class="brand text-decoration-none">
+    LEARNEXUS
+</a>
         
         <div class="nav-menu">
             <a href="dashboard.php" class="nav-link">Dashboard</a>
@@ -239,12 +257,22 @@ $courses = $stmt->fetchAll();
         </div>
         
         <div class="user-section">
-            <i class="bi bi-bell" style="font-size: 22px; color: #666; cursor: pointer;"></i>
-            <span style="font-weight: 600; color: #333;"><?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?></span>
-            <div class="user-avatar">
+    <i class="bi bi-bell" style="font-size: 22px; color: #666; cursor: pointer;"></i>
+    <a href="settings.php" style="font-weight: 600; color: #333; text-decoration: none;">
+        <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>
+    </a>
+    <a href="settings.php" style="display: inline-block; text-decoration: none;">
+        <div class="user-avatar">
+            <?php if (!empty($user['avatar']) && file_exists($user['avatar'])): ?>
+                <img src="<?php echo htmlspecialchars($user['avatar']); ?>" alt="Avatar">
+            <?php else: ?>
                 <?php echo strtoupper(substr($_SESSION['first_name'], 0, 1)); ?>
-            </div>
+            <?php endif; ?>
         </div>
+    </a>
+</div>
+
+
     </div>
 
     <!-- Main Content -->

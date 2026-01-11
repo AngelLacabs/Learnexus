@@ -8,6 +8,11 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'instructor') {
 }
 
 $teacherID = $_SESSION['user_id'];
+// Fetch instructor avatar
+$stmt = $conn->prepare("SELECT avatar FROM users WHERE userID = ?");
+$stmt->execute([$teacherID]);
+$userAvatar = $stmt->fetchColumn();
+
 
 // Get courses by teacher
 $stmt = $conn->prepare("SELECT courseID, title FROM courses WHERE teacherID = ? ORDER BY title");
@@ -54,18 +59,53 @@ $allEnrollees = $stmt->fetchAll();
         .top-nav { background: linear-gradient(180deg, #e8f0fe 0%, #f8f9fa 100%); padding: 15px 40px; }
         .brand { font-size: 20px; font-weight: 700; color: #1a73e8; }
         .course-card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .user-avatar {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    overflow: hidden;
+}
+
+.user-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+ 
     </style>
 </head>
 <body>
     <div class="top-nav d-flex justify-content-between align-items-center">
-        <div class="brand">LEARNEXUS</div>
+         <a href="dashboard.php" class="brand text-decoration-none">
+    LEARNEXUS
+</a>
         <div>
             <a href="dashboard.php" class="me-3 text-decoration-none">Dashboard</a>
             <a href="courses.php" class="me-3 text-decoration-none">Courses</a>
             <a href="quizzes.php" class="me-3 text-decoration-none">Quizzes</a>
             <a href="enrollees.php" class="me-3 text-decoration-none text-primary fw-bold">Enrollees</a>
         </div>
-        <span><?php echo htmlspecialchars($_SESSION['first_name']); ?></span>
+        <a href="settings.php" class="d-flex align-items-center gap-2 text-decoration-none text-dark">
+    <span class="fw-semibold">
+        <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>
+    </span>
+
+    <div class="user-avatar">
+        <?php if (!empty($userAvatar) && file_exists($userAvatar)): ?>
+            <img src="<?php echo htmlspecialchars($userAvatar); ?>" alt="Avatar">
+        <?php else: ?>
+            <?php echo strtoupper(substr($_SESSION['first_name'], 0, 1)); ?>
+        <?php endif; ?>
+    </div>
+</a>
+
+
     </div>
 
     <div class="container mt-4">

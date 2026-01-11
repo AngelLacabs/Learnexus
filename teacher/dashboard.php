@@ -9,6 +9,11 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'instructor') {
 
 $teacherID = $_SESSION['user_id'];
 
+// Get user avatar
+$stmt = $conn->prepare("SELECT avatar FROM users WHERE userID = ?");
+$stmt->execute([$teacherID]);
+$userAvatar = $stmt->fetchColumn();
+
 // Get total courses created
 $stmt = $conn->prepare("SELECT COUNT(*) as count FROM courses WHERE teacherID = ?");
 $stmt->execute([$teacherID]);
@@ -205,13 +210,20 @@ $page_title = "Instructor Dashboard - Learnexus";
         .user-avatar {
             width: 40px;
             height: 40px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border-radius: 50%;
+            overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             font-weight: 600;
+        }
+        
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
         
         .welcome-banner {
@@ -422,10 +434,14 @@ $page_title = "Instructor Dashboard - Learnexus";
                     <span class="notification-badge">2</span>
                 </div>
                 
-                <div class="user-info">
+                <div class="user-info" onclick="window.location.href='settings.php'" style="cursor: pointer;">
                     <span style="font-weight: 600; color: #333;"><?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?></span>
                     <div class="user-avatar">
-                        <?php echo strtoupper(substr($_SESSION['first_name'], 0, 1)); ?>
+                        <?php if (!empty($userAvatar) && file_exists($userAvatar)): ?>
+                            <img src="<?php echo htmlspecialchars($userAvatar); ?>" alt="Avatar">
+                        <?php else: ?>
+                            <?php echo strtoupper(substr($_SESSION['first_name'], 0, 1)); ?>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
