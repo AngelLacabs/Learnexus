@@ -14,6 +14,62 @@ $stmt = $conn->prepare("SELECT * FROM users WHERE userID = ?");
 $stmt->execute([$userID]);
 $user = $stmt->fetch();
 
+// Handle avatar upload
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['avatar'])) {
+    $uploadDir = '../uploads/avatars/';
+    
+    // Create directory if it doesn't exist
+    if (!file_exists($uploadDir)) {
+        mkdir($uploadDir, 0777, true);
+    }
+    
+    $file = $_FILES['avatar'];
+    $fileName = $file['name'];
+    $fileTmpName = $file['tmp_name'];
+    $fileSize = $file['size'];
+    $fileError = $file['error'];
+    
+    // Get file extension
+    $fileExt = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+    $allowed = ['jpg', 'jpeg', 'png', 'gif'];
+    
+    if (in_array($fileExt, $allowed)) {
+        if ($fileError === 0) {
+            if ($fileSize < 5000000) { // 5MB max
+                // Generate unique filename
+                $newFileName = 'avatar_' . $userID . '_' . time() . '.' . $fileExt;
+                $fileDestination = $uploadDir . $newFileName;
+                
+                // Delete old avatar if exists
+                if (!empty($user['avatar']) && file_exists($user['avatar'])) {
+                    unlink($user['avatar']);
+                }
+                
+                if (move_uploaded_file($fileTmpName, $fileDestination)) {
+                    // Update database
+                    $stmt = $conn->prepare("UPDATE users SET avatar = ? WHERE userID = ?");
+                    $stmt->execute([$fileDestination, $userID]);
+                    
+                    $success = "Avatar updated successfully!";
+                    
+                    // Refresh user data
+                    $stmt = $conn->prepare("SELECT * FROM users WHERE userID = ?");
+                    $stmt->execute([$userID]);
+                    $user = $stmt->fetch();
+                } else {
+                    $error = "Failed to upload avatar.";
+                }
+            } else {
+                $error = "File is too large. Maximum size is 5MB.";
+            }
+        } else {
+            $error = "Error uploading file.";
+        }
+    } else {
+        $error = "Invalid file type. Only JPG, JPEG, PNG, and GIF are allowed.";
+    }
+}
+
 // Handle personal info update
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_info'])) {
     $firstName = trim($_POST['firstName']);
@@ -33,6 +89,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_info'])) {
     $_SESSION['last_name'] = $lastName;
     
     $success = "Personal information updated successfully!";
+    
+    // Refresh user data
+    $stmt = $conn->prepare("SELECT * FROM users WHERE userID = ?");
+    $stmt->execute([$userID]);
+    $user = $stmt->fetch();
 }
 
 // Handle password update
@@ -84,7 +145,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_password'])) {
         .settings-layout { display: grid; grid-template-columns: 250px 1fr; gap: 30px; }
         .settings-sidebar { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); height: fit-content; }
         .avatar-section { text-align: center; padding: 20px 0; border-bottom: 1px solid #e0e0e0; margin-bottom: 20px; }
-        .avatar { width: 80px; height: 80px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 32px; font-weight: 600; margin: 0 auto 15px; }
+        .avatar { width: 80px; height: 80px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 32px; font-weight: 600; margin: 0 auto 15px; overflow: hidden; }
+        .avatar img { width: 100%; height: 100%; object-fit: cover; }
         .sidebar-menu { list-style: none; padding: 0; margin: 0; }
         .sidebar-menu li { padding: 12px 15px; cursor: pointer; border-radius: 8px; margin-bottom: 5px; display: flex; align-items: center; gap: 10px; transition: background 0.2s; }
         .sidebar-menu li:hover { background: #f5f5f5; }
@@ -97,6 +159,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_password'])) {
         .btn-save { background: #1e88e5; color: white; padding: 10px 30px; border: none; border-radius: 8px; font-weight: 500; }
         .btn-save:hover { background: #1565c0; }
         .btn-logout { background: #f5f5f5; color: #666; padding: 10px 20px; border: none; border-radius: 8px; width: 100%; margin-top: 20px; }
+        #avatarInput { display: none; }
     </style>
 </head>
 <body>
@@ -117,11 +180,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_password'])) {
             <div class="settings-sidebar">
                 <div class="avatar-section">
                     <div class="avatar">
-                        <?php echo strtoupper(substr($_SESSION['first_name'], 0, 1)); ?>
+                        <?php if (!empty($user['avatar']) && file_exists($user['avatar'])): ?>
+                            <img src="<?php echo htmlspecialchars($user['avatar']); ?>" alt="Avatar">
+                        <?php else: ?>
+                            <?php echo strtoupper(substr($_SESSION['first_name'], 0, 1)); ?>
+                        <?php endif; ?>
                     </div>
                     <h6 class="mb-0"><?php echo htmlspecialchars($user['firstName'] . ' ' . $user['lastName']); ?></h6>
                     <small class="text-muted">Student ID: <?php echo htmlspecialchars($user['studentNumber']); ?></small>
-                    <button class="btn btn-sm btn-outline-primary mt-2">Change Avatar</button>
+                    
+                    <form method="POST" enctype="multipart/form-data" id="avatarForm">
+                        <input type="file" name="avatar" id="avatarInput" accept="image/*" onchange="document.getElementById('avatarForm').submit()">
+                        <button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="document.getElementById('avatarInput').click()">
+                            Change Avatar
+                        </button>
+                    </form>
                 </div>
                 
                 <ul class="sidebar-menu">
@@ -249,6 +322,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_password'])) {
             title: 'Success!',
             text: '<?php echo $success; ?>',
             timer: 2000
+        }).then(() => {
+            window.location.reload();
         });
         <?php endif; ?>
 
