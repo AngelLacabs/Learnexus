@@ -49,6 +49,24 @@ $certificatesCount = $stmt->fetch()['count'];
 $weeklyGoalPercentage = 80;
 
 $page_title = "Dashboard - Learnexus";
+// Array of student motivational phrases
+$studentMotivations = [
+    "Keep learning—you’re building a brighter future!",
+    "Every study session brings you closer to success!",
+    "Mistakes are proof that you are trying. Keep going!",
+    "Knowledge is your superpower. Use it wisely!",
+    "Stay curious and never stop exploring!",
+    "Small steps every day lead to big achievements!",
+    "Believe in yourself—you can do amazing things!",
+    "Learning is a journey. Enjoy every step!",
+    "Focus, practice, and grow every single day!",
+    "Your effort today shapes your success tomorrow!"
+];
+
+// Pick a phrase for today based on the day of the year
+$dayOfYear = date('z'); // 0-365
+$dailyMotivationStudent = $studentMotivations[$dayOfYear % count($studentMotivations)];
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -466,10 +484,9 @@ $page_title = "Dashboard - Learnexus";
 
         <!-- Welcome Banner -->
         <div class="welcome-banner">
-            <h2>Hello, <?php echo htmlspecialchars($_SESSION['first_name']); ?>!</h2>
-            <p>You've completed <?php echo $weeklyGoalPercentage; ?>% of your weekly learning goal.</p>
-            <p>Keep up the great momentum!</p>
-        </div>
+    <h2><?php echo $dailyMotivationStudent; ?></h2>
+</div>
+
 
         <!-- Stats Cards -->
         <div class="stats-container">
