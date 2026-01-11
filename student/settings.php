@@ -137,7 +137,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_password'])) {
     <style>
         body { background: #f8f9fa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
         .top-nav { background: linear-gradient(180deg, #e8f0fe 0%, #f8f9fa 100%); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; }
-        .brand { font-size: 20px; font-weight: 700; color: #1a73e8; }
+        .brand {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1a73e8;
+    cursor: pointer;
+}
+
         .nav-menu { display: flex; gap: 30px; }
         .nav-link { color: #666; text-decoration: none; font-weight: 500; }
         .nav-link:hover { color: #1a73e8; }
@@ -165,7 +171,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_password'])) {
 <body>
     <!-- Top Navigation -->
     <div class="top-nav">
-        <div class="brand">LEARNEXUS</div>
+    <a href="dashboard.php" class="brand" style="text-decoration: none;">
+        LEARNEXUS
+    </a>
+
         <div class="nav-menu">
             <a href="dashboard.php" class="nav-link">Dashboard</a>
             <a href="course_catalog.php" class="nav-link">Course Catalog</a>
