@@ -317,14 +317,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_password'])) {
         }
 
         <?php if (isset($success)): ?>
-        Swal.fire({
-            icon: 'success',
-            title: 'Success!',
-            text: '<?php echo $success; ?>',
-            timer: 2000
-        }).then(() => {
-            window.location.reload();
-        });
+       Swal.fire({
+    icon: 'success',
+    title: 'Success!',
+    text: '<?php echo $success; ?>',
+    confirmButtonText: 'OK'
+});
+
         <?php endif; ?>
 
         <?php if (isset($error)): ?>
