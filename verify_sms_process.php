@@ -24,17 +24,17 @@ if (empty($otpCode) || !preg_match('/^\d{6}$/', $otpCode)) {
     exit();
 }
 
-$otpHelper = new OTPHelper($conn);
-$verificationResult = $otpHelper->verifySMSOTP($phone, $otpCode);
-
-if (!$verificationResult['success']) {
-    $_SESSION['error'] = $verificationResult['message'];
-    header('Location: verify_sms.php');
-    exit();
-}
-
-// Proceed with user registration
 try {
+    $otpHelper = new OTPHelper($conn);
+    $verificationResult = $otpHelper->verifySMSOTP($phone, $otpCode);
+
+    if (!$verificationResult['success']) {
+        $_SESSION['error'] = $verificationResult['message'];
+        header('Location: verify_sms.php');
+        exit();
+    }
+
+    // SMS OTP VERIFIED - Complete registration
     $passwordHash = password_hash($pendingData['password'], PASSWORD_DEFAULT);
 
     if ($pendingData['role'] == 'student') {
@@ -53,7 +53,6 @@ try {
             $pendingData['role'],
             $pendingData['studentNumber']
         ]);
-        $userId = $conn->lastInsertId();
         $successMessage = 'Your account has been successfully created!<br><br>Student Number: <strong>' . htmlspecialchars($pendingData['studentNumber']) . '</strong><br>You can now login to your account.';
     } else {
         $stmt = $conn->prepare("
@@ -71,19 +70,21 @@ try {
             $pendingData['role'],
             $pendingData['teacherNumber']
         ]);
-        $userId = $conn->lastInsertId();
         $successMessage = 'Your account has been successfully created!<br><br>Teacher Number: <strong>' . htmlspecialchars($pendingData['teacherNumber']) . '</strong><br>You can now login to your account.';
     }
 
+    // Clear session
     unset($_SESSION['pending_registration']);
     unset($_SESSION['otp_phone']);
+    unset($_SESSION['otp_email']);
 
     $_SESSION['success'] = $successMessage;
     header('Location: index.php');
     exit();
+
 } catch (PDOException $e) {
-    error_log("Registration completion error: " . $e->getMessage());
-    $_SESSION['error'] = 'Registration failed. Please try again.';
+    error_log("SMS Verification Error: " . $e->getMessage());
+    $_SESSION['error'] = 'Verification failed. Please try again.';
     header('Location: verify_sms.php');
     exit();
 }

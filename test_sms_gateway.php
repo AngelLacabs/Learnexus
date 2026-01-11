@@ -1,59 +1,77 @@
 <?php
-// Test if SMS Gateway is accessible
-$phone_ip = "192.168.18.217";
-$port = "8080";
+require_once 'config/sms_config.php';
 
-// Test 1: Check if server is reachable
-$socket = @fsockopen($phone_ip, $port, $errno, $errstr, 5);
-if ($socket) {
-    echo "✅ SMS Gateway server is reachable at $phone_ip:$port<br>";
-    fclose($socket);
+echo "<h2>SMS Gateway Test</h2>";
+
+// Test 1: Check if gateway is reachable
+echo "<h3>Test 1: Gateway Connection</h3>";
+$ch = curl_init(SMS_GATEWAY_URL . '/messages');
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+curl_setopt($ch, CURLOPT_NOBODY, true);
+curl_exec($ch);
+$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+curl_close($ch);
+
+if ($httpCode > 0) {
+    echo "✅ Gateway is reachable at " . SMS_GATEWAY_URL . "<br>";
+    echo "HTTP Code: $httpCode<br>";
 } else {
-    echo "❌ SMS Gateway server NOT reachable: $errstr ($errno)<br>";
+    echo "❌ Gateway is NOT reachable<br>";
+    echo "Error: " . curl_error($ch) . "<br>";
 }
 
-// Test 2: Try to send actual SMS
-$gateway_url = "http://$phone_ip:$port";
-$username = "sms";
-$password = "OBRAuro1";
-$recipient = "09940695628"; // Your test number
-$test_otp = rand(100000, 999999);
-$message = "Test SMS: $test_otp";
+// Test 2: Send actual SMS
+echo "<h3>Test 2: Send Test SMS</h3>";
+$testPhone = '09387450528'; // Your test number
+$testOTP = rand(100000, 999999);
 
-$url = rtrim($gateway_url, '/') . '/messages';
-$payload = [
-    'phoneNumbers' => [$recipient],
-    'message' => $message
-];
+echo "Sending test SMS to: $testPhone<br>";
+echo "Test OTP: $testOTP<br><br>";
 
-$options = [
-    'http' => [
-        'method' => 'POST',
-        'header' => [
-            'Content-Type: application/json',
-            'Authorization: Basic ' . base64_encode("$username:$password")
-        ],
-        'content' => json_encode($payload),
-        'timeout' => 10
-    ]
-];
+$result = sendSMSOTP($testPhone, 'Test User', $testOTP);
 
-$context = stream_context_create($options);
+echo "<strong>Result:</strong><br>";
+echo "Success: " . ($result['success'] ? 'YES' : 'NO') . "<br>";
+echo "Message: " . $result['message'] . "<br>";
 
-echo "<br>Trying to send SMS to: $recipient<br>";
-echo "Message: $message<br><br>";
-
-$response = @file_get_contents($url, false, $context);
-$http_response_header = $http_response_header ?? [];
-
-echo "Response:<br>";
-if ($response === false) {
-    echo "❌ Failed to send SMS<br>";
-    echo "Error: " . error_get_last()['message'] ?? 'Unknown error';
-} else {
-    echo "✅ SMS sent (API Response): " . htmlspecialchars($response) . "<br>";
+if (isset($result['http_code'])) {
+    echo "HTTP Code: " . $result['http_code'] . "<br>";
 }
 
-echo "<br>HTTP Headers:<br>";
-print_r($http_response_header);
-?>
+if (isset($result['response'])) {
+    echo "Response: <pre>" . htmlspecialchars($result['response']) . "</pre><br>";
+}
+
+// Test 3: Configuration Check
+echo "<h3>Test 3: Configuration</h3>";
+echo "Gateway URL: " . SMS_GATEWAY_URL . "<br>";
+echo "Username: " . SMS_USERNAME . "<br>";
+echo "Device ID: " . SMS_DEVICE_ID . "<br>";
+echo "Sender Number: " . SMS_SENDER_NUMBER . "<br>";
+
+// Test 4: Check if webhook is accessible
+echo "<h3>Test 4: Webhook Check</h3>";
+$webhookUrl = "http://192.168.18.34:8000/sms_webhook.php";
+echo "Webhook URL: $webhookUrl<br>";
+echo "Make sure your SMS Forwarder is configured to send to this URL<br>";
+
+// Test 5: Recent SMS logs
+echo "<h3>Test 5: Recent SMS Logs</h3>";
+$logFile = __DIR__ . '/sms_log.txt';
+if (file_exists($logFile)) {
+    $logs = file_get_contents($logFile);
+    $lastLogs = array_slice(explode("---\n", $logs), -5);
+    echo "<pre>" . htmlspecialchars(implode("---\n", $lastLogs)) . "</pre>";
+} else {
+    echo "No SMS logs found yet.<br>";
+}
+
+echo "<hr>";
+echo "<p><strong>Next Steps:</strong></p>";
+echo "<ol>";
+echo "<li>If Test 1 fails, check if your phone's SMS Gateway app is running</li>";
+echo "<li>If Test 2 fails, check the username/password in config/sms_config.php</li>";
+echo "<li>Make sure your phone and laptop are on the same network</li>";
+echo "<li>Check if SMS Forwarder webhook is pointing to: $webhookUrl</li>";
+echo "</ol>";

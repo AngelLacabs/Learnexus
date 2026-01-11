@@ -12,20 +12,25 @@ if (!isset($_SESSION['pending_registration']) || !isset($_SESSION['otp_phone']))
 $phone = $_SESSION['otp_phone'];
 $pendingData = $_SESSION['pending_registration'];
 
-$otpHelper = new OTPHelper($conn);
-$otpCode = $otpHelper->resendSMSOTP($phone);
+try {
+    $otpHelper = new OTPHelper($conn);
+    $otpCode = $otpHelper->resendSMSOTP($phone);
 
-if ($otpCode) {
-    $toName = $pendingData['firstName'] . ' ' . $pendingData['lastName'];
-    $smsSent = sendSMSOTP($phone, $toName, $otpCode);
+    if ($otpCode) {
+        $toName = $pendingData['firstName'] . ' ' . $pendingData['lastName'];
+        $smsSent = sendSMSOTP($phone, $toName, $otpCode);
 
-    if ($smsSent['success']) {
-        $_SESSION['success'] = 'New OTP has been sent to your phone!';
+        if ($smsSent['success']) {
+            $_SESSION['success'] = 'New OTP has been sent to your phone!';
+        } else {
+            $_SESSION['error'] = 'Failed to resend OTP: ' . $smsSent['message'];
+        }
     } else {
-        $_SESSION['error'] = 'Failed to resend OTP. Please try again or use email verification.';
+        $_SESSION['error'] = 'Failed to generate new OTP. Please try again.';
     }
-} else {
-    $_SESSION['error'] = 'Failed to generate new OTP. Please try again.';
+} catch (Exception $e) {
+    error_log("Resend SMS OTP Error: " . $e->getMessage());
+    $_SESSION['error'] = 'System error. Please try again.';
 }
 
 header('Location: verify_sms.php');

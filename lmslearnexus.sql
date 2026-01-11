@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 11, 2026 at 08:29 AM
+-- Generation Time: Jan 09, 2026 at 06:35 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -137,8 +137,7 @@ CREATE TABLE `email_otp` (
 --
 
 INSERT INTO `email_otp` (`emailOtpID`, `email`, `otpCode`, `userID`, `expiresAt`, `verified`, `createdAt`) VALUES
-(1, 'angelicalacaba0660@gmail.com', '427507', NULL, '2026-01-09 10:40:05', 0, '2026-01-09 17:30:05'),
-(8, 'coralandrew7@gmail.com', '620305', NULL, '2026-01-10 18:21:38', 0, '2026-01-11 01:11:38');
+(1, 'angelicalacaba0660@gmail.com', '427507', NULL, '2026-01-09 10:40:05', 0, '2026-01-09 17:30:05');
 
 -- --------------------------------------------------------
 
@@ -268,6 +267,16 @@ CREATE TABLE `sms_otp` (
   `verified` tinyint(1) DEFAULT 0,
   `createdAt` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `sms_otp`
+--
+
+INSERT INTO `sms_otp` (`otpID`, `phone`, `otpCode`, `expiresAt`, `verified`, `createdAt`) VALUES
+(1, '09940695628', '479126', '2026-01-11 08:49:04', 1, '2026-01-11 08:47:50'),
+(2, '09940695628', '624548', '2026-01-11 01:59:04', 0, '2026-01-11 08:49:04'),
+(3, '09940695628', '998073', '2026-01-11 02:00:02', 0, '2026-01-11 08:50:02'),
+(4, '09940695628', '633557', '2026-01-11 02:03:02', 0, '2026-01-11 08:53:02');
 
 -- --------------------------------------------------------
 
@@ -475,7 +484,7 @@ ALTER TABLE `courses`
 -- AUTO_INCREMENT for table `email_otp`
 --
 ALTER TABLE `email_otp`
-  MODIFY `emailOtpID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `emailOtpID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `enrollments`
@@ -523,7 +532,7 @@ ALTER TABLE `sms_feedback`
 -- AUTO_INCREMENT for table `sms_otp`
 --
 ALTER TABLE `sms_otp`
-  MODIFY `otpID` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `otpID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `users`
