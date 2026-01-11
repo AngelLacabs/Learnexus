@@ -21,6 +21,7 @@ function maskEmail($email) {
 }
 
 $maskedEmail = maskEmail($email);
+$userPhone = $pendingData['phone'] ?? '';
 ?>
 
 <div class="container-fluid vh-100">
@@ -68,7 +69,9 @@ $maskedEmail = maskEmail($email);
 
                             <div class="text-center mt-3">
                                 <p class="text-muted mb-2">Prefer to verify via SMS?</p>
-                                <a href="switch_to_sms.php" class="btn btn-outline-primary btn-sm">Use SMS Instead</a>
+                                <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#smsModal">
+                                    Use SMS Instead
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -95,6 +98,38 @@ $maskedEmail = maskEmail($email);
     </div>
 </div>
 
+<!-- SMS Confirmation Modal -->
+<div class="modal fade" id="smsModal" tabindex="-1" aria-labelledby="smsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="smsModalLabel">Confirm Phone Number</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" fill="#0d6efd" class="bi bi-phone" viewBox="0 0 16 16">
+                        <path d="M11 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h6zM5 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H5z"/>
+                        <path d="M8 14a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/>
+                    </svg>
+                </div>
+                <p class="text-center">We will send a verification code to:</p>
+                <h4 class="text-center text-primary mb-4"><?php echo htmlspecialchars($userPhone); ?></h4>
+                <div class="alert alert-warning">
+                    <small><strong>Note:</strong> Standard SMS rates may apply. Make sure your phone can receive SMS.</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="sendSmsBtn">
+                    <span id="sendSmsText">Send SMS OTP</span>
+                    <span id="sendSmsSpinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
     #otp {
         font-size: 24px;
@@ -109,6 +144,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const otpError = document.getElementById('otpError');
     const resendBtn = document.getElementById('resendBtn');
     const resendTimer = document.getElementById('resendTimer');
+    const sendSmsBtn = document.getElementById('sendSmsBtn');
+    const sendSmsText = document.getElementById('sendSmsText');
+    const sendSmsSpinner = document.getElementById('sendSmsSpinner');
 
     otpInput.focus();
 
@@ -147,6 +185,54 @@ document.addEventListener('DOMContentLoaded', function() {
             otpInput.classList.add('is-invalid');
             otpInput.focus();
         }
+    });
+
+    // SMS Modal Handler
+    sendSmsBtn.addEventListener('click', function() {
+        sendSmsText.classList.add('d-none');
+        sendSmsSpinner.classList.remove('d-none');
+        sendSmsBtn.disabled = true;
+
+        fetch('switch_to_sms.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'SMS Sent!',
+                    text: 'Verification code has been sent to your phone.',
+                    confirmButtonColor: '#3085d6'
+                }).then(() => {
+                    window.location.href = 'verify_sms.php';
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'SMS Failed',
+                    text: data.message || 'Failed to send SMS. Please try email verification.',
+                    confirmButtonColor: '#3085d6'
+                });
+            }
+        })
+        .catch(error => {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Network error. Please try again.',
+                confirmButtonColor: '#3085d6'
+            });
+        })
+        .finally(() => {
+            sendSmsText.classList.remove('d-none');
+            sendSmsSpinner.classList.add('d-none');
+            sendSmsBtn.disabled = false;
+            bootstrap.Modal.getInstance(document.getElementById('smsModal')).hide();
+        });
     });
 });
 </script>

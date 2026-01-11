@@ -1,59 +1,52 @@
 <?php
-// config/sms_config.php
+// SMS Gateway Configuration
+define('SMS_GATEWAY_URL', 'http://192.168.18.217:8080');
+define('SMS_USERNAME', 'sms');
+define('SMS_PASSWORD', 'OBRAuro1');
+define('SMS_DEVICE_ID', '0000000055ecf0860000019ba379');
+define('SMS_SENDER_NUMBER', '0995477940');
 
-class SMSSender
+function sendSMSOTP($phoneNumber, $userName, $otpCode)
 {
-    private $gateway_url;
-    private $username;
-    private $password;
-
-    public function __construct()
-    {
-        // Update these with your SMS gateway configuration
-        $this->gateway_url = "http://192.168.0.251:8080"; // Your SMS gateway URL
-        $this->username = "sms"; // Your SMS gateway username
-        $this->password = "88888888"; // Your SMS gateway password
+    $message = "Hello $userName! Your LEARNEXUS verification code is: $otpCode. The OTP will expire in 10 minutes.";
+    
+    $url = SMS_GATEWAY_URL . '/messages';
+    
+    $payload = [
+        'phoneNumbers' => [$phoneNumber],
+        'message' => $message
+    ];
+    
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        'Content-Type: application/json',
+        'Authorization: Basic ' . base64_encode(SMS_USERNAME . ':' . SMS_PASSWORD)
+    ]);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+    
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $error = curl_error($ch);
+    curl_close($ch);
+    
+    // Log the attempt
+    error_log("SMS Send Attempt - Phone: $phoneNumber, HTTP Code: $httpCode, Response: $response");
+    
+    if ($httpCode >= 200 && $httpCode < 300) {
+        return [
+            'success' => true,
+            'message' => 'SMS sent successfully',
+            'response' => $response
+        ];
+    } else {
+        return [
+            'success' => false,
+            'message' => 'Failed to send SMS: ' . ($error ?: 'Unknown error'),
+            'http_code' => $httpCode,
+            'response' => $response
+        ];
     }
-
-    public function sendOTP($phoneNumber, $toName, $otpCode)
-    {
-        try {
-            $message = "Hello $toName,\nYour Learnexus verification code is: $otpCode\nValid for 10 minutes.\n\nDo not share this code with anyone.";
-
-            $url = rtrim($this->gateway_url, '/') . '/messages';
-            $payload = [
-                "phoneNumbers" => [$phoneNumber],
-                "message" => $message
-            ];
-
-            $options = [
-                'http' => [
-                    'method' => 'POST',
-                    'header' => [
-                        'Content-Type: application/json',
-                        'Authorization: Basic ' . base64_encode("$this->username:$this->password")
-                    ],
-                    'content' => json_encode($payload)
-                ]
-            ];
-
-            $context = stream_context_create($options);
-            $response = file_get_contents($url, false, $context);
-
-            if ($response !== false) {
-                return ['success' => true, 'message' => 'SMS sent successfully'];
-            } else {
-                throw new Exception('Failed to send SMS');
-            }
-        } catch (Exception $e) {
-            error_log("SMS sending failed: " . $e->getMessage());
-            return ['success' => false, 'message' => 'Failed to send SMS. Please try email verification.'];
-        }
-    }
-}
-
-function sendSMSOTP($phoneNumber, $toName, $otpCode)
-{
-    $smsSender = new SMSSender();
-    return $smsSender->sendOTP($phoneNumber, $toName, $otpCode);
 }

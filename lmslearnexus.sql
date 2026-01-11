@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 09, 2026 at 06:35 PM
+-- Generation Time: Jan 11, 2026 at 09:54 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -137,7 +137,17 @@ CREATE TABLE `email_otp` (
 --
 
 INSERT INTO `email_otp` (`emailOtpID`, `email`, `otpCode`, `userID`, `expiresAt`, `verified`, `createdAt`) VALUES
-(1, 'angelicalacaba0660@gmail.com', '427507', NULL, '2026-01-09 10:40:05', 0, '2026-01-09 17:30:05');
+(1, 'angelicalacaba0660@gmail.com', '035342', NULL, '2026-01-11 00:05:18', 0, '2026-01-11 06:55:18'),
+(5, 'paduakim085@gmail.com', '758525', NULL, '2026-01-11 08:13:09', 1, '2026-01-11 08:13:01'),
+(6, 'paduakim085@gmail.com', '753245', NULL, '2026-01-11 01:31:42', 0, '2026-01-11 08:21:42'),
+(7, 'paduakim085@gmail.com', '844270', NULL, '2026-01-11 01:52:01', 0, '2026-01-11 08:42:01'),
+(8, 'paduakim085@gmail.com', '608636', NULL, '2026-01-11 01:52:51', 0, '2026-01-11 08:42:51'),
+(9, 'paduakim085@gmail.com', '890798', NULL, '2026-01-11 01:53:20', 0, '2026-01-11 08:43:20'),
+(10, 'paduakim085@gmail.com', '211649', NULL, '2026-01-11 01:54:13', 0, '2026-01-11 08:44:13'),
+(11, 'paduakim085@gmail.com', '947969', NULL, '2026-01-11 01:57:41', 0, '2026-01-11 08:47:41'),
+(12, 'paduakim085@gmail.com', '237220', NULL, '2026-01-11 01:59:49', 0, '2026-01-11 08:49:49'),
+(13, 'paduakim085@gmail.com', '676513', NULL, '2026-01-11 01:59:54', 0, '2026-01-11 08:49:54'),
+(14, 'paduakim085@gmail.com', '361423', NULL, '2026-01-11 02:02:53', 0, '2026-01-11 08:52:53');
 
 -- --------------------------------------------------------
 
@@ -267,6 +277,16 @@ CREATE TABLE `sms_otp` (
   `verified` tinyint(1) DEFAULT 0,
   `createdAt` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `sms_otp`
+--
+
+INSERT INTO `sms_otp` (`otpID`, `phone`, `otpCode`, `expiresAt`, `verified`, `createdAt`) VALUES
+(1, '09940695628', '479126', '2026-01-11 08:49:04', 1, '2026-01-11 08:47:50'),
+(2, '09940695628', '624548', '2026-01-11 01:59:04', 0, '2026-01-11 08:49:04'),
+(3, '09940695628', '998073', '2026-01-11 02:00:02', 0, '2026-01-11 08:50:02'),
+(4, '09940695628', '633557', '2026-01-11 02:03:02', 0, '2026-01-11 08:53:02');
 
 -- --------------------------------------------------------
 
@@ -466,7 +486,7 @@ ALTER TABLE `courses`
 -- AUTO_INCREMENT for table `email_otp`
 --
 ALTER TABLE `email_otp`
-  MODIFY `emailOtpID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `emailOtpID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
 -- AUTO_INCREMENT for table `enrollments`
@@ -514,7 +534,7 @@ ALTER TABLE `sms_feedback`
 -- AUTO_INCREMENT for table `sms_otp`
 --
 ALTER TABLE `sms_otp`
-  MODIFY `otpID` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `otpID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `users`
