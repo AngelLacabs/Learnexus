@@ -67,10 +67,12 @@ foreach ($courses as $course) {
         }
         
         .brand {
-            font-size: 20px;
-            font-weight: 700;
-            color: #1a73e8;
-        }
+    font-size: 20px;
+    font-weight: 700;
+    color: #1a73e8;
+    cursor: pointer;
+}
+
         
         .nav-menu {
             display: flex;
@@ -271,12 +273,16 @@ foreach ($courses as $course) {
             color: white;
             border-color: #1e88e5;
         }
+        
     </style>
 </head>
 <body>
     <!-- Top Navigation -->
     <div class="top-nav">
-        <div class="brand">LEARNEXUS</div>
+    <a href="dashboard.php" class="brand" style="text-decoration: none;">
+        LEARNEXUS
+    </a>
+
         
         <div class="nav-menu">
             <a href="dashboard.php" class="nav-link">Dashboard</a>
