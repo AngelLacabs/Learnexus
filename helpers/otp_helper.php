@@ -1,7 +1,6 @@
 <?php
 // helpers/otp_helper.php
-
-require_once 'database/db_connect.php';
+// Database connection should be passed to constructor, not required here
 
 class OTPHelper
 {

@@ -24,96 +24,65 @@ if (empty($otpCode) || !preg_match('/^\d{6}$/', $otpCode)) {
 try {
     require_once 'database/db_connect.php';
     
-    // SMART OTP VERIFICATION - Works with any table structure
-    error_log("=== SMART OTP VERIFICATION ===");
+    error_log("=== OTP VERIFICATION ===");
     error_log("Email: $email, OTP: $otpCode");
     
-    // Method 1: Try to find OTP with known column names
-    $possibleColumns = ['otpCode', 'otp', 'code', 'verification_code'];
-    $possibleTimeColumns = ['created_at', 'created', 'timestamp', 'createdDate', 'date_created'];
-    
-    $foundOTP = false;
     $isValid = false;
     
-    foreach ($possibleColumns as $otpColumn) {
-        foreach ($possibleTimeColumns as $timeColumn) {
-            try {
-                $query = "SELECT $otpColumn, $timeColumn FROM email_otp WHERE email = ? ORDER BY $timeColumn DESC LIMIT 1";
-                $stmt = $conn->prepare($query);
-                $stmt->execute([$email]);
-                $record = $stmt->fetch(PDO::FETCH_ASSOC);
+    // Try standard column names first
+    try {
+        $stmt = $conn->prepare("SELECT otpCode, createdAt FROM email_otp WHERE email = ? ORDER BY createdAt DESC LIMIT 1");
+        $stmt->execute([$email]);
+        $record = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($record && isset($record['otpCode'])) {
+            error_log("✅ Found OTP: " . $record['otpCode']);
+            
+            // Check OTP match
+            if ((string)$otpCode === (string)$record['otpCode']) {
+                error_log("✅ OTP MATCHES!");
                 
-                if ($record && isset($record[$otpColumn])) {
-                    error_log("✅ Found OTP in column '$otpColumn': " . $record[$otpColumn]);
-                    $foundOTP = true;
-                    
-                    // Check OTP match
-                    if ((string)$otpCode === (string)$record[$otpColumn]) {
-                        error_log("✅ OTP MATCHES!");
-                        
-                        // Check expiration if we have timestamp
-                        if (isset($record[$timeColumn])) {
-                            $createdTime = strtotime($record[$timeColumn]);
-                            $elapsed = time() - $createdTime;
-                            error_log("✅ OTP created at: " . $record[$timeColumn] . " ($elapsed seconds ago)");
-                            
-                            if ($elapsed > 900) { // 15 minutes
-                                $_SESSION['error'] = 'OTP has expired (15 minutes).';
-                                header('Location: verify_email.php');
-                                exit();
-                            }
-                        }
-                        
-                        $isValid = true;
-                        break 3; // Break out of all loops
-                    } else {
-                        error_log("❌ OTP mismatch: Submitted '$otpCode' vs Stored '" . $record[$otpColumn] . "'");
-                    }
+                // Check expiration
+                $createdTime = strtotime($record['createdAt']);
+                $elapsed = time() - $createdTime;
+                error_log("✅ OTP age: $elapsed seconds");
+                
+                if ($elapsed > 600) { // 10 minutes
+                    $_SESSION['error'] = 'OTP has expired. Please request a new one.';
+                    header('Location: verify_email.php');
+                    exit();
                 }
-            } catch (Exception $e) {
-                // Column doesn't exist, try next
-                continue;
+                
+                $isValid = true;
+            } else {
+                error_log("❌ OTP mismatch: '$otpCode' vs '" . $record['otpCode'] . "'");
             }
         }
+    } catch (Exception $e) {
+        error_log("⚠️ Standard query failed: " . $e->getMessage());
     }
     
-    // If not found with known columns, try generic approach
-    if (!$foundOTP) {
-        error_log("⚠️ OTP not found with known columns. Trying generic search...");
-        
+    // If not valid, check if there's any OTP in the table
+    if (!$isValid) {
         try {
-            // Get all columns
-            $stmt = $conn->prepare("SELECT * FROM email_otp WHERE email = ?");
+            $stmt = $conn->prepare("SELECT * FROM email_otp WHERE email = ? ORDER BY emailOtpID DESC LIMIT 1");
             $stmt->execute([$email]);
-            $records = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $record = $stmt->fetch(PDO::FETCH_ASSOC);
             
-            if ($records) {
-                foreach ($records as $record) {
-                    foreach ($record as $key => $value) {
-                        // Look for 6-digit numbers
-                        if (is_numeric($value) && strlen((string)$value) == 6) {
-                            error_log("🔍 Found possible OTP in column '$key': $value");
-                            
-                            if ((string)$otpCode === (string)$value) {
-                                error_log("✅ OTP MATCHES!");
-                                $isValid = true;
-                                break 2;
-                            }
+            if ($record) {
+                // Try to find a 6-digit OTP in any column
+                foreach ($record as $column => $value) {
+                    if (is_numeric($value) && strlen((string)$value) == 6) {
+                        if ((string)$otpCode === (string)$value) {
+                            error_log("✅ OTP found in column '$column' and matches!");
+                            $isValid = true;
+                            break;
                         }
                     }
                 }
             }
         } catch (Exception $e) {
-            error_log("❌ Generic search failed: " . $e->getMessage());
-        }
-    }
-    
-    // Check SMS OTP as fallback (since we see sms_otp in session)
-    if (!$isValid && isset($_SESSION['sms_otp'])) {
-        error_log("⚠️ Checking SMS OTP fallback...");
-        if ((string)$otpCode === (string)$_SESSION['sms_otp']) {
-            error_log("✅ OTP verified from SMS session!");
-            $isValid = true;
+            error_log("⚠️ Fallback query failed: " . $e->getMessage());
         }
     }
     
@@ -131,8 +100,8 @@ try {
     if ($pendingData['role'] == 'student') {
         $stmt = $conn->prepare("
             INSERT INTO users 
-            (email, passwordHash, firstName, lastName, middleInitial, phone, role, studentNumber, emailVerified, createdAt) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, NOW())
+            (email, passwordHash, firstName, lastName, middleInitial, phone, role, studentNumber, emailVerified, phoneVerified, createdAt) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, 1, NOW())
         ");
         $stmt->execute([
             $pendingData['email'],
@@ -149,8 +118,8 @@ try {
     } else {
         $stmt = $conn->prepare("
             INSERT INTO users 
-            (email, passwordHash, firstName, lastName, middleInitial, phone, role, teacherNumber, emailVerified, createdAt) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, NOW())
+            (email, passwordHash, firstName, lastName, middleInitial, phone, role, teacherNumber, emailVerified, phoneVerified, createdAt) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, 1, NOW())
         ");
         $stmt->execute([
             $pendingData['email'],
@@ -170,7 +139,7 @@ try {
     unset($_SESSION['pending_registration']);
     unset($_SESSION['otp_email']);
     unset($_SESSION['sms_otp']);
-    unset($_SESSION['sms_phone']);
+    unset($_SESSION['otp_phone']);
 
     $_SESSION['success'] = $successMessage;
     header('Location: index.php');
@@ -178,8 +147,7 @@ try {
     
 } catch (Exception $e) {
     error_log("❌ System Error: " . $e->getMessage());
-    $_SESSION['error'] = 'System error: ' . $e->getMessage();
+    $_SESSION['error'] = 'System error. Please try again.';
     header('Location: verify_email.php');
     exit();
 }
-?>

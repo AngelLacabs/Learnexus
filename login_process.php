@@ -1,7 +1,7 @@
 <?php
 session_start();
 require_once 'database/db_connect.php';
-require_once 'helpers/OTPHelper.php';
+require_once 'helpers/otp_helper.php';
 require_once 'config/email_config.php';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
