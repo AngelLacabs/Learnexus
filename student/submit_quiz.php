@@ -18,8 +18,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         die("Invalid submission.");
     }
 
-    // Fetch correct answers
-    $stmt = $conn->prepare("SELECT questionID, correctAnswer FROM quiz_questions WHERE quizID = ?");
+    // 1️⃣ Get the student's enrollment
+    $stmt = $conn->prepare("
+        SELECT enrollmentID 
+        FROM enrollments 
+        WHERE userID = ? AND courseID = ?
+    ");
+    $stmt->execute([$userID, $courseID]);
+    $enrollment = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$enrollment) {
+        die("You are not enrolled in this course.");
+    }
+
+    $enrollmentID = $enrollment['enrollmentID'];
+
+    // 2️⃣ Fetch correct answers
+    $stmt = $conn->prepare("SELECT questionID, correct_option FROM quiz_questions WHERE quizID = ?");
     $stmt->execute([$quizID]);
     $questions = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -28,8 +43,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     foreach ($questions as $q) {
         $qid = $q['questionID'];
-        $correct = trim(strtolower($q['correctAnswer']));
-        $studentAnswer = trim(strtolower($answers[$qid] ?? ''));
+        $correct = trim(strtoupper($q['correct_option']));
+        $studentAnswer = trim(strtoupper($answers[$qid] ?? ''));
 
         if ($studentAnswer === $correct) {
             $score++;
@@ -37,14 +52,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     $percentage = ($total > 0) ? ($score / $total * 100) : 0;
-    $passed = ($percentage >= 70) ? 1 : 0; // Pass threshold 70%
+    $passed = ($percentage >= 70) ? 1 : 0;
 
-    // Save result
-    $stmt = $conn->prepare("INSERT INTO quiz_results (userID, quizID, score, passed) VALUES (?, ?, ?, ?)
-                            ON DUPLICATE KEY UPDATE score = VALUES(score), passed = VALUES(passed), takenAt = NOW()");
-    $stmt->execute([$userID, $quizID, $percentage, $passed]);
+    // 3️⃣ Save result
+    $stmt = $conn->prepare("
+        INSERT INTO quiz_results (enrollmentID, userID, quizID, score, passed, takenAt)
+        VALUES (?, ?, ?, ?, ?, NOW())
+        ON DUPLICATE KEY UPDATE
+            score = VALUES(score),
+            passed = VALUES(passed),
+            takenAt = NOW()
+    ");
+    $stmt->execute([$enrollmentID, $userID, $quizID, $percentage, $passed]);
 
-    // Redirect back to course page
+    // 4️⃣ Redirect back to course
     header("Location: course_learn.php?id=$courseID");
     exit();
 }
