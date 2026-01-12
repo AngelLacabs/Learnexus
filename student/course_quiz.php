@@ -10,6 +10,25 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
 $userID = $_SESSION['user_id'];
 $courseID = $_GET['id'] ?? 0;
 
+// CHECK IF STUDENT ALREADY FAILED - BLOCK RETAKE WITHOUT PAYMENT
+$stmt = $conn->prepare("
+    SELECT qr.passed, qr.status 
+    FROM quiz_results qr
+    JOIN quizzes q ON qr.quizID = q.quizID
+    WHERE q.courseID = ? AND qr.userID = ?
+    ORDER BY qr.takenAt DESC
+    LIMIT 1
+");
+$stmt->execute([$courseID, $userID]);
+$previousResult = $stmt->fetch();
+
+// If student failed the last attempt, they must pay to retake
+if ($previousResult && $previousResult['passed'] == 0) {
+    $_SESSION['error'] = "You must pay to retake this course after failing the quiz.";
+    header('Location: retake_course.php?id=' . $courseID);
+    exit();
+}
+
 // Get quiz for course
 $stmt = $conn->prepare("SELECT * FROM quizzes WHERE courseID = ?");
 $stmt->execute([$courseID]);
@@ -30,6 +49,8 @@ $questions = $stmt->fetchAll(PDO::FETCH_ASSOC);
 $stmt = $conn->prepare("
     SELECT * FROM quiz_results 
     WHERE quizID = ? AND userID = ?
+    ORDER BY takenAt DESC
+    LIMIT 1
 ");
 $stmt->execute([$quizID, $userID]);
 $existingResult = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -101,15 +122,21 @@ if (!$submitted && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $percentage = ($total > 0) ? ($score / $total * 100) : 0;
     $passed = ($percentage >= 70) ? 1 : 0;
+    $quizStatus = $passed ? 'passed' : 'failed';
     $submitted = true;
 
-    // Save result
+    // Save result with status
     $stmt = $conn->prepare("
-        INSERT INTO quiz_results (enrollmentID, userID, quizID, score, passed, takenAt)
-        VALUES (?, ?, ?, ?, ?, NOW())
-        ON DUPLICATE KEY UPDATE score=VALUES(score), passed=VALUES(passed), takenAt=NOW()
+        INSERT INTO quiz_results (enrollmentID, userID, quizID, score, percentage, passed, status, takenAt)
+        VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
     ");
-    $stmt->execute([$enrollmentID, $userID, $quizID, $percentage, $passed]);
+    $stmt->execute([$enrollmentID, $userID, $quizID, $score, $percentage, $passed, $quizStatus]);
+    
+    // Update enrollment status if passed
+    if ($passed) {
+        $stmt = $conn->prepare("UPDATE enrollments SET status = 'completed', completedAt = NOW() WHERE enrollmentID = ?");
+        $stmt->execute([$enrollmentID]);
+    }
 }
 ?>
 
@@ -118,75 +145,162 @@ if (!$submitted && $_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <title><?= htmlspecialchars($quiz['title']) ?> - Quiz</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .quiz-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .question-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+            padding: 25px;
+        }
+        .quiz-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+        }
+        .result-badge {
+            padding: 15px 25px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .result-badge.passed {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #c3e6cb;
+        }
+        .result-badge.failed {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #f5c6cb;
+        }
+        .option-correct {
+            background: #d4edda !important;
+            border-color: #c3e6cb !important;
+        }
+        .option-wrong {
+            background: #f8d7da !important;
+            border-color: #f5c6cb !important;
+        }
+    </style>
 </head>
-<body class="bg-light">
+<body>
 
-<div class="container mt-5">
+<div class="container mt-5 quiz-container">
 
     <a href="course_learn.php?id=<?= $courseID ?>" class="btn btn-secondary mb-3">
-        ← Back to Course
+        <i class="bi bi-arrow-left"></i> Back to Course
     </a>
 
-    <h2><?= htmlspecialchars($quiz['title']) ?></h2>
+    <div class="quiz-header">
+        <h2><i class="bi bi-patch-question"></i> <?= htmlspecialchars($quiz['title']) ?></h2>
+        <?php if (!$submitted): ?>
+            <p class="mb-0">Answer all questions below. Passing score: 70%</p>
+        <?php endif; ?>
+    </div>
 
     <?php if (!$submitted): ?>
         <form method="POST">
             <?php foreach ($questions as $index => $q): ?>
-                <div class="card mb-4">
-                    <div class="card-body">
-                        <p class="fw-bold"><?= ($index + 1) . ". " . htmlspecialchars($q['question']) ?></p>
-                        <?php 
-                        $options = [
-                            'A' => $q['option1'],
-                            'B' => $q['option2'],
-                            'C' => $q['option3'],
-                            'D' => $q['option4']
-                        ];
-                        ?>
-                        <?php foreach ($options as $key => $value): ?>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="answers[<?= $q['questionID'] ?>]" value="<?= $key ?>" required>
-                                <label class="form-check-label"><?= $key ?>. <?= htmlspecialchars($value) ?></label>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
+                <div class="question-card">
+                    <p class="fw-bold mb-3">
+                        <span class="badge bg-primary me-2"><?= ($index + 1) ?></span>
+                        <?= htmlspecialchars($q['question']) ?>
+                    </p>
+                    <?php 
+                    $options = [
+                        'A' => $q['option1'],
+                        'B' => $q['option2'],
+                        'C' => $q['option3'],
+                        'D' => $q['option4']
+                    ];
+                    ?>
+                    <?php foreach ($options as $key => $value): ?>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="answers[<?= $q['questionID'] ?>]" 
+                                   id="q<?= $q['questionID'] ?>_<?= $key ?>" value="<?= $key ?>" required>
+                            <label class="form-check-label" for="q<?= $q['questionID'] ?>_<?= $key ?>">
+                                <strong><?= $key ?>.</strong> <?= htmlspecialchars($value) ?>
+                            </label>
+                        </div>
+                    <?php endforeach; ?>
                 </div>
             <?php endforeach; ?>
-            <button type="submit" class="btn btn-primary">Submit Quiz</button>
+            <button type="submit" class="btn btn-primary btn-lg w-100">
+                <i class="bi bi-check-circle"></i> Submit Quiz
+            </button>
         </form>
     <?php else: ?>
-        <div class="alert alert-info">
-            <h4>Quiz Results</h4>
-            <p><strong>Score:</strong> <?= round($score / $total * 100, 2) ?>%</p>
-            <p><strong>Status:</strong> <?= $passed ? 'Passed ✅' : 'Failed ❌' ?></p>
-        </div>
+        
+        <?php if ($passed): ?>
+            <div class="result-badge passed">
+                <i class="bi bi-check-circle-fill"></i> Congratulations! You Passed!
+                <div class="mt-2">Score: <?= round($score / $total * 100, 2) ?>%</div>
+            </div>
+        <?php else: ?>
+            <div class="result-badge failed">
+                <i class="bi bi-x-circle-fill"></i> Quiz Failed
+                <div class="mt-2">Score: <?= round($score / $total * 100, 2) ?>%</div>
+                <div class="mt-2" style="font-size: 14px;">You need to pay to retake this course.</div>
+            </div>
+        <?php endif; ?>
+
+        <h4 class="mt-4 mb-3">Review Your Answers</h4>
 
         <?php foreach ($results as $index => $r): ?>
-            <div class="card mb-3">
-                <div class="card-body">
-                    <p class="fw-bold"><?= ($index + 1) . ". " . htmlspecialchars($r['question']) ?></p>
-                    <ul class="list-group">
-                        <?php foreach ($r['options'] as $key => $value): ?>
-                            <li class="list-group-item
-                                <?= $key === $r['correct'] ? 'list-group-item-success' : '' ?>
-                                <?= $key === $r['student'] && !$r['isCorrect'] ? 'list-group-item-danger' : '' ?>
-                            ">
-                                <?= $key ?>. <?= htmlspecialchars($value) ?>
-                                <?php if ($key === $r['correct']) echo ' ✅'; ?>
-                                <?php if ($key === $r['student'] && !$r['isCorrect']) echo ' ❌ (Your Answer)'; ?>
-                            </li>
-                        <?php endforeach; ?>
-                    </ul>
-                </div>
+            <div class="question-card">
+                <p class="fw-bold mb-3">
+                    <span class="badge bg-secondary me-2"><?= ($index + 1) ?></span>
+                    <?= htmlspecialchars($r['question']) ?>
+                </p>
+                <ul class="list-group">
+                    <?php foreach ($r['options'] as $key => $value): ?>
+                        <li class="list-group-item
+                            <?= $key === $r['correct'] ? 'option-correct' : '' ?>
+                            <?= $key === $r['student'] && !$r['isCorrect'] ? 'option-wrong' : '' ?>
+                        ">
+                            <strong><?= $key ?>.</strong> <?= htmlspecialchars($value) ?>
+                            <?php if ($key === $r['correct']): ?>
+                                <i class="bi bi-check-circle-fill text-success float-end"></i>
+                            <?php endif; ?>
+                            <?php if ($key === $r['student'] && !$r['isCorrect']): ?>
+                                <i class="bi bi-x-circle-fill text-danger float-end"></i>
+                                <span class="badge bg-danger float-end me-2">Your Answer</span>
+                            <?php endif; ?>
+                        </li>
+                    <?php endforeach; ?>
+                </ul>
             </div>
         <?php endforeach; ?>
 
-        <!-- E-Certificate Section -->
-        <div class="mt-4">
+        <!-- Action Buttons -->
+        <div class="mt-4 d-grid gap-2">
             <?php if ($passed): ?>
-                <a href="certificate.php?course=<?= $courseID ?>" class="btn btn-success">🎓 Unlock E-Certificate</a>
+                <a href="certificate.php?course=<?= $courseID ?>" class="btn btn-success btn-lg">
+                    <i class="bi bi-award"></i> View Your E-Certificate
+                </a>
+                <a href="dashboard.php" class="btn btn-outline-primary">
+                    <i class="bi bi-house"></i> Back to Dashboard
+                </a>
             <?php else: ?>
-                <button class="btn btn-secondary" disabled>🎓 Unlock E-Certificate (Locked)</button>
+                <a href="retake_course.php?id=<?= $courseID ?>" class="btn btn-warning btn-lg">
+                    <i class="bi bi-credit-card"></i> Pay to Retake Course
+                </a>
+                <a href="dashboard.php" class="btn btn-outline-secondary">
+                    <i class="bi bi-house"></i> Back to Dashboard
+                </a>
             <?php endif; ?>
         </div>
 
@@ -194,5 +308,6 @@ if (!$submitted && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 11, 2026 at 08:26 PM
+-- Generation Time: Jan 12, 2026 at 02:15 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -212,7 +212,7 @@ CREATE TABLE `lesson_completions` (
 --
 
 INSERT INTO `lesson_completions` (`id`, `userID`, `lessonID`, `completedAt`) VALUES
-(10, 2, 2, '2026-01-12 02:50:46');
+(16, 2, 2, '2026-01-12 04:25:08');
 
 -- --------------------------------------------------------
 
@@ -316,8 +316,8 @@ CREATE TABLE `quiz_questions` (
 --
 
 INSERT INTO `quiz_questions` (`questionID`, `quizID`, `question`, `option1`, `option2`, `option3`, `option4`, `correct_option`, `createdAt`) VALUES
-(1, 1, 'ano ang pangalan ng website', 'Learnexus', 'kdhhd', 'sdhs', 'hdbxasd', 1, '2026-01-11 17:56:43'),
-(2, 1, 'Cute ka ba?', 'oo', 'syempre', 'yes', 'naman', 1, '2026-01-11 17:57:14');
+(3, 1, 'tulog kana?', 'yes', 'no', 'maybe', 'pake mo', 0, '2026-01-11 19:38:48'),
+(4, 1, 'Ye_?', 's', 'b', 'd', 'p', 0, '2026-01-11 20:14:49');
 
 -- --------------------------------------------------------
 
@@ -334,8 +334,21 @@ CREATE TABLE `quiz_results` (
   `totalPoints` int(11) DEFAULT NULL,
   `percentage` decimal(5,2) DEFAULT NULL,
   `status` enum('passed','failed','pending') DEFAULT 'pending',
-  `submittedAt` timestamp NOT NULL DEFAULT current_timestamp()
+  `submittedAt` timestamp NOT NULL DEFAULT current_timestamp(),
+  `passed` tinyint(1) NOT NULL DEFAULT 0,
+  `takenAt` datetime NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `quiz_results`
+--
+
+INSERT INTO `quiz_results` (`resultID`, `enrollmentID`, `userID`, `quizID`, `score`, `totalPoints`, `percentage`, `status`, `submittedAt`, `passed`, `takenAt`) VALUES
+(3, 1, 2, 1, 0.00, NULL, NULL, 'pending', '2026-01-11 20:05:46', 0, '2026-01-12 04:05:46'),
+(4, 1, 2, 1, 0.00, NULL, NULL, 'pending', '2026-01-11 20:07:45', 0, '2026-01-12 04:07:45'),
+(5, 1, 2, 1, 0.00, NULL, NULL, 'pending', '2026-01-11 20:15:33', 0, '2026-01-12 04:15:33'),
+(6, 1, 2, 1, 0.00, NULL, NULL, 'pending', '2026-01-11 20:22:12', 0, '2026-01-12 04:22:12'),
+(7, 1, 2, 1, 0.00, NULL, NULL, 'pending', '2026-01-11 20:22:25', 0, '2026-01-12 04:22:25');
 
 -- --------------------------------------------------------
 
@@ -619,7 +632,7 @@ ALTER TABLE `lessons`
 -- AUTO_INCREMENT for table `lesson_completions`
 --
 ALTER TABLE `lesson_completions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- AUTO_INCREMENT for table `modules`
@@ -649,13 +662,13 @@ ALTER TABLE `quizzes`
 -- AUTO_INCREMENT for table `quiz_questions`
 --
 ALTER TABLE `quiz_questions`
-  MODIFY `questionID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `questionID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `quiz_results`
 --
 ALTER TABLE `quiz_results`
-  MODIFY `resultID` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `resultID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `sms_feedback`

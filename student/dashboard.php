@@ -12,14 +12,36 @@ $stmt = $conn->prepare("SELECT avatar FROM users WHERE userID = ?");
 $stmt->execute([$userID]);
 $userAvatar = $stmt->fetchColumn();
 
-
-// Get courses in progress
+// Get courses in progress WITH LATEST QUIZ STATUS (no duplicates)
 $stmt = $conn->prepare("
-    SELECT c.*, e.progressPercentage, e.enrolledAt, e.status,
-           CONCAT(u.firstName, ' ', u.lastName) as instructorName
+    SELECT c.*, 
+           e.progressPercentage, 
+           e.enrolledAt, 
+           e.status,
+           e.enrollmentID,
+           CONCAT(u.firstName, ' ', u.lastName) as instructorName,
+           q.quizID,
+           q.title as quizTitle,
+           latest_qr.resultID,
+           latest_qr.passed,
+           latest_qr.percentage as quizScore,
+           latest_qr.status as quizStatus,
+           latest_qr.takenAt
     FROM enrollments e
     JOIN courses c ON e.courseID = c.courseID
     JOIN users u ON c.teacherID = u.userID
+    LEFT JOIN quizzes q ON q.courseID = c.courseID
+    LEFT JOIN (
+        SELECT qr1.*
+        FROM quiz_results qr1
+        INNER JOIN (
+            SELECT quizID, userID, MAX(takenAt) as maxTakenAt
+            FROM quiz_results
+            GROUP BY quizID, userID
+        ) qr2 ON qr1.quizID = qr2.quizID 
+              AND qr1.userID = qr2.userID 
+              AND qr1.takenAt = qr2.maxTakenAt
+    ) latest_qr ON latest_qr.quizID = q.quizID AND latest_qr.userID = e.userID
     WHERE e.userID = ? AND e.status = 'active'
     ORDER BY e.enrolledAt DESC
     LIMIT 3
@@ -45,13 +67,11 @@ $stmt = $conn->prepare("
 $stmt->execute([$userID]);
 $certificatesCount = $stmt->fetch()['count'];
 
-// Calculate weekly learning goal (80% hardcoded for now)
-$weeklyGoalPercentage = 80;
-
 $page_title = "Dashboard - Learnexus";
+
 // Array of student motivational phrases
 $studentMotivations = [
-    "Keep learning—you’re building a brighter future!",
+    "Keep learning—you're building a brighter future!",
     "Every study session brings you closer to success!",
     "Mistakes are proof that you are trying. Keep going!",
     "Knowledge is your superpower. Use it wisely!",
@@ -63,10 +83,8 @@ $studentMotivations = [
     "Your effort today shapes your success tomorrow!"
 ];
 
-// Pick a phrase for today based on the day of the year
-$dayOfYear = date('z'); // 0-365
+$dayOfYear = date('z');
 $dailyMotivationStudent = $studentMotivations[$dayOfYear % count($studentMotivations)];
-
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -200,25 +218,24 @@ $dailyMotivationStudent = $studentMotivations[$dayOfYear % count($studentMotivat
             gap: 10px;
         }
         
-       .user-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    font-weight: 600;
-}
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+        }
 
-.user-avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
         
         .welcome-banner {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -233,12 +250,6 @@ $dailyMotivationStudent = $studentMotivations[$dayOfYear % count($studentMotivat
             font-size: 32px;
             font-weight: 700;
             margin-bottom: 10px;
-        }
-        
-        .welcome-banner p {
-            font-size: 16px;
-            opacity: 0.95;
-            margin: 0;
         }
         
         .stats-container {
@@ -345,6 +356,34 @@ $dailyMotivationStudent = $studentMotivations[$dayOfYear % count($studentMotivat
             color: #333;
         }
         
+        .quiz-status-badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .quiz-status-badge.passed {
+            background: rgba(76, 175, 80, 0.95);
+            color: white;
+        }
+        
+        .quiz-status-badge.failed {
+            background: rgba(244, 67, 54, 0.95);
+            color: white;
+        }
+        
+        .quiz-status-badge.pending {
+            background: rgba(255, 152, 0, 0.95);
+            color: white;
+        }
+        
         .course-body {
             padding: 20px;
         }
@@ -367,7 +406,30 @@ $dailyMotivationStudent = $studentMotivations[$dayOfYear % count($studentMotivat
         .course-instructor {
             font-size: 13px;
             color: #666;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
+        }
+        
+        .quiz-info {
+            background: #f8f9fa;
+            padding: 10px 12px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            font-size: 12px;
+        }
+        
+        .quiz-info.passed {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        
+        .quiz-info.failed {
+            background: #ffebee;
+            color: #c62828;
+        }
+        
+        .quiz-info strong {
+            display: block;
+            margin-bottom: 4px;
         }
         
         .progress {
@@ -396,6 +458,33 @@ $dailyMotivationStudent = $studentMotivations[$dayOfYear % count($studentMotivat
         .btn-resume:hover {
             background: #1565c0;
             color: white;
+        }
+        
+        .btn-retake {
+            background: #ff9800;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 500;
+            width: 100%;
+            transition: background 0.2s;
+        }
+        
+        .btn-retake:hover {
+            background: #f57c00;
+            color: white;
+        }
+        
+        .btn-disabled {
+            background: #ccc;
+            color: #666;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 500;
+            width: 100%;
+            cursor: not-allowed;
         }
         
         .logout-btn {
@@ -462,31 +551,29 @@ $dailyMotivationStudent = $studentMotivations[$dayOfYear % count($studentMotivat
                 <input type="text" placeholder="Search for courses, assignments...">
             </div>
             
-           <div class="user-section">
-    <div class="notification-icon">
-        <i class="bi bi-bell"></i>
-        <span class="notification-badge">3</span>
-    </div>
-    
-    <div class="user-info" onclick="window.location.href='settings.php'" style="cursor: pointer;">
-        <span style="font-weight: 600; color: #333;"><?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?></span>
-        <div class="user-avatar">
-    <?php if (!empty($userAvatar) && file_exists($userAvatar)): ?>
-        <img src="<?php echo htmlspecialchars($userAvatar); ?>" alt="Avatar">
-    <?php else: ?>
-        <?php echo strtoupper(substr($_SESSION['first_name'], 0, 1)); ?>
-    <?php endif; ?>
-</div>
-
-    </div>
-</div>
+            <div class="user-section">
+                <div class="notification-icon">
+                    <i class="bi bi-bell"></i>
+                    <span class="notification-badge">3</span>
+                </div>
+                
+                <div class="user-info" onclick="window.location.href='settings.php'" style="cursor: pointer;">
+                    <span style="font-weight: 600; color: #333;"><?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?></span>
+                    <div class="user-avatar">
+                        <?php if (!empty($userAvatar) && file_exists($userAvatar)): ?>
+                            <img src="<?php echo htmlspecialchars($userAvatar); ?>" alt="Avatar">
+                        <?php else: ?>
+                            <?php echo strtoupper(substr($_SESSION['first_name'], 0, 1)); ?>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Welcome Banner -->
         <div class="welcome-banner">
-    <h2><?php echo $dailyMotivationStudent; ?></h2>
-</div>
-
+            <h2><?php echo $dailyMotivationStudent; ?></h2>
+        </div>
 
         <!-- Stats Cards -->
         <div class="stats-container">
@@ -523,18 +610,61 @@ $dailyMotivationStudent = $studentMotivations[$dayOfYear % count($studentMotivat
                     <div class="course-card">
                         <div class="course-image">
                             <span class="course-progress-badge"><?php echo round($course['progressPercentage']); ?>%</span>
-                            // photo
+                            
+                            <?php if ($course['resultID']): ?>
+                                <?php if ($course['passed'] == 1): ?>
+                                    <span class="quiz-status-badge passed">
+                                        <i class="bi bi-check-circle-fill"></i> Passed
+                                    </span>
+                                <?php elseif ($course['quizStatus'] == 'failed'): ?>
+                                    <span class="quiz-status-badge failed">
+                                        <i class="bi bi-x-circle-fill"></i> Failed
+                                    </span>
+                                <?php else: ?>
+                                    <span class="quiz-status-badge pending">
+                                        <i class="bi bi-hourglass-split"></i> Pending
+                                    </span>
+                                <?php endif; ?>
+                            <?php endif; ?>
+                            
+                            <span>Course Image</span>
                         </div>
                         <div class="course-body">
-                            <div class="course-category"><?php echo htmlspecialchars($course['category'] ?? 'Design'); ?></div>
+                            <div class="course-category"><?php echo htmlspecialchars($course['category'] ?? 'General'); ?></div>
                             <div class="course-title"><?php echo htmlspecialchars($course['title']); ?></div>
                             <div class="course-instructor">Dr. <?php echo htmlspecialchars($course['instructorName']); ?></div>
+                            
+                            <?php if ($course['resultID']): ?>
+                                <?php if ($course['passed'] == 1): ?>
+                                    <div class="quiz-info passed">
+                                        <strong><i class="bi bi-trophy-fill"></i> Quiz Passed!</strong>
+                                        Score: <?php echo number_format($course['quizScore'], 1); ?>% - You can continue to the next section
+                                    </div>
+                                <?php elseif ($course['quizStatus'] == 'failed'): ?>
+                                    <div class="quiz-info failed">
+                                        <strong><i class="bi bi-exclamation-triangle-fill"></i> Quiz Failed</strong>
+                                        Score: <?php echo number_format($course['quizScore'], 1); ?>% - Payment required to retake
+                                    </div>
+                                <?php endif; ?>
+                            <?php endif; ?>
+                            
                             <div class="progress">
                                 <div class="progress-bar" role="progressbar" style="width: <?php echo $course['progressPercentage']; ?>%"></div>
                             </div>
-                            <button class="btn btn-resume" onclick="window.location.href='course_view.php?id=<?php echo $course['courseID']; ?>'">
-                                Resume
-                            </button>
+                            
+                            <?php if ($course['resultID'] && $course['quizStatus'] == 'failed'): ?>
+                                <button class="btn btn-retake" onclick="window.location.href='retake_course.php?id=<?php echo $course['courseID']; ?>'">
+                                    <i class="bi bi-credit-card"></i> Pay to Retake
+                                </button>
+                            <?php elseif ($course['passed'] == 1): ?>
+                                <button class="btn btn-resume" onclick="window.location.href='view_certificate.php?courseID=<?php echo $course['courseID']; ?>'">
+                                    <i class="bi bi-award"></i> View Certificate
+                                </button>
+                            <?php else: ?>
+                                <button class="btn btn-resume" onclick="window.location.href='course_view.php?id=<?php echo $course['courseID']; ?>'">
+                                    <i class="bi bi-play-circle"></i> Resume
+                                </button>
+                            <?php endif; ?>
                         </div>
                     </div>
                 <?php endforeach; ?>
