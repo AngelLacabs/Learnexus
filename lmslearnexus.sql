@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 12, 2026 at 02:15 AM
+-- Generation Time: Jan 12, 2026 at 07:33 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -69,6 +69,13 @@ CREATE TABLE `certificates` (
   `courseTitle` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `certificates`
+--
+
+INSERT INTO `certificates` (`certificateID`, `enrollmentID`, `courseID`, `userID`, `certificateUUID`, `issuedAt`, `instructorName`, `studentName`, `courseTitle`) VALUES
+(1, 1, 2, 2, 'a259ccd4-8e2c-4dda-bc9d-7cbc80a314a1', '2026-01-12 06:04:17', 'Andrew Coral', 'Andrew B. Coral', 'Data Administration');
+
 -- --------------------------------------------------------
 
 --
@@ -121,7 +128,9 @@ CREATE TABLE `courses` (
 --
 
 INSERT INTO `courses` (`courseID`, `teacherID`, `title`, `description`, `price`, `category`, `status`, `passingScore`, `createdAt`) VALUES
-(2, 3, 'Data Administration', '', 100.00, 'Programming', 'published', 70, '2026-01-11 10:21:25');
+(2, 3, 'Data Administration', '', 100.00, 'Programming', 'published', 70, '2026-01-11 10:21:25'),
+(3, 3, 'SAD', '', 50.00, 'Design', 'draft', 70, '2026-01-12 06:18:05'),
+(4, 3, 'RIPH', '', 10.00, 'Programming', 'published', 70, '2026-01-12 06:21:37');
 
 -- --------------------------------------------------------
 
@@ -147,7 +156,8 @@ INSERT INTO `email_otp` (`emailOtpID`, `email`, `otpCode`, `userID`, `expiresAt`
 (1, 'angelicalacaba0660@gmail.com', '427507', NULL, '2026-01-09 10:40:05', 0, '2026-01-09 17:30:05'),
 (8, 'coralandrew7@gmail.com', '620305', NULL, '2026-01-10 18:21:38', 0, '2026-01-11 01:11:38'),
 (10, 'gelicakes.rodrigo66@gmail.com', '858689', NULL, '2026-01-11 00:49:05', 0, '2026-01-11 07:39:05'),
-(11, 'paduakim085@gmail.com', '628521', NULL, '2026-01-11 01:22:24', 0, '2026-01-11 08:12:24');
+(11, 'paduakim085@gmail.com', '628521', NULL, '2026-01-11 01:22:24', 0, '2026-01-11 08:12:24'),
+(12, 'marasigan.juliamae@gmail.com', '426840', NULL, '2026-01-11 23:40:54', 0, '2026-01-12 06:30:54');
 
 -- --------------------------------------------------------
 
@@ -171,7 +181,7 @@ CREATE TABLE `enrollments` (
 --
 
 INSERT INTO `enrollments` (`enrollmentID`, `userID`, `courseID`, `paymentID`, `progressPercentage`, `enrolledAt`, `completedAt`, `status`) VALUES
-(1, 2, 2, 3, 100.00, '2026-01-11 15:32:17', NULL, 'active');
+(1, 2, 2, 3, 100.00, '2026-01-11 15:32:17', '2026-01-12 06:00:38', 'completed');
 
 -- --------------------------------------------------------
 
@@ -192,7 +202,9 @@ CREATE TABLE `lessons` (
 --
 
 INSERT INTO `lessons` (`lessonID`, `courseID`, `title`, `filename`, `uploadedAt`) VALUES
-(2, 2, 'Part 1', 'uploads/lessons/6963b390b09cf_Self Intro.pdf', '2026-01-11 14:28:32');
+(2, 2, 'Part 1', 'uploads/lessons/6963b390b09cf_Self Intro.pdf', '2026-01-11 14:28:32'),
+(3, 3, 'SAD - Intro Lesson', 'uploads/lessons/6964921d42278_FINALIZING-LMS.drawio.pdf', '2026-01-12 06:18:05'),
+(4, 4, 'RIPH - Intro Lesson', 'uploads/lessons/696492f1ec86a_myDB.pdf', '2026-01-12 06:21:37');
 
 -- --------------------------------------------------------
 
@@ -212,7 +224,7 @@ CREATE TABLE `lesson_completions` (
 --
 
 INSERT INTO `lesson_completions` (`id`, `userID`, `lessonID`, `completedAt`) VALUES
-(16, 2, 2, '2026-01-12 04:25:08');
+(22, 2, 2, '2026-01-12 14:00:29');
 
 -- --------------------------------------------------------
 
@@ -252,7 +264,12 @@ CREATE TABLE `payments` (
 --
 
 INSERT INTO `payments` (`paymentID`, `enrollmentID`, `userID`, `courseID`, `amount`, `transactionReference`, `status`, `paymentDate`, `createdAt`) VALUES
-(3, 1, 2, 2, 100.00, '3PD75966M49920535', 'completed', '2026-01-11 15:32:17', '2026-01-11 15:32:17');
+(3, 1, 2, 2, 100.00, '3PD75966M49920535', 'completed', '2026-01-11 15:32:17', '2026-01-11 15:32:17'),
+(4, 1, 2, 2, 100.00, '95P06104YJ299842S', 'completed', '2026-01-12 05:46:48', '2026-01-12 05:46:48'),
+(5, 1, 2, 2, 100.00, '65648183083769645', 'completed', '2026-01-12 05:52:49', '2026-01-12 05:52:49'),
+(6, 1, 2, 2, 100.00, '17P05731LP463472L', 'completed', '2026-01-12 05:55:35', '2026-01-12 05:55:35'),
+(7, 1, 2, 2, 100.00, '2MW68986YN407984D', 'completed', '2026-01-12 05:57:50', '2026-01-12 05:57:50'),
+(8, 1, 2, 2, 100.00, '5VS99243D90050401', 'completed', '2026-01-12 06:00:23', '2026-01-12 06:00:23');
 
 -- --------------------------------------------------------
 
@@ -344,11 +361,7 @@ CREATE TABLE `quiz_results` (
 --
 
 INSERT INTO `quiz_results` (`resultID`, `enrollmentID`, `userID`, `quizID`, `score`, `totalPoints`, `percentage`, `status`, `submittedAt`, `passed`, `takenAt`) VALUES
-(3, 1, 2, 1, 0.00, NULL, NULL, 'pending', '2026-01-11 20:05:46', 0, '2026-01-12 04:05:46'),
-(4, 1, 2, 1, 0.00, NULL, NULL, 'pending', '2026-01-11 20:07:45', 0, '2026-01-12 04:07:45'),
-(5, 1, 2, 1, 0.00, NULL, NULL, 'pending', '2026-01-11 20:15:33', 0, '2026-01-12 04:15:33'),
-(6, 1, 2, 1, 0.00, NULL, NULL, 'pending', '2026-01-11 20:22:12', 0, '2026-01-12 04:22:12'),
-(7, 1, 2, 1, 0.00, NULL, NULL, 'pending', '2026-01-11 20:22:25', 0, '2026-01-12 04:22:25');
+(12, 1, 2, 1, 2.00, NULL, 100.00, 'passed', '2026-01-12 06:00:38', 1, '2026-01-12 14:00:38');
 
 -- --------------------------------------------------------
 
@@ -384,7 +397,8 @@ CREATE TABLE `sms_otp` (
 --
 
 INSERT INTO `sms_otp` (`otpID`, `phone`, `otpCode`, `expiresAt`, `verified`, `createdAt`) VALUES
-(1, '09661308611', '742565', '2026-01-11 01:22:34', 0, '2026-01-11 08:12:34');
+(1, '09661308611', '742565', '2026-01-11 01:22:34', 0, '2026-01-11 08:12:34'),
+(2, '09387450528', '942507', '2026-01-11 23:41:04', 0, '2026-01-12 06:31:04');
 
 -- --------------------------------------------------------
 
@@ -416,7 +430,8 @@ CREATE TABLE `users` (
 
 INSERT INTO `users` (`userID`, `email`, `passwordHash`, `firstName`, `lastName`, `middleInitial`, `phone`, `avatar`, `phoneVerified`, `emailVerified`, `role`, `status`, `createdAt`, `studentNumber`, `teacherNumber`) VALUES
 (2, 'coralandrew7@gmail.com', '$2y$10$El2k8n20aI0h69tNIVHfaOVIZESP58WFkO4lbrh2QypLPLwzSZ6ia', 'Andrew', 'Coral', 'B', '09661308611', '../uploads/avatars/avatar_2_1768096756.jpg', 1, 1, 'student', 'active', '2026-01-11 01:14:31', '2023-00361-ST-0', NULL),
-(3, 'gelicakes.rodrigo66@gmail.com', '$2y$10$3AcItDmydOTghw1zXATUXuDvmVMYh1/9bcUdgLP7CMuV9m6AvtPm6', 'Andrew', 'Coral', 'B', '09306906952', '../uploads/avatars/avatar_3_1768120349.png', 1, 1, 'instructor', 'active', '2026-01-11 07:39:32', NULL, '123456789');
+(3, 'gelicakes.rodrigo66@gmail.com', '$2y$10$3AcItDmydOTghw1zXATUXuDvmVMYh1/9bcUdgLP7CMuV9m6AvtPm6', 'Andrew', 'Coral', 'B', '09306906952', '../uploads/avatars/avatar_3_1768120349.png', 1, 1, 'instructor', 'active', '2026-01-11 07:39:32', NULL, '123456789'),
+(4, 'marasigan.juliamae@gmail.com', '$2y$10$IhPbMcwZggqLiRfI8/0TZOPLcGhNtIa1XeQaHdGHlviGz4L6tQW8K', 'Julia', 'Marasigan', '', '09387450528', NULL, 1, 1, 'student', 'active', '2026-01-12 06:31:41', 'STU-007', NULL);
 
 -- --------------------------------------------------------
 
@@ -590,7 +605,7 @@ ALTER TABLE `vouchers`
 -- AUTO_INCREMENT for table `certificates`
 --
 ALTER TABLE `certificates`
-  MODIFY `certificateID` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `certificateID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `choices`
@@ -608,13 +623,13 @@ ALTER TABLE `contents`
 -- AUTO_INCREMENT for table `courses`
 --
 ALTER TABLE `courses`
-  MODIFY `courseID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `courseID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `email_otp`
 --
 ALTER TABLE `email_otp`
-  MODIFY `emailOtpID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `emailOtpID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `enrollments`
@@ -626,13 +641,13 @@ ALTER TABLE `enrollments`
 -- AUTO_INCREMENT for table `lessons`
 --
 ALTER TABLE `lessons`
-  MODIFY `lessonID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `lessonID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `lesson_completions`
 --
 ALTER TABLE `lesson_completions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 
 --
 -- AUTO_INCREMENT for table `modules`
@@ -644,7 +659,7 @@ ALTER TABLE `modules`
 -- AUTO_INCREMENT for table `payments`
 --
 ALTER TABLE `payments`
-  MODIFY `paymentID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `paymentID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `questions`
@@ -668,7 +683,7 @@ ALTER TABLE `quiz_questions`
 -- AUTO_INCREMENT for table `quiz_results`
 --
 ALTER TABLE `quiz_results`
-  MODIFY `resultID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `resultID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `sms_feedback`
@@ -680,13 +695,13 @@ ALTER TABLE `sms_feedback`
 -- AUTO_INCREMENT for table `sms_otp`
 --
 ALTER TABLE `sms_otp`
-  MODIFY `otpID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `otpID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `userID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `userID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `vouchers`
