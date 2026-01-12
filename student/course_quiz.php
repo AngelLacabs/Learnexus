@@ -29,6 +29,15 @@ if ($previousResult && $previousResult['passed'] == 0) {
     exit();
 }
 
+// Get course info
+$stmt = $conn->prepare("SELECT title, passingScore FROM courses WHERE courseID = ?");
+$stmt->execute([$courseID]);
+$course = $stmt->fetch(PDO::FETCH_ASSOC);
+
+if (!$course) {
+    die("Course not found");
+}
+
 // Get quiz for course
 $stmt = $conn->prepare("SELECT * FROM quizzes WHERE courseID = ?");
 $stmt->execute([$courseID]);
@@ -40,10 +49,14 @@ if (!$quiz) {
 
 $quizID = $quiz['quizID'];
 
-// Fetch quiz questions
+// Fetch quiz questions (matching teacher's format)
 $stmt = $conn->prepare("SELECT * FROM quiz_questions WHERE quizID = ? ORDER BY questionID ASC");
 $stmt->execute([$quizID]);
 $questions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+if (empty($questions)) {
+    die("<h3>No questions available for this quiz yet.</h3>");
+}
 
 // Check if student already took the quiz
 $stmt = $conn->prepare("
@@ -64,27 +77,9 @@ $passed = 0;
 if ($submitted) {
     $score = $existingResult['score'];
     $passed = $existingResult['passed'];
-
-    // Load student's answers from results table if you store them separately
-    foreach ($questions as $q) {
-        $qid = $q['questionID'];
-        $correct = strtoupper($q['correct_option']);
-        $studentAnswer = ''; // You may need to fetch from a saved column if storing answers
-        $isCorrect = ($studentAnswer === $correct);
-
-        $results[] = [
-            'question' => $q['question'],
-            'options' => [
-                'A' => $q['option1'],
-                'B' => $q['option2'],
-                'C' => $q['option3'],
-                'D' => $q['option4']
-            ],
-            'correct' => $correct,
-            'student' => $studentAnswer,
-            'isCorrect' => $isCorrect
-        ];
-    }
+    
+    // Reconstruct results for review (if you stored answers, retrieve them)
+    // For now, we'll just show the questions
 }
 
 // Handle new submission if not already submitted
@@ -98,30 +93,31 @@ if (!$submitted && $_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$enrollment) die("You are not enrolled in this course.");
     $enrollmentID = $enrollment['enrollmentID'];
 
+    // Calculate score
     foreach ($questions as $q) {
         $qid = $q['questionID'];
-        $correct = strtoupper($q['correct_option']);
-        $studentAnswer = strtoupper($answers[$qid] ?? '');
-        $isCorrect = ($studentAnswer === $correct);
-
+        $correct = (int)$q['correct_option']; // 0=A, 1=B, 2=C, 3=D
+        $studentAnswer = (int)($answers[$qid] ?? -1);
+        
+        if ($studentAnswer === $correct) {
+            $score++;
+        }
+        
         $results[] = [
             'question' => $q['question'],
             'options' => [
-                'A' => $q['option1'],
-                'B' => $q['option2'],
-                'C' => $q['option3'],
-                'D' => $q['option4']
+                $q['option1'],
+                $q['option2'],
+                $q['option3'],
+                $q['option4']
             ],
             'correct' => $correct,
-            'student' => $studentAnswer,
-            'isCorrect' => $isCorrect
+            'student' => $studentAnswer
         ];
-
-        if ($isCorrect) $score++;
     }
 
     $percentage = ($total > 0) ? ($score / $total * 100) : 0;
-    $passed = ($percentage >= 70) ? 1 : 0;
+    $passed = ($percentage >= ($course['passingScore'] ?? 70)) ? 1 : 0;
     $quizStatus = $passed ? 'passed' : 'failed';
     $submitted = true;
 
@@ -138,21 +134,31 @@ if (!$submitted && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->execute([$enrollmentID]);
     }
 }
+
+// Helper function to convert option index to letter
+function getOptionLetter($index) {
+    return chr(65 + $index); // 0=A, 1=B, 2=C, 3=D
+}
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($quiz['title']) ?> - Quiz</title>
+    <link rel="icon" type="image/png" href="../images/Learnexus.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
         body {
             background-color: #f8f9fa;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
         .quiz-container {
             max-width: 900px;
-            margin: 0 auto;
+            margin: 40px auto;
+            padding: 0 20px;
         }
         .question-card {
             background: white;
@@ -186,6 +192,25 @@ if (!$submitted && $_SERVER['REQUEST_METHOD'] === 'POST') {
             color: #721c24;
             border: 2px solid #f5c6cb;
         }
+        .option-label {
+            display: block;
+            padding: 15px 20px;
+            margin-bottom: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .option-label:hover {
+            border-color: #667eea;
+            background: #f8f9fa;
+        }
+        .option-label input[type="radio"] {
+            margin-right: 10px;
+        }
+        .option-label input[type="radio"]:checked ~ span {
+            font-weight: 600;
+        }
         .option-correct {
             background: #d4edda !important;
             border-color: #c3e6cb !important;
@@ -194,11 +219,23 @@ if (!$submitted && $_SERVER['REQUEST_METHOD'] === 'POST') {
             background: #f8d7da !important;
             border-color: #f5c6cb !important;
         }
+        .question-number {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 32px;
+            font-weight: 600;
+            margin-right: 10px;
+        }
     </style>
 </head>
 <body>
 
-<div class="container mt-5 quiz-container">
+<div class="quiz-container">
 
     <a href="course_learn.php?id=<?= $courseID ?>" class="btn btn-secondary mb-3">
         <i class="bi bi-arrow-left"></i> Back to Course
@@ -206,84 +243,99 @@ if (!$submitted && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <div class="quiz-header">
         <h2><i class="bi bi-patch-question"></i> <?= htmlspecialchars($quiz['title']) ?></h2>
+        <p class="mb-0"><?= htmlspecialchars($course['title']) ?></p>
         <?php if (!$submitted): ?>
-            <p class="mb-0">Answer all questions below. Passing score: 70%</p>
+            <p class="mb-0 mt-2">
+                <i class="bi bi-info-circle"></i> Passing score: <?= $course['passingScore'] ?? 70 ?>% | 
+                Total questions: <?= $total ?>
+            </p>
         <?php endif; ?>
     </div>
 
     <?php if (!$submitted): ?>
+        <!-- QUIZ FORM -->
         <form method="POST">
             <?php foreach ($questions as $index => $q): ?>
                 <div class="question-card">
                     <p class="fw-bold mb-3">
-                        <span class="badge bg-primary me-2"><?= ($index + 1) ?></span>
+                        <span class="question-number"><?= ($index + 1) ?></span>
                         <?= htmlspecialchars($q['question']) ?>
                     </p>
+                    
                     <?php 
                     $options = [
-                        'A' => $q['option1'],
-                        'B' => $q['option2'],
-                        'C' => $q['option3'],
-                        'D' => $q['option4']
+                        $q['option1'],
+                        $q['option2'],
+                        $q['option3'],
+                        $q['option4']
                     ];
                     ?>
-                    <?php foreach ($options as $key => $value): ?>
-                        <div class="form-check mb-2">
-                            <input class="form-check-input" type="radio" name="answers[<?= $q['questionID'] ?>]" 
-                                   id="q<?= $q['questionID'] ?>_<?= $key ?>" value="<?= $key ?>" required>
-                            <label class="form-check-label" for="q<?= $q['questionID'] ?>_<?= $key ?>">
-                                <strong><?= $key ?>.</strong> <?= htmlspecialchars($value) ?>
-                            </label>
-                        </div>
+                    
+                    <?php foreach ($options as $optIndex => $optText): ?>
+                        <label class="option-label">
+                            <input type="radio" 
+                                   name="answers[<?= $q['questionID'] ?>]" 
+                                   value="<?= $optIndex ?>" 
+                                   required>
+                            <span><strong><?= getOptionLetter($optIndex) ?>.</strong> <?= htmlspecialchars($optText) ?></span>
+                        </label>
                     <?php endforeach; ?>
                 </div>
             <?php endforeach; ?>
+            
             <button type="submit" class="btn btn-primary btn-lg w-100">
                 <i class="bi bi-check-circle"></i> Submit Quiz
             </button>
         </form>
+        
     <?php else: ?>
+        <!-- RESULTS VIEW -->
         
         <?php if ($passed): ?>
             <div class="result-badge passed">
                 <i class="bi bi-check-circle-fill"></i> Congratulations! You Passed!
-                <div class="mt-2">Score: <?= round($score / $total * 100, 2) ?>%</div>
+                <div class="mt-2">Score: <?= $score ?>/<?= $total ?> (<?= round(($score/$total)*100, 2) ?>%)</div>
             </div>
         <?php else: ?>
             <div class="result-badge failed">
                 <i class="bi bi-x-circle-fill"></i> Quiz Failed
-                <div class="mt-2">Score: <?= round($score / $total * 100, 2) ?>%</div>
-                <div class="mt-2" style="font-size: 14px;">You need to pay to retake this course.</div>
+                <div class="mt-2">Score: <?= $score ?>/<?= $total ?> (<?= round(($score/$total)*100, 2) ?>%)</div>
+                <div class="mt-2" style="font-size: 14px;">Required: <?= $course['passingScore'] ?? 70 ?>% to pass</div>
             </div>
         <?php endif; ?>
 
         <h4 class="mt-4 mb-3">Review Your Answers</h4>
 
-        <?php foreach ($results as $index => $r): ?>
-            <div class="question-card">
-                <p class="fw-bold mb-3">
-                    <span class="badge bg-secondary me-2"><?= ($index + 1) ?></span>
-                    <?= htmlspecialchars($r['question']) ?>
-                </p>
-                <ul class="list-group">
-                    <?php foreach ($r['options'] as $key => $value): ?>
-                        <li class="list-group-item
-                            <?= $key === $r['correct'] ? 'option-correct' : '' ?>
-                            <?= $key === $r['student'] && !$r['isCorrect'] ? 'option-wrong' : '' ?>
+        <?php if (!empty($results)): ?>
+            <?php foreach ($results as $index => $r): ?>
+                <div class="question-card">
+                    <p class="fw-bold mb-3">
+                        <span class="question-number"><?= ($index + 1) ?></span>
+                        <?= htmlspecialchars($r['question']) ?>
+                    </p>
+                    
+                    <?php foreach ($r['options'] as $optIndex => $optText): ?>
+                        <div class="option-label
+                            <?= $optIndex === $r['correct'] ? 'option-correct' : '' ?>
+                            <?= $optIndex === $r['student'] && $r['student'] !== $r['correct'] ? 'option-wrong' : '' ?>
                         ">
-                            <strong><?= $key ?>.</strong> <?= htmlspecialchars($value) ?>
-                            <?php if ($key === $r['correct']): ?>
+                            <strong><?= getOptionLetter($optIndex) ?>.</strong> <?= htmlspecialchars($optText) ?>
+                            
+                            <?php if ($optIndex === $r['correct']): ?>
                                 <i class="bi bi-check-circle-fill text-success float-end"></i>
                             <?php endif; ?>
-                            <?php if ($key === $r['student'] && !$r['isCorrect']): ?>
+                            
+                            <?php if ($optIndex === $r['student'] && $r['student'] !== $r['correct']): ?>
                                 <i class="bi bi-x-circle-fill text-danger float-end"></i>
                                 <span class="badge bg-danger float-end me-2">Your Answer</span>
+                            <?php elseif ($optIndex === $r['student'] && $r['student'] === $r['correct']): ?>
+                                <span class="badge bg-success float-end me-2">Your Answer</span>
                             <?php endif; ?>
-                        </li>
+                        </div>
                     <?php endforeach; ?>
-                </ul>
-            </div>
-        <?php endforeach; ?>
+                </div>
+            <?php endforeach; ?>
+        <?php endif; ?>
 
         <!-- Action Buttons -->
         <div class="mt-4 d-grid gap-2">
