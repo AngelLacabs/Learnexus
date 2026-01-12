@@ -16,7 +16,9 @@ $searchQuery = $_GET['search'] ?? '';
 $sql = "
     SELECT c.*, 
            CONCAT(u.firstName, ' ', u.lastName) as instructorName,
-           u.avatar as instructorAvatar
+           u.avatar as instructorAvatar,
+           (SELECT COUNT(*) FROM enrollments WHERE courseID = c.courseID) as enrollmentCount,
+           (SELECT COUNT(*) FROM lessons WHERE courseID = c.courseID) as lessonCount
     FROM courses c
     JOIN users u ON c.teacherID = u.userID
     WHERE c.status = 'published'
@@ -24,7 +26,6 @@ $sql = "
         SELECT courseID FROM enrollments WHERE userID = ?
     )
 ";
-
 
 if (!empty($searchQuery)) {
     $sql .= " AND (c.title LIKE ? OR c.description LIKE ? OR c.category LIKE ?)";
@@ -44,6 +45,11 @@ foreach ($courses as $course) {
     $category = $course['category'] ?? 'Other';
     $coursesByCategory[$category][] = $course;
 }
+
+// Get total published courses count for debugging
+$stmt = $conn->prepare("SELECT COUNT(*) as total FROM courses WHERE status = 'published'");
+$stmt->execute();
+$totalPublished = $stmt->fetch()['total'];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -70,12 +76,12 @@ foreach ($courses as $course) {
         }
         
         .brand {
-    font-size: 20px;
-    font-weight: 700;
-    color: #1a73e8;
-    cursor: pointer;
-}
-
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a73e8;
+            cursor: pointer;
+            text-decoration: none;
+        }
         
         .nav-menu {
             display: flex;
@@ -149,10 +155,11 @@ foreach ($courses as $course) {
             margin-bottom: 15px;
         }
         
-        .category-badge.design { background: #e3f2fd; color: #1976d2; }
-        .category-badge.development { background: #e8f5e9; color: #388e3c; }
+        .category-badge.programming { background: #e3f2fd; color: #1976d2; }
+        .category-badge.design { background: #e8f5e9; color: #388e3c; }
         .category-badge.business { background: #fce4ec; color: #c2185b; }
         .category-badge.marketing { background: #fff3e0; color: #f57c00; }
+        .category-badge.other { background: #f3e5f5; color: #7b1fa2; }
         
         .course-grid {
             display: grid;
@@ -183,6 +190,19 @@ foreach ($courses as $course) {
             align-items: center;
             justify-content: center;
             color: #999;
+            position: relative;
+        }
+        
+        .lesson-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(255,255,255,0.95);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #333;
         }
         
         .course-body {
@@ -225,6 +245,13 @@ foreach ($courses as $course) {
             height: 24px;
             background: #e0e0e0;
             border-radius: 50%;
+            overflow: hidden;
+        }
+        
+        .instructor-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
         
         .course-price {
@@ -255,37 +282,29 @@ foreach ($courses as $course) {
             background: #e0e0e0;
         }
         
-        .pagination {
-            display: flex;
-            justify-content: center;
-            gap: 5px;
-            margin-top: 40px;
+        .enrollment-count {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 10px;
         }
         
-        .pagination button {
-            width: 36px;
-            height: 36px;
-            border: 1px solid #e0e0e0;
-            background: white;
-            border-radius: 6px;
-            cursor: pointer;
+        .category-header {
+            margin: 40px 0 20px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e0e0e0;
         }
         
-        .pagination button.active {
-            background: #1e88e5;
-            color: white;
-            border-color: #1e88e5;
+        .category-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
         }
-        
     </style>
 </head>
 <body>
     <!-- Top Navigation -->
     <div class="top-nav">
-    <a href="dashboard.php" class="brand" style="text-decoration: none;">
-        LEARNEXUS
-    </a>
-
+        <a href="dashboard.php" class="brand">LEARNEXUS</a>
         
         <div class="nav-menu">
             <a href="dashboard.php" class="nav-link">Dashboard</a>
@@ -295,90 +314,103 @@ foreach ($courses as $course) {
         </div>
         
         <div class="user-section">
-    <i class="bi bi-bell" style="font-size: 22px; color: #666; cursor: pointer;"></i>
-
-    <a href="settings.php" style="text-decoration: none;">
-        <span style="font-weight: 600; color: #333; cursor: pointer;">
-            <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>
-        </span>
-    </a>
-</div>
-
+            <i class="bi bi-bell" style="font-size: 22px; color: #666; cursor: pointer;"></i>
+            <a href="settings.php" style="text-decoration: none;">
+                <span style="font-weight: 600; color: #333; cursor: pointer;">
+                    <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>
+                </span>
+            </a>
+        </div>
     </div>
 
     <!-- Main Content -->
     <div class="container-main">
         <div class="page-header">
             <h1>Find your next skill</h1>
-            <p class="text-muted">Explore catalog courses designed for you.</p>
+            <p class="text-muted">Explore <?php echo $totalPublished; ?> published courses designed for you.</p>
         </div>
 
         <!-- Search Box -->
         <form method="GET" class="search-box">
             <input type="text" name="search" placeholder="What do you want to learn today?" value="<?php echo htmlspecialchars($searchQuery); ?>">
-            <button type="submit">Search</button>
+            <button type="submit"><i class="bi bi-search"></i> Search</button>
         </form>
 
         <!-- Course Grid by Category -->
-        <?php foreach ($coursesByCategory as $category => $categoryCourses): ?>
-            <h3 style="margin-bottom: 20px; color: #333;"><?php echo htmlspecialchars($category); ?></h3>
-            
-            <div class="course-grid">
-                <?php foreach ($categoryCourses as $course): ?>
-                    <div class="course-card" onclick="window.location.href='course_details.php?id=<?php echo $course['courseID']; ?>'">
-                        <div class="course-image">
-                            // photo
-                        </div>
-                        <div class="course-body">
-                            <span class="category-badge <?php echo strtolower($category); ?>">
-                                <?php echo strtoupper($category); ?>
-                            </span>
-                            
-                            <div class="course-title"><?php echo htmlspecialchars($course['title']); ?></div>
-                            <div class="course-description"><?php echo htmlspecialchars($course['description']); ?></div>
-                            
-                            <div class="course-footer">
-                                <div class="instructor-info">
-                                    <div class="instructor-avatar">
-    <?php if (!empty($course['instructorAvatar']) && file_exists($course['instructorAvatar'])): ?>
-        <img src="<?php echo htmlspecialchars($course['instructorAvatar']); ?>" alt="Avatar" style="width:24px;height:24px;border-radius:50%;">
-    <?php endif; ?>
-</div>
-<span><?php echo htmlspecialchars($course['instructorName']); ?></span>
-
-                                </div>
-                                <div class="course-price <?php echo $course['price'] == 0 ? 'free' : ''; ?>">
-                                    <?php echo $course['price'] == 0 ? 'FREE' : '₱' . number_format($course['price'], 2); ?>
-                                </div>
+        <?php if (!empty($coursesByCategory)): ?>
+            <?php foreach ($coursesByCategory as $category => $categoryCourses): ?>
+                <div class="category-header">
+                    <h3 class="category-title"><?php echo htmlspecialchars($category); ?> (<?php echo count($categoryCourses); ?>)</h3>
+                </div>
+                
+                <div class="course-grid">
+                    <?php foreach ($categoryCourses as $course): ?>
+                        <div class="course-card" onclick="window.location.href='course_details.php?id=<?php echo $course['courseID']; ?>'">
+                            <div class="course-image">
+                                <?php if ($course['lessonCount'] > 0): ?>
+                                    <span class="lesson-badge">
+                                        <i class="bi bi-file-earmark-pdf"></i> <?php echo $course['lessonCount']; ?> Lessons
+                                    </span>
+                                <?php endif; ?>
+                                <i class="bi bi-book" style="font-size: 48px; color: #ccc;"></i>
                             </div>
-                            
-                            <button class="view-details-btn">View Details →</button>
+                            <div class="course-body">
+                                <span class="category-badge <?php echo strtolower($category); ?>">
+                                    <?php echo strtoupper($category); ?>
+                                </span>
+                                
+                                <div class="course-title"><?php echo htmlspecialchars($course['title']); ?></div>
+                                
+                                <?php if (!empty($course['description'])): ?>
+                                    <div class="course-description"><?php echo htmlspecialchars($course['description']); ?></div>
+                                <?php else: ?>
+                                    <div class="course-description text-muted">No description available</div>
+                                <?php endif; ?>
+                                
+                                <div class="enrollment-count">
+                                    <i class="bi bi-people"></i> <?php echo $course['enrollmentCount']; ?> students enrolled
+                                </div>
+                                
+                                <div class="course-footer">
+                                    <div class="instructor-info">
+                                        <div class="instructor-avatar">
+                                            <?php if (!empty($course['instructorAvatar']) && file_exists($course['instructorAvatar'])): ?>
+                                                <img src="<?php echo htmlspecialchars($course['instructorAvatar']); ?>" alt="Avatar">
+                                            <?php else: ?>
+                                                <div style="width:100%;height:100%;background:#e0e0e0;"></div>
+                                            <?php endif; ?>
+                                        </div>
+                                        <span><?php echo htmlspecialchars($course['instructorName']); ?></span>
+                                    </div>
+                                    <div class="course-price <?php echo $course['price'] == 0 ? 'free' : ''; ?>">
+                                        <?php echo $course['price'] == 0 ? 'FREE' : '₱' . number_format($course['price'], 2); ?>
+                                    </div>
+                                </div>
+                                
+                                <button class="view-details-btn">View Details →</button>
+                            </div>
                         </div>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-        <?php endforeach; ?>
-
-        <?php if (empty($courses)): ?>
+                    <?php endforeach; ?>
+                </div>
+            <?php endforeach; ?>
+        <?php else: ?>
             <div class="alert alert-info text-center">
                 <i class="bi bi-info-circle"></i>
                 <?php if (!empty($searchQuery)): ?>
                     No courses found matching "<?php echo htmlspecialchars($searchQuery); ?>". Try a different search term.
                 <?php else: ?>
-                    No courses available at the moment. Check back later!
+                    <strong>No published courses available yet.</strong><br>
+                    <small class="text-muted">
+                        Teachers need to create courses and set them to "Published" status for them to appear here.
+                        <?php if ($totalPublished > 0): ?>
+                            <br>There are <?php echo $totalPublished; ?> published courses, but you may already be enrolled in all of them.
+                        <?php endif; ?>
+                    </small>
                 <?php endif; ?>
             </div>
         <?php endif; ?>
-
-        <!-- Pagination -->
-        <div class="pagination">
-            <button>«</button>
-            <button class="active">1</button>
-            <button>2</button>
-            <button>3</button>
-            <button>4</button>
-            <button>»</button>
-        </div>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

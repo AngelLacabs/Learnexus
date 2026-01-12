@@ -41,6 +41,7 @@ $enrolledCourses = $stmt->fetchAll();
     <link rel="icon" type="image/png" href="../images/Learnexus.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         body {
             background-color: #f8f9fa;
@@ -107,6 +108,7 @@ $enrolledCourses = $stmt->fetchAll();
             box-shadow: 0 2px 8px rgba(0,0,0,0.05);
             margin-bottom: 20px;
             transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
         }
         
         .course-card:hover {
@@ -138,6 +140,7 @@ $enrolledCourses = $stmt->fetchAll();
             color: #666;
             font-size: 14px;
             margin-bottom: 15px;
+            flex-wrap: wrap;
         }
         
         .instructor-info {
@@ -198,6 +201,13 @@ $enrolledCourses = $stmt->fetchAll();
             color: #388e3c;
         }
         
+        .course-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-top: 15px;
+        }
+        
         .btn-continue {
             background: #1e88e5;
             color: white;
@@ -213,6 +223,44 @@ $enrolledCourses = $stmt->fetchAll();
         .btn-continue:hover {
             background: #1976d2;
             color: white;
+        }
+        
+        .btn-delete {
+            background: transparent;
+            color: #dc3545;
+            border: 1px solid #dc3545;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .btn-delete:hover {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-dropdown {
+            background: transparent;
+            border: 1px solid #e0e0e0;
+            color: #666;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-dropdown:hover {
+            background: #f8f9fa;
+            border-color: #ccc;
+        }
+        
+        .dropdown-menu {
+            min-width: 150px;
         }
         
         .empty-state {
@@ -247,9 +295,8 @@ $enrolledCourses = $stmt->fetchAll();
         
         <div class="nav-menu">
             <a href="dashboard.php" class="nav-link">Dashboard</a>
-            <a href="course_catalog.php" class="nav-link">Course Catalog</a>
+            <a href="browse_courses.php" class="nav-link">Course Catalog</a>
             <a href="my_courses.php" class="nav-link active">My Courses</a>
-            <a href="ai_tutor.php" class="nav-link">AI Tutor</a>
         </div>
         
         <div class="user-section">
@@ -271,10 +318,10 @@ $enrolledCourses = $stmt->fetchAll();
 
         <?php if (count($enrolledCourses) > 0): ?>
             <?php foreach ($enrolledCourses as $course): ?>
-                <div class="course-card">
+                <div class="course-card" id="course-<?php echo $course['enrollmentID']; ?>">
                     <div class="course-card-body">
                         <div class="course-header">
-                            <div>
+                            <div style="flex: 1;">
                                 <div class="course-title"><?php echo htmlspecialchars($course['title']); ?></div>
                                 <div class="course-meta">
                                     <div class="instructor-info">
@@ -293,7 +340,24 @@ $enrolledCourses = $stmt->fetchAll();
                                     <?php endif; ?>
                                 </div>
                             </div>
-                            <span class="badge badge-primary">In Progress</span>
+                            <div class="dropdown">
+                                <button class="btn-dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-three-dots-vertical"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li>
+                                        <a class="dropdown-item" href="course_content.php?id=<?php echo $course['courseID']; ?>">
+                                            <i class="bi bi-play-circle"></i> Continue Learning
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-item text-danger" href="#" onclick="confirmDelete(<?php echo $course['enrollmentID']; ?>, '<?php echo htmlspecialchars(addslashes($course['title'])); ?>'); return false;">
+                                            <i class="bi bi-trash"></i> Unenroll from Course
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
                         </div>
                         
                         <?php if (!empty($course['description'])): ?>
@@ -314,10 +378,13 @@ $enrolledCourses = $stmt->fetchAll();
                             </div>
                         </div>
                         
-                        <div class="mt-3">
-                            <a href="course_learn.php?id=<?php echo $course['courseID']; ?>" class="btn-continue">
+                        <div class="course-actions">
+                            <a href="course_content.php?id=<?php echo $course['courseID']; ?>" class="btn-continue">
                                 <?php echo $course['progressPercentage'] > 0 ? 'Continue Learning' : 'Start Course'; ?> →
                             </a>
+                            <button class="btn-delete" onclick="confirmDelete(<?php echo $course['enrollmentID']; ?>, '<?php echo htmlspecialchars(addslashes($course['title'])); ?>')">
+                                <i class="bi bi-trash"></i> Unenroll
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -327,11 +394,97 @@ $enrolledCourses = $stmt->fetchAll();
                 <i class="bi bi-journal-x"></i>
                 <h3>No Courses Yet</h3>
                 <p>You haven't enrolled in any courses. Start learning today!</p>
-                <a href="course_catalog.php" class="btn-continue">Browse Course Catalog</a>
+                <a href="browse_courses.php" class="btn-continue">Browse Course Catalog</a>
             </div>
         <?php endif; ?>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function confirmDelete(enrollmentID, courseTitle) {
+            Swal.fire({
+                title: 'Unenroll from Course?',
+                html: `Are you sure you want to unenroll from <strong>${courseTitle}</strong>?<br><br><span style="color: #666; font-size: 14px;">Your progress will be lost and you'll need to re-enroll to access this course again.</span>`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, Unenroll',
+                cancelButtonText: 'Cancel',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    deleteCourse(enrollmentID);
+                }
+            });
+        }
+
+        function deleteCourse(enrollmentID) {
+            // Show loading
+            Swal.fire({
+                title: 'Processing...',
+                text: 'Removing course enrollment',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            // Send delete request
+            fetch('unenroll_course.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `enrollment_id=${enrollmentID}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Unenrolled Successfully',
+                        text: 'You have been removed from this course.',
+                        confirmButtonColor: '#1e88e5',
+                        timer: 2000
+                    }).then(() => {
+                        // Remove card from DOM with animation
+                        const card = document.getElementById(`course-${enrollmentID}`);
+                        if (card) {
+                            card.style.transition = 'all 0.3s';
+                            card.style.opacity = '0';
+                            card.style.transform = 'translateX(-20px)';
+                            setTimeout(() => {
+                                card.remove();
+                                
+                                // Check if no courses left
+                                const remainingCourses = document.querySelectorAll('.course-card');
+                                if (remainingCourses.length === 0) {
+                                    location.reload();
+                                }
+                            }, 300);
+                        }
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.message || 'Failed to unenroll from course',
+                        confirmButtonColor: '#1e88e5'
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'An error occurred. Please try again.',
+                    confirmButtonColor: '#1e88e5'
+                });
+            });
+        }
+    </script>
 </body>
 </html>
