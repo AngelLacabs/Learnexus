@@ -127,3 +127,11 @@
         <span>Course Management</span>
     </a>
 </li>
+
+<!-- Add this to your sidebar menu in includes/sidebar.php -->
+<li class="nav-item">
+    <a class="nav-link" href="payments.php">
+        <i class="bi bi-cash-stack"></i>
+        <span>Payments</span>
+    </a>
+</li>
