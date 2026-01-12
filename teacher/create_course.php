@@ -32,27 +32,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $courseID = $conn->lastInsertId();
 
         // Handle PDF lesson upload
-        if (!empty($_FILES['lesson_file']['name'])) {
-            $file = $_FILES['lesson_file'];
-            $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+if (!empty($_FILES['lesson_file']['name'])) {
+    $file = $_FILES['lesson_file'];
+    $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
 
-            if ($ext === 'pdf' && $file['error'] === 0) {
-                $uploadDir = '../uploads/lessons/';
-                if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
+    if ($ext === 'pdf' && $file['error'] === 0) {
+        $uploadDir = '../uploads/lessons/';
+        if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
 
-                $newFilename = uniqid() . "_" . basename($file['name']);
-                $destination = $uploadDir . $newFilename;
+        $newFilename = uniqid() . "_" . basename($file['name']);
+        $destination = $uploadDir . $newFilename;
 
-                if (move_uploaded_file($file['tmp_name'], $destination)) {
-                    $lessonTitle = $title . " - Intro Lesson";
-                    $stmt = $conn->prepare("INSERT INTO lessons (courseID, title, filename) VALUES (?, ?, ?)");
-                    $stmt->execute([$courseID, $lessonTitle, 'uploads/lessons/' . $newFilename]);
-                }
-            } else {
-                echo json_encode(['success' => false, 'message' => 'Invalid file type. Only PDF allowed']);
-                exit();
-            }
+        if (move_uploaded_file($file['tmp_name'], $destination)) {
+            $lessonTitle = $title . " - Intro Lesson";
+            $stmt = $conn->prepare("INSERT INTO lessons (courseID, title, filename) VALUES (?, ?, ?)");
+            
+            // FIX: Save the CORRECT relative path
+            $stmt->execute([$courseID, $lessonTitle, '../uploads/lessons/' . $newFilename]);
+            
+            // Alternatively, if you want to save the actual path used:
+            // $stmt->execute([$courseID, $lessonTitle, $destination]);
         }
+    } else {
+        echo json_encode(['success' => false, 'message' => 'Invalid file type. Only PDF allowed']);
+        exit();
+    }
+}
 
         // Return newly created course info
         echo json_encode(['success' => true, 'course' => [
