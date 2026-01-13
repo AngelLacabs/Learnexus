@@ -478,7 +478,7 @@ foreach ($enrolledCourses as $course) {
                             </div>
                             
                             <div class="course-actions">
-                                <a href="course_content.php?id=<?php echo $course['courseID']; ?>" class="btn-continue">
+                                <a href="course_learn.php?id=<?php echo $course['courseID']; ?>" class="btn-continue">
                                     <?php echo $course['progressPercentage'] > 0 ? 'Continue Learning' : 'Start Course'; ?> →
                                 </a>
                                 <button class="btn-delete" onclick="confirmDelete(<?php echo $course['enrollmentID']; ?>, '<?php echo htmlspecialchars(addslashes($course['title'])); ?>')">

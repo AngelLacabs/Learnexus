@@ -149,9 +149,6 @@ if ($payment['status'] !== 'completed') {
         </div>
         
         <div class="d-grid gap-2 mt-4">
-            <button class="btn btn-primary btn-lg" onclick="window.location.href='course_content.php?id=<?php echo $payment['courseID']; ?>'">
-                <i class="bi bi-play-circle"></i> Start Learning Now
-            </button>
             <button class="btn btn-outline-secondary" onclick="window.location.href='my_courses.php'">
                 Go to My Courses
             </button>

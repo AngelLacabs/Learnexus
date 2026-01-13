@@ -97,6 +97,7 @@ $stmt->execute([$courseID]);
 $quizID = $stmt->fetchColumn();
 
 $quizPassed = false;
+$quizTaken = false;
 if ($quizID) {
     $stmt = $conn->prepare("
         SELECT status 
@@ -106,8 +107,25 @@ if ($quizID) {
         LIMIT 1
     ");
     $stmt->execute([$userID, $quizID]);
-    $quizPassed = $stmt->fetchColumn() === 'passed';
+    $quizStatus = $stmt->fetchColumn();
+    $quizTaken = !empty($quizStatus);
+    $quizPassed = $quizStatus === 'passed';
 }
+
+/* =====================
+   CALCULATE DYNAMIC PROGRESS
+===================== */
+$totalSteps = count($lessons) + ($quizID ? 1 : 0); // lessons + quiz (if exists)
+$completedSteps = count($completedLessons);
+if ($quizPassed) {
+    $completedSteps++; // Add quiz to completed steps
+}
+$dynamicProgress = $totalSteps > 0 ? round(($completedSteps / $totalSteps) * 100) : 0;
+
+/* =====================
+   CERTIFICATE ELIGIBILITY
+===================== */
+$canGetCertificate = $allLessonsCompleted && $quizPassed;
 
 /* =====================
    CURRENT LESSON
@@ -128,18 +146,17 @@ $currentLesson = $lessons[$currentLessonIndex] ?? null;
 body { background:#f8f9fa; }
 .learning-container { display:flex; height:100vh; }
 .sidebar { width:350px; background:#fff; border-right:1px solid #ddd; display:flex; flex-direction:column; }
-.lesson-item { padding:15px 20px; display:flex; gap:10px; border-bottom:1px solid #eee; text-decoration:none; color:#333; transition: all 0.2s; }
+.lesson-item { padding:15px 20px; display:flex; gap:10px; border-bottom:1px solid #eee; text-decoration:none; color:#333; transition: all 0.2s; cursor:pointer; }
 .lesson-item:hover { background:#f8f9fa; }
 .lesson-item.active { background:#e3f2fd; }
-.lesson-icon { width:36px; height:36px; display:flex; align-items:center; justify-content:center; background:#e3f2fd; border-radius:8px; }
+.lesson-icon { width:36px; height:36px; display:flex; align-items:center; justify-content:center; background:#e3f2fd; border-radius:8px; flex-shrink:0; }
 .lesson-item.active .lesson-icon { background:#1e88e5; color:#fff; }
 .content-area { flex:1; display:flex; flex-direction:column; }
 .lesson-viewer { padding:30px; flex:1; overflow:auto; }
 .btn-nav { padding:12px 20px; border:1px solid #ccc; border-radius:8px; background:#fff; text-decoration:none; display:block; text-align:center; transition:all 0.2s; }
-.btn-nav:hover { background:#f8f9fa; }
+.btn-nav:hover:not(.disabled-link) { background:#f8f9fa; }
 .btn-nav.primary { background:#1e88e5; color:#fff; border-color:#1e88e5; }
-.btn-nav.primary:hover { background:#1565c0; color:#fff; }
-.btn-nav:disabled { opacity:.5; cursor:not-allowed; }
+.btn-nav.primary:hover:not(.disabled-link) { background:#1565c0; color:#fff; }
 .disabled-link {
     pointer-events: none;
     opacity: 0.5;
@@ -147,6 +164,7 @@ body { background:#f8f9fa; }
 }
 .progress-text { display:block; margin-top:5px; font-size:12px; }
 .course-header { padding:20px; border-bottom:1px solid #eee; background:#fff; }
+.quiz-status-item { padding:15px 20px; display:flex; gap:10px; border-bottom:1px solid #eee; background:#f8f9fa; }
 </style>
 </head>
 
@@ -163,15 +181,16 @@ body { background:#f8f9fa; }
 
         <div class="mt-3">
             <div class="progress" style="height:8px;">
-                <div class="progress-bar bg-success" style="width:<?php echo $course['progressPercentage']; ?>%"></div>
+                <div class="progress-bar bg-success" id="progress-bar" style="width:<?php echo $dynamicProgress; ?>%"></div>
             </div>
-            <small class="text-muted progress-text">
-                <?php echo number_format($course['progressPercentage'],0); ?>% Complete
+            <small class="text-muted progress-text" id="progress-text">
+                <?php echo $dynamicProgress; ?>% Complete
             </small>
         </div>
     </div>
 
     <div class="flex-grow-1 overflow-auto">
+        <!-- LESSONS -->
         <?php foreach ($lessons as $i => $lesson): 
             $done = in_array($lesson['lessonID'], $completedLessons);
         ?>
@@ -180,7 +199,7 @@ body { background:#f8f9fa; }
             <div class="lesson-icon">
                 <i class="bi <?php echo $done?'bi-check-circle-fill':'bi-file-earmark-pdf'; ?>"></i>
             </div>
-            <div>
+            <div class="flex-grow-1">
                 <div><strong><?php echo htmlspecialchars($lesson['title']); ?></strong></div>
                 <small class="text-muted">
                     <input type="checkbox"
@@ -192,6 +211,37 @@ body { background:#f8f9fa; }
             </div>
         </a>
         <?php endforeach; ?>
+
+        <!-- QUIZ STATUS ITEM -->
+        <?php if ($quizID): ?>
+        <div class="quiz-status-item">
+            <div class="lesson-icon">
+                <i class="bi <?php 
+                    if ($quizPassed) {
+                        echo 'bi-check-circle-fill text-success';
+                    } elseif ($allLessonsCompleted) {
+                        echo 'bi-question-circle text-primary';
+                    } else {
+                        echo 'bi-lock text-muted';
+                    }
+                ?>"></i>
+            </div>
+            <div class="flex-grow-1">
+                <div><strong>Course Quiz</strong></div>
+                <small class="text-muted">
+                    <?php if ($quizPassed): ?>
+                        <i class="bi bi-check-circle-fill text-success"></i> Passed
+                    <?php elseif ($quizTaken && !$quizPassed): ?>
+                        <i class="bi bi-x-circle text-danger"></i> Failed - Retake required
+                    <?php elseif ($allLessonsCompleted): ?>
+                        <i class="bi bi-exclamation-circle text-warning"></i> Ready to take
+                    <?php else: ?>
+                        <i class="bi bi-lock"></i> Complete all lessons first
+                    <?php endif; ?>
+                </small>
+            </div>
+        </div>
+        <?php endif; ?>
     </div>
 
     <!-- ================= BUTTONS ================= -->
@@ -202,20 +252,23 @@ body { background:#f8f9fa; }
            id="take-quiz-btn"
            class="btn-nav primary w-100 mb-2 <?php echo !$allLessonsCompleted ? 'disabled-link' : ''; ?>"
            title="<?php echo !$allLessonsCompleted ? 'Complete all lessons first' : ''; ?>">
-            <i class="bi bi-question-circle"></i> Take Quiz
+            <i class="bi bi-question-circle"></i> 
+            <?php echo $quizTaken && !$quizPassed ? 'Retake Quiz' : 'Take Quiz'; ?>
         </a>
 
         <!-- CERTIFICATE -->
         <a href="certificate.php?course=<?php echo $courseID; ?>"
            id="unlock-certificate-btn"
-           class="btn-nav primary w-100"
-           <?php
-           if (!$allLessonsCompleted) {
-               echo 'style="pointer-events:none;opacity:0.5;" title="Complete all lessons first"';
-           } elseif (!$quizPassed) {
-               echo 'style="pointer-events:none;opacity:0.5;" title="Pass the quiz to unlock"';
-           }
-           ?>>
+           class="btn-nav primary w-100 <?php echo !$canGetCertificate ? 'disabled-link' : ''; ?>"
+           title="<?php 
+               if (!$allLessonsCompleted) {
+                   echo 'Complete all lessons first';
+               } elseif (!$quizPassed) {
+                   echo 'Pass the quiz to unlock';
+               } else {
+                   echo 'Get your certificate';
+               }
+           ?>">
             <i class="bi bi-award"></i> Unlock E-Certificate
         </a>
 
@@ -233,7 +286,7 @@ body { background:#f8f9fa; }
     <div class="lesson-viewer">
         <?php if ($currentLesson): ?>
             <h4 class="mb-3"><?php echo htmlspecialchars($currentLesson['title']); ?></h4>
-            <iframe src="../<?php echo htmlspecialchars($currentLesson['filename']); ?>"
+            <iframe src="<?php echo htmlspecialchars($currentLesson['filename']); ?>"
                 width="100%" height="600" style="border:1px solid #ddd; border-radius:8px;"></iframe>
         <?php else: ?>
             <div class="alert alert-info">
@@ -246,48 +299,106 @@ body { background:#f8f9fa; }
 </div>
 
 <script>
+const totalLessons = <?php echo count($lessons); ?>;
+const hasQuiz = <?php echo $quizID ? 'true' : 'false'; ?>;
+const totalSteps = hasQuiz ? totalLessons + 1 : totalLessons;
+
+function updateProgress() {
+    const checkboxes = document.querySelectorAll('.lesson-complete-checkbox');
+    const completedCount = [...checkboxes].filter(cb => cb.checked).length;
+    
+    // Calculate progress (lessons only, quiz status comes from server)
+    const progressPercent = Math.round((completedCount / totalSteps) * 100);
+    
+    document.getElementById('progress-bar').style.width = progressPercent + '%';
+    document.getElementById('progress-text').textContent = progressPercent + '% Complete';
+    
+    return completedCount;
+}
+
 function updateButtons(){
     const checkboxes = document.querySelectorAll('.lesson-complete-checkbox');
-    const allChecked = [...checkboxes].every(cb => cb.checked);
+    const completedCount = [...checkboxes].filter(cb => cb.checked).length;
+    const allChecked = completedCount === totalLessons;
 
     const quizBtn = document.getElementById('take-quiz-btn');
     const certBtn = document.getElementById('unlock-certificate-btn');
 
+    // Update Quiz Button
     if(allChecked){
         quizBtn.classList.remove('disabled-link');
         quizBtn.removeAttribute('title');
-        quizBtn.style.pointerEvents = 'auto';
-        quizBtn.style.opacity = '1';
+        quizBtn.href = 'course_quiz.php?id=<?php echo $courseID; ?>';
     } else {
         quizBtn.classList.add('disabled-link');
-        quizBtn.title = 'Complete all lessons first';
-        certBtn.style.pointerEvents = 'none';
-        certBtn.style.opacity = '0.5';
-        certBtn.title = 'Complete all lessons first';
+        quizBtn.setAttribute('title', 'Complete all lessons first');
+        quizBtn.href = 'javascript:void(0)';
     }
+
+    // Update Certificate Button (stays disabled until quiz is passed - server-side check)
+    if(!allChecked) {
+        certBtn.classList.add('disabled-link');
+        certBtn.setAttribute('title', 'Complete all lessons first');
+    }
+    // Note: Quiz passing status is handled by PHP on page load
 }
 
+// Handle lesson completion checkbox changes
 document.querySelectorAll('.lesson-complete-checkbox').forEach(cb=>{
-    cb.addEventListener('change',()=>{
+    cb.addEventListener('change', function(e){
+        // Prevent event bubbling to parent anchor tag
+        e.stopPropagation();
+        
+        const lessonId = this.dataset.lessonId;
+        const isCompleted = this.checked;
+        
         fetch('mark_lesson_complete.php',{
             method:'POST',
             headers:{'Content-Type':'application/json'},
             body:JSON.stringify({
-                lessonID:cb.dataset.lessonId,
-                completed:cb.checked ? 1 : 0
+                lessonID: lessonId,
+                completed: isCompleted ? 1 : 0
             })
-        }).then(res => res.json())
-          .then(data => {
-              if(data.success) {
-                  updateButtons();
-                  // Update progress bar
-                  location.reload();
-              }
-          })
-          .catch(err => console.error('Error:', err));
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.success) {
+                // Update the lesson icon
+                const lessonItem = this.closest('.lesson-item');
+                const icon = lessonItem.querySelector('.lesson-icon i');
+                
+                if(isCompleted) {
+                    icon.className = 'bi bi-check-circle-fill';
+                } else {
+                    icon.className = 'bi bi-file-earmark-pdf';
+                }
+                
+                // Update progress and buttons
+                updateProgress();
+                updateButtons();
+            } else {
+                // Revert checkbox if operation failed
+                this.checked = !isCompleted;
+                alert('Failed to update lesson status. Please try again.');
+            }
+        })
+        .catch(err => {
+            console.error('Error:', err);
+            // Revert checkbox on error
+            this.checked = !isCompleted;
+            alert('An error occurred. Please try again.');
+        });
     });
 });
 
+// Prevent checkbox clicks from triggering lesson navigation
+document.querySelectorAll('.lesson-complete-checkbox').forEach(cb => {
+    cb.addEventListener('click', function(e) {
+        e.stopPropagation();
+    });
+});
+
+// Initialize on page load
 updateButtons();
 </script>
 

@@ -103,6 +103,7 @@ if (!$allLessonsCompleted || !$quizPassed) {
     <head>
         <meta charset="UTF-8">
         <title>Certificate Locked</title>
+        <link rel="icon" href="../images/Learnexus.png">
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
         <style>
@@ -172,8 +173,6 @@ if (!$certificate) {
     $certificate = $stmt->fetch(PDO::FETCH_ASSOC);
 }
 
-$issueDate = date('F d, Y', strtotime($certificate['issuedAt']));
-?>
 /* =====================
    TRACK CERTIFICATE VIEW
 ===================== */
@@ -187,10 +186,10 @@ function trackCertificateView($conn, $certificateID, $userID) {
         ");
         $stmt->execute([$certificateID]);
         
-        // Log the download/view
+        // Log the download/view (only if table exists)
         $stmt = $conn->prepare("
-            INSERT INTO certificate_downloads (certificateID, userID, ipAddress, userAgent)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO certificate_downloads (certificateID, userID, ipAddress, userAgent, downloadedAt)
+            VALUES (?, ?, ?, ?, NOW())
         ");
         $stmt->execute([
             $certificateID,
@@ -204,13 +203,13 @@ function trackCertificateView($conn, $certificateID, $userID) {
     }
 }
 
-// Track this view/download if admin is viewing
-if (isset($certificate['certificateID']) && isset($_GET['admin']) && $_GET['admin'] == 1) {
+// Track this certificate view
+if (isset($certificate['certificateID'])) {
     trackCertificateView($conn, $certificate['certificateID'], $userID);
 }
 
-// Call this function when certificate is viewed/generated
-trackCertificateDownload($conn, $certificate['certificateID'], $userID);
+$issueDate = date('F d, Y', strtotime($certificate['issuedAt']));
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -218,7 +217,6 @@ trackCertificateDownload($conn, $certificate['certificateID'], $userID);
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Certificate - <?= htmlspecialchars($course['title']) ?></title>
 <link rel="icon" type="image/png" href="../images/Learnexus.png">
-<!-- Save this file as: student/certificate.php -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
@@ -356,6 +354,7 @@ body {
     display: flex;
     gap: 15px;
     justify-content: center;
+    flex-wrap: wrap;
 }
 
 .btn-download {
@@ -367,11 +366,14 @@ body {
     font-weight: 600;
     cursor: pointer;
     transition: transform 0.2s;
+    text-decoration: none;
+    display: inline-block;
 }
 
 .btn-download:hover {
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    color: white;
 }
 
 .btn-back {
@@ -417,6 +419,32 @@ body {
     }
     .action-buttons {
         display: none;
+    }
+    .certificate {
+        border: 10px solid #667eea;
+        box-shadow: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .certificate {
+        padding: 30px 20px;
+    }
+    .certificate-title {
+        font-size: 28px;
+    }
+    .recipient-name {
+        font-size: 32px;
+    }
+    .course-name {
+        font-size: 24px;
+    }
+    .seal {
+        width: 80px;
+        height: 80px;
+        bottom: 30px;
+        right: 30px;
+        font-size: 10px;
     }
 }
 </style>
@@ -477,8 +505,11 @@ body {
         <button onclick="downloadCertificate()" class="btn-download">
             <i class="bi bi-download"></i> Download PDF
         </button>
+        <a href="course_learn.php?id=<?= $courseID ?>" class="btn-back">
+            <i class="bi bi-arrow-left"></i> Back to Course
+        </a>
         <a href="dashboard.php" class="btn-back">
-            <i class="bi bi-house"></i> Back to Dashboard
+            <i class="bi bi-house"></i> Dashboard
         </a>
     </div>
 </div>
