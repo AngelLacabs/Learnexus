@@ -63,14 +63,6 @@
         <!-- Divider -->
         <li class="menu-divider"></li>
 
-        <!-- OTP Logs -->
-        <li class="menu-item">
-            <a href="otp-logs.php" class="menu-link <?php echo basename($_SERVER['PHP_SELF']) == 'otp-logs.php' ? 'active' : ''; ?>">
-                <i class="bi bi-shield-lock"></i>
-                <span>OTP Logs</span>
-            </a>
-        </li>
-
         <!-- SMS Feedback -->
         <li class="menu-item">
             <a href="sms-feedback.php" class="menu-link <?php echo basename($_SERVER['PHP_SELF']) == 'sms-feedback.php' ? 'active' : ''; ?>">
@@ -86,61 +78,5 @@
                 <span>Announcements</span>
             </a>
         </li>
-
-        <!-- Divider -->
-        <li class="menu-divider"></li>
-
-        <!-- Reports -->
-        <li class="menu-item">
-            <a href="reports.php" class="menu-link <?php echo basename($_SERVER['PHP_SELF']) == 'reports.php' ? 'active' : ''; ?>">
-                <i class="bi bi-graph-up"></i>
-                <span>Reports</span>
-            </a>
-        </li>
-
-        <!-- Activity Logs -->
-        <li class="menu-item">
-            <a href="activity-logs.php" class="menu-link <?php echo basename($_SERVER['PHP_SELF']) == 'activity-logs.php' ? 'active' : ''; ?>">
-                <i class="bi bi-clock-history"></i>
-                <span>Activity Logs</span>
-            </a>
-        </li>
-
-        <!-- System Settings -->
-        <li class="menu-item">
-            <a href="settings.php" class="menu-link <?php echo basename($_SERVER['PHP_SELF']) == 'settings.php' ? 'active' : ''; ?>">
-                <i class="bi bi-gear"></i>
-                <span>Settings</span>
-            </a>
-        </li>
     </ul>
-</div><li class="menu-item">
-    <a class="menu-link <?php echo basename($_SERVER['PHP_SELF']) == 'users.php' ? 'active' : ''; ?>" href="users.php">
-        <i class="bi bi-people"></i>
-        <span>Users</span>
-    </a>
-</li>
-<!-- Add this in the sidebar menu -->
-<li class="menu-item">
-    <a href="courses.php" class="menu-link <?php echo basename($_SERVER['PHP_SELF']) == 'courses.php' ? 'active' : ''; ?>">
-        <i class="bi bi-book"></i>
-        <span>Course Management</span>
-    </a>
-</li>
-
-<!-- Add this to your sidebar menu in includes/sidebar.php -->
-<li class="nav-item">
-    <a class="nav-link" href="payments.php">
-        <i class="bi bi-cash-stack"></i>
-        <span>Payments</span>
-    </a>
-</li>
-
-<!-- Add this to the sidebar menu -->
-<li class="menu-item">
-    <a class="menu-link <?php echo basename($_SERVER['PHP_SELF']) === 'certificates.php' ? 'active' : ''; ?>" 
-       href="certificates.php">
-        <i class="bi bi-award"></i>
-        <span>Certificates</span>
-    </a>
-</li>
+</div>
