@@ -148,19 +148,71 @@ $activeTab = $_GET['tab'] ?? 'quizzes';
         
         .status-badge.completed { background: #e8f5e9; color: #43a047; }
         .status-badge.ongoing { background: #e3f2fd; color: #1e88e5; }
+        .brand {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1e88e5;
+    text-decoration: none;
+}
+
+.brand:hover {
+    text-decoration: none;
+    color: #1565c0;
+}
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    padding: 8px 12px;
+    border-radius: 8px;
+    transition: background 0.2s;
+}
+
+.user-info:hover {
+    background: #f5f5f5;
+}
+
+.user-name {
+    font-weight: 600;
+    color: #333;
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+}
+
+
     </style>
 </head>
 <body>
     <!-- Top Navigation -->
     <div class="top-nav">
-        <div style="font-size: 20px; font-weight: 700; color: #1a73e8;">LEARNEXUS</div>
+        <a href="dashboard.php" class="brand">LEARNEXUS</a>
+
         <div>
             <a href="dashboard.php" class="me-3 text-decoration-none text-muted">Dashboard</a>
             <a href="courses.php" class="me-3 text-decoration-none text-muted">Courses</a>
             <a href="quizzes.php" class="me-3 text-decoration-none text-muted">Quizzes</a>
             <a href="enrollees.php" class="me-3 text-decoration-none fw-bold" style="color: #1a73e8;">Enrollees</a>
         </div>
-        <span style="font-weight: 600;"><?php echo htmlspecialchars($_SESSION['first_name']); ?></span>
+        <div class="user-info" onclick="window.location.href='settings.php'">
+    <span class="user-name">
+        <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>
+    </span>
+    <div class="user-avatar">
+        <?php echo strtoupper(substr($_SESSION['first_name'], 0, 1)); ?>
+    </div>
+</div>
+
     </div>
 
     <!-- Main Content -->
