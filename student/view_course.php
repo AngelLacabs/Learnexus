@@ -14,7 +14,7 @@ $userID = $_SESSION['user_id'];
 
 // Check enrollment
 $stmt = $conn->prepare("
-    SELECT e.enrollmentID, e.progressPercentage, e.status, e.completedAt,
+    SELECT e.enrollmentID, e.progressPercentage, e.status, 
            c.title as courseTitle, c.description, c.price, c.passingScore,
            CONCAT(u.firstName, ' ', u.lastName) as instructorName
     FROM enrollments e
@@ -31,60 +31,29 @@ if (!$enrollment) {
     exit();
 }
 
-// 🔒 PROTECTION: Get lessons based on completion status
-if ($enrollment['status'] === 'completed' && !empty($enrollment['completedAt'])) {
-    // LOCKED VIEW: Show only lessons that existed at completion time
-    $stmt = $conn->prepare("
-        SELECT l.*, 
-               EXISTS(SELECT 1 FROM lesson_completions WHERE lessonID = l.lessonID AND userID = ?) as isCompleted
-        FROM lessons l
-        WHERE l.courseID = ?
-          AND l.uploadedAt <= ?
-        ORDER BY l.lessonID ASC
-    ");
-    $stmt->execute([$userID, $courseID, $enrollment['completedAt']]);
-} else {
-    // ACTIVE VIEW: Show all current lessons
-    $stmt = $conn->prepare("
-        SELECT l.*, 
-               EXISTS(SELECT 1 FROM lesson_completions WHERE lessonID = l.lessonID AND userID = ?) as isCompleted
-        FROM lessons l
-        WHERE l.courseID = ?
-        ORDER BY l.lessonID ASC
-    ");
-    $stmt->execute([$userID, $courseID]);
-}
+// Get lessons with completion status
+$stmt = $conn->prepare("
+    SELECT l.*, 
+           EXISTS(SELECT 1 FROM lesson_completions WHERE lessonID = l.lessonID AND userID = ?) as isCompleted
+    FROM lessons l
+    WHERE l.courseID = ?
+    ORDER BY l.lessonID ASC
+");
+$stmt->execute([$userID, $courseID]);
 $lessons = $stmt->fetchAll();
 
-// 🔒 PROTECTION: Get quizzes based on completion status
-if ($enrollment['status'] === 'completed' && !empty($enrollment['completedAt'])) {
-    // LOCKED VIEW: Show only quizzes that existed at completion time
-    $stmt = $conn->prepare("
-        SELECT q.*,
-               (SELECT COUNT(*) FROM quiz_questions WHERE quizID = q.quizID) as questionCount,
-               (SELECT MAX(takenAt) FROM quiz_results WHERE quizID = q.quizID AND userID = ?) as lastAttempt,
-               (SELECT passed FROM quiz_results WHERE quizID = q.quizID AND userID = ? ORDER BY takenAt DESC LIMIT 1) as hasPassed,
-               (SELECT score FROM quiz_results WHERE quizID = q.quizID AND userID = ? ORDER BY takenAt DESC LIMIT 1) as lastScore
-        FROM quizzes q
-        WHERE q.courseID = ?
-          AND q.createdAt <= ?
-        ORDER BY q.quizID ASC
-    ");
-    $stmt->execute([$userID, $userID, $userID, $courseID, $enrollment['completedAt']]);
-} else {
-    // ACTIVE VIEW: Show all current quizzes
-    $stmt = $conn->prepare("
-        SELECT q.*,
-               (SELECT COUNT(*) FROM quiz_questions WHERE quizID = q.quizID) as questionCount,
-               (SELECT MAX(takenAt) FROM quiz_results WHERE quizID = q.quizID AND userID = ?) as lastAttempt,
-               (SELECT passed FROM quiz_results WHERE quizID = q.quizID AND userID = ? ORDER BY takenAt DESC LIMIT 1) as hasPassed,
-               (SELECT score FROM quiz_results WHERE quizID = q.quizID AND userID = ? ORDER BY takenAt DESC LIMIT 1) as lastScore
-        FROM quizzes q
-        WHERE q.courseID = ?
-        ORDER BY q.quizID ASC
-    ");
-    $stmt->execute([$userID, $userID, $userID, $courseID]);
-}
+// Get quizzes
+$stmt = $conn->prepare("
+    SELECT q.*,
+           (SELECT COUNT(*) FROM quiz_questions WHERE quizID = q.quizID) as questionCount,
+           (SELECT MAX(takenAt) FROM quiz_results WHERE quizID = q.quizID AND userID = ?) as lastAttempt,
+           (SELECT passed FROM quiz_results WHERE quizID = q.quizID AND userID = ? ORDER BY takenAt DESC LIMIT 1) as hasPassed,
+           (SELECT score FROM quiz_results WHERE quizID = q.quizID AND userID = ? ORDER BY takenAt DESC LIMIT 1) as lastScore
+    FROM quizzes q
+    WHERE q.courseID = ?
+    ORDER BY q.quizID ASC
+");
+$stmt->execute([$userID, $userID, $userID, $courseID]);
 $quizzes = $stmt->fetchAll();
 
 // Calculate progress
@@ -213,20 +182,6 @@ if ($currentLessonID) {
         .progress-text {
             font-size: 13px;
             color: #666;
-        }
-        /* 🔒 NEW: Locked course indicator */
-        .locked-indicator {
-            background: linear-gradient(135deg, #43a047 0%, #66bb6a 100%);
-            color: white;
-            padding: 12px;
-            border-radius: 8px;
-            margin-top: 16px;
-            font-size: 12px;
-            text-align: center;
-        }
-        .locked-indicator i {
-            font-size: 16px;
-            margin-bottom: 4px;
         }
         .content-list {
             flex: 1;
@@ -448,15 +403,6 @@ if ($currentLessonID) {
                         <span><?php echo $progressPercentage; ?>%</span>
                     </div>
                 </div>
-
-                <?php if ($enrollment['status'] === 'completed'): ?>
-                <!-- 🔒 NEW: Show locked indicator -->
-                <div class="locked-indicator">
-                    <i class="bi bi-lock-fill d-block"></i>
-                    <strong>Course Completed!</strong><br>
-                    <small>Your view is locked to preserve your achievement</small>
-                </div>
-                <?php endif; ?>
             </div>
             
             <div class="content-list">
@@ -588,9 +534,9 @@ if ($currentLessonID) {
                                     <button class="btn btn-primary" onclick="window.location.href='?id=<?php echo $courseID; ?>&lesson_id=<?php echo $nextLesson['lessonID']; ?>'">
                                         Next Lesson <i class="bi bi-arrow-right"></i>
                                     </button>
-                                <?php elseif (!empty($quizzes) && !$isCompleted): ?>
+                                <?php elseif (!empty($quizzes)): ?>
                                     <button class="btn btn-primary" onclick="window.location.href='?id=<?php echo $courseID; ?>&quiz_id=<?php echo $quizzes[0]['quizID']; ?>'">
-                                        View Quiz <i class="bi bi-arrow-right"></i>
+                                        Start Quiz <i class="bi bi-arrow-right"></i>
                                     </button>
                                 <?php endif; ?>
                             </div>
@@ -640,6 +586,13 @@ if ($currentLessonID) {
                                 <strong>Quiz passed!</strong> You've successfully completed this assessment with a score of <?php echo $currentQuiz['lastScore']; ?>%.
                             </div>
                         <?php endif; ?>
+                        
+                        <div class="navigation-buttons">
+                            <div></div>
+                            <button class="btn btn-primary" onclick="window.location.href='take_quiz.php?id=<?php echo $currentQuiz['quizID']; ?>'">
+                                <?php echo $currentQuiz['lastAttempt'] ? 'Retake Quiz' : 'Start Quiz'; ?> <i class="bi bi-arrow-right"></i>
+                            </button>
+                        </div>
                     </div>
                 <?php else: ?>
                     <div class="empty-state">

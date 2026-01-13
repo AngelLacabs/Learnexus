@@ -17,18 +17,30 @@ $search = $_GET['search'] ?? '';
 $sort = $_GET['sort'] ?? 'newest';
 $priceRange = $_GET['price'] ?? '';
 
-// Build query
+// Build query with enrollment progress - EXCLUDE COMPLETED COURSES
 $query = "
     SELECT c.*, 
            CONCAT(u.firstName, ' ', u.lastName) as instructorName,
            (SELECT COUNT(*) FROM enrollments WHERE courseID = c.courseID) as enrollmentCount,
-           EXISTS(SELECT 1 FROM enrollments WHERE courseID = c.courseID AND userID = ?) as isEnrolled
+           EXISTS(
+               SELECT 1 FROM enrollments 
+               WHERE courseID = c.courseID 
+               AND userID = ? 
+               AND (progressPercentage < 100 OR progressPercentage IS NULL)
+           ) as isEnrolled,
+           (SELECT progressPercentage FROM enrollments WHERE courseID = c.courseID AND userID = ? LIMIT 1) as progressPercentage
     FROM courses c
     JOIN users u ON c.teacherID = u.userID
     WHERE c.status = 'published'
+    AND NOT EXISTS (
+        SELECT 1 FROM enrollments e 
+        WHERE e.courseID = c.courseID 
+        AND e.userID = ? 
+        AND e.progressPercentage >= 100
+    )
 ";
 
-$params = [$userID];
+$params = [$userID, $userID, $userID];
 
 if (!empty($search)) {
     $query .= " AND (c.title LIKE ? OR c.description LIKE ?)";
@@ -91,7 +103,7 @@ $stats = $statsStmt->fetch();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Browse Courses - Learnexus</title>
+    <title>Course Catalog - Learnexus</title>
     <link rel="icon" type="image/png" href="../images/Learnexus.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
@@ -101,17 +113,18 @@ $stats = $statsStmt->fetch();
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
         .top-nav {
-            background: linear-gradient(180deg, #e8f0fe 0%, #f8f9fa 100%);
-            padding: 15px 40px;
+            background: white;
+            padding: 20px 40px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border-bottom: 1px solid #e0e0e0;
         }
         .brand {
-            font-size: 20px;
+            font-size: 24px;
             font-weight: 700;
-            color: #1a73e8;
+            color: #1e88e5;
             text-decoration: none;
         }
         .nav-menu {
@@ -122,9 +135,13 @@ $stats = $statsStmt->fetch();
             color: #666;
             text-decoration: none;
             font-weight: 500;
+            transition: color 0.2s;
+        }
+        .nav-link:hover {
+            color: #1e88e5;
         }
         .nav-link.active {
-            color: #1a73e8;
+            color: #1e88e5;
         }
         .user-section {
             display: flex;
@@ -138,6 +155,12 @@ $stats = $statsStmt->fetch();
         }
         .header-section {
             margin-bottom: 40px;
+        }
+        .header-section h1 {
+            font-size: 36px;
+            font-weight: 700;
+            color: #212121;
+            margin-bottom: 8px;
         }
         .search-bar {
             max-width: 600px;
@@ -193,16 +216,20 @@ $stats = $statsStmt->fetch();
             font-size: 48px;
             position: relative;
         }
-        .course-image.enrolled::after {
-            content: 'ENROLLED';
+        .course-status-badge {
             position: absolute;
             top: 12px;
             right: 12px;
-            background: rgba(67, 160, 71, 0.9);
-            padding: 6px 12px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        .badge-enrolled {
+            background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%);
+            color: white;
         }
         .course-body {
             padding: 20px;
@@ -253,10 +280,26 @@ $stats = $statsStmt->fetch();
         }
         .btn-enroll {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             border-radius: 8px;
             font-weight: 600;
             margin-top: 12px;
+            border: none;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: #1e88e5;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #1565c0;
+        }
+        .btn-success {
+            background: #43a047;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #388e3c;
         }
         .no-results {
             text-align: center;
@@ -277,6 +320,24 @@ $stats = $statsStmt->fetch();
         .clear-filters:hover {
             text-decoration: underline;
         }
+        .progress-mini {
+            height: 4px;
+            background: #e0e0e0;
+            border-radius: 2px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+        .progress-mini-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #1e88e5 0%, #42a5f5 100%);
+            border-radius: 2px;
+            transition: width 0.3s;
+        }
+        .progress-text-mini {
+            font-size: 11px;
+            color: #666;
+            margin-top: 4px;
+        }
     </style>
 </head>
 <body>
@@ -286,8 +347,9 @@ $stats = $statsStmt->fetch();
         
         <div class="nav-menu">
             <a href="dashboard.php" class="nav-link">Dashboard</a>
-            <a href="browse_courses.php" class="nav-link active">Course Catalog</a>
+            <a href="course_catalog.php" class="nav-link active">Course Catalog</a>
             <a href="my_courses.php" class="nav-link">My Courses</a>
+            <a href="ai_tutor.php" class="nav-link">AI Tutor</a>
         </div>
         
         <div class="user-section">
@@ -367,7 +429,7 @@ $stats = $statsStmt->fetch();
 
                 <?php if ($category || $search || $priceRange || $sort !== 'newest'): ?>
                     <div class="mt-3">
-                        <a href="browse_courses.php" class="clear-filters">
+                        <a href="course_catalog.php" class="clear-filters">
                             <i class="bi bi-x-circle"></i> Clear all filters
                         </a>
                     </div>
@@ -388,7 +450,7 @@ $stats = $statsStmt->fetch();
                 <i class="bi bi-search"></i>
                 <h4>No courses found</h4>
                 <p class="text-muted">Try adjusting your filters or search terms</p>
-                <a href="browse_courses.php" class="clear-filters">Clear all filters</a>
+                <a href="course_catalog.php" class="clear-filters">Clear all filters</a>
             </div>
         <?php else: ?>
             <div class="course-grid">
@@ -402,11 +464,16 @@ $stats = $statsStmt->fetch();
                         'linear-gradient(135deg, #30cfd0 0%, #330867 100%)',
                     ];
                     $gradient = $gradients[$course['courseID'] % count($gradients)];
+                    $progress = $course['progressPercentage'] ?? 0;
                 ?>
                     <div class="course-card" onclick="window.location.href='course_details.php?id=<?php echo $course['courseID']; ?>'">
-                        <div class="course-image <?php echo $course['isEnrolled'] ? 'enrolled' : ''; ?>" 
-                             style="background: <?php echo $gradient; ?>">
+                        <div class="course-image" style="background: <?php echo $gradient; ?>">
                             <i class="bi bi-book"></i>
+                            <?php if ($course['isEnrolled'] && $progress > 0 && $progress < 100): ?>
+                                <span class="course-status-badge badge-enrolled">
+                                    <i class="bi bi-play-circle-fill"></i> IN PROGRESS
+                                </span>
+                            <?php endif; ?>
                         </div>
                         <div class="course-body">
                             <span class="category-badge">
@@ -427,6 +494,15 @@ $stats = $statsStmt->fetch();
                                 <i class="bi bi-people"></i> <?php echo $course['enrollmentCount']; ?> student<?php echo $course['enrollmentCount'] !== 1 ? 's' : ''; ?> enrolled
                             </div>
 
+                            <?php if ($course['isEnrolled'] && $progress > 0 && $progress < 100): ?>
+                                <div class="progress-mini">
+                                    <div class="progress-mini-fill" style="width: <?php echo $progress; ?>%"></div>
+                                </div>
+                                <div class="progress-text-mini">
+                                    <?php echo number_format($progress, 0); ?>% Complete
+                                </div>
+                            <?php endif; ?>
+
                             <div class="course-meta">
                                 <div class="course-price <?php echo $course['price'] == 0 ? 'free' : ''; ?>">
                                     <?php if ($course['price'] == 0): ?>
@@ -437,9 +513,9 @@ $stats = $statsStmt->fetch();
                                 </div>
                             </div>
 
-                            <?php if ($course['isEnrolled']): ?>
-                                <button class="btn btn-success btn-enroll" onclick="event.stopPropagation(); window.location.href='course_content.php?id=<?php echo $course['courseID']; ?>'">
-                                    Continue Learning <i class="bi bi-arrow-right"></i>
+                            <?php if ($course['isEnrolled'] && $progress > 0): ?>
+                                <button class="btn btn-success btn-enroll" onclick="event.stopPropagation(); window.location.href='view_course.php?id=<?php echo $course['courseID']; ?>'">
+                                    <i class="bi bi-play-circle"></i> Continue Learning
                                 </button>
                             <?php else: ?>
                                 <button class="btn btn-primary btn-enroll" onclick="event.stopPropagation(); window.location.href='course_details.php?id=<?php echo $course['courseID']; ?>'">

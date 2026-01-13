@@ -43,7 +43,7 @@ $totalRevenue = $stmt->fetch()['total'];
 $stmt = $conn->prepare("
     SELECT c.*,
            (SELECT COUNT(*) FROM enrollments WHERE courseID = c.courseID) as enrollmentCount,
-           (SELECT COUNT(*) FROM modules WHERE courseID = c.courseID) as moduleCount,
+           (SELECT COUNT(*) FROM lessons WHERE courseID = c.courseID) as lessonCount,
            (SELECT COUNT(*) FROM quizzes WHERE courseID = c.courseID) as quizCount
     FROM courses c
     WHERE c.teacherID = ?
@@ -541,9 +541,10 @@ $dailyMotivationTeacher = $teacherMotivations[$dayOfYear % count($teacherMotivat
                                     <div class="label">Students</div>
                                 </div>
                                 <div class="course-stat">
-                                    <div class="number"><?php echo $course['moduleCount']; ?></div>
-                                    <div class="label">Modules</div>
-                                </div>
+    <div class="number"><?php echo $course['lessonCount']; ?></div>
+    <div class="label">Lessons</div>
+</div>
+
                                 <div class="course-stat">
                                     <div class="number"><?php echo $course['quizCount']; ?></div>
                                     <div class="label">Quizzes</div>
