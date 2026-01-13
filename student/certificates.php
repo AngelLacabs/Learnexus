@@ -10,28 +10,57 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
 }
 
 $userID = $_SESSION['user_id'];
+
 // Get user data including avatar
 $userStmt = $conn->prepare("SELECT avatar FROM users WHERE userID = ?");
 $userStmt->execute([$userID]);
 $user = $userStmt->fetch();
 
-// Get all certificates for this user
-$stmt = $conn->prepare("
-    SELECT 
-        cert.*,
-        c.title as courseTitle,
-        c.description as courseDescription,
-        CONCAT(u.firstName, ' ', u.lastName) as instructorName,
-        e.completedAt,
-        e.progressPercentage
-    FROM certificates cert
-    JOIN enrollments e ON cert.enrollmentID = e.enrollmentID
-    JOIN courses c ON cert.courseID = c.courseID
-    JOIN users u ON c.teacherID = u.userID
-    WHERE cert.userID = ?
-    ORDER BY cert.issuedAt DESC
-");
-$stmt->execute([$userID]);
+// Get search query
+$searchQuery = isset($_GET['search']) ? trim($_GET['search']) : '';
+
+// Get all certificates for this user with optional search
+if (!empty($searchQuery)) {
+    $stmt = $conn->prepare("
+        SELECT 
+            cert.*,
+            c.title as courseTitle,
+            c.description as courseDescription,
+            CONCAT(u.firstName, ' ', u.lastName) as instructorName,
+            e.completedAt,
+            e.progressPercentage
+        FROM certificates cert
+        JOIN enrollments e ON cert.enrollmentID = e.enrollmentID
+        JOIN courses c ON cert.courseID = c.courseID
+        JOIN users u ON c.teacherID = u.userID
+        WHERE cert.userID = ? 
+        AND (
+            c.title LIKE ? OR 
+            c.description LIKE ? OR 
+            CONCAT(u.firstName, ' ', u.lastName) LIKE ?
+        )
+        ORDER BY cert.issuedAt DESC
+    ");
+    $searchParam = "%{$searchQuery}%";
+    $stmt->execute([$userID, $searchParam, $searchParam, $searchParam]);
+} else {
+    $stmt = $conn->prepare("
+        SELECT 
+            cert.*,
+            c.title as courseTitle,
+            c.description as courseDescription,
+            CONCAT(u.firstName, ' ', u.lastName) as instructorName,
+            e.completedAt,
+            e.progressPercentage
+        FROM certificates cert
+        JOIN enrollments e ON cert.enrollmentID = e.enrollmentID
+        JOIN courses c ON cert.courseID = c.courseID
+        JOIN users u ON c.teacherID = u.userID
+        WHERE cert.userID = ?
+        ORDER BY cert.issuedAt DESC
+    ");
+    $stmt->execute([$userID]);
+}
 $certificates = $stmt->fetchAll();
 ?>
 <!DOCTYPE html>
@@ -140,12 +169,32 @@ $certificates = $stmt->fetchAll();
             font-size: 14px;
         }
 
-        .search-box i {
+        .search-box input:focus {
+            outline: none;
+            border-color: #1e88e5;
+            box-shadow: 0 0 0 3px rgba(30, 136, 229, 0.1);
+        }
+
+        .search-box button {
             position: absolute;
-            right: 14px;
+            right: 4px;
             top: 50%;
             transform: translateY(-50%);
-            color: #999;
+            background: #1e88e5;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .search-box button:hover {
+            background: #1976d2;
+        }
+
+        .search-box i {
+            font-size: 14px;
         }
 
         .user-section {
@@ -176,6 +225,13 @@ $certificates = $stmt->fetchAll();
             align-items: center;
             gap: 12px;
             cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+
+        .user-info:hover {
+            background: #f5f5f5;
         }
 
         .user-avatar {
@@ -188,6 +244,7 @@ $certificates = $stmt->fetchAll();
             justify-content: center;
             color: white;
             font-weight: 600;
+            overflow: hidden;
         }
 
         .content-area {
@@ -202,6 +259,30 @@ $certificates = $stmt->fetchAll();
             font-size: 32px;
             font-weight: 700;
             margin-bottom: 8px;
+        }
+
+        .search-results-info {
+            background: #e3f2fd;
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .search-results-info .clear-search {
+            background: white;
+            border: none;
+            padding: 6px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            color: #1e88e5;
+        }
+
+        .search-results-info .clear-search:hover {
+            background: #f5f5f5;
         }
 
         .certificates-grid {
@@ -366,6 +447,12 @@ $certificates = $stmt->fetchAll();
             background: #1976d2;
             color: white;
         }
+
+        mark {
+            background-color: #fff59d;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
     </style>
 </head>
 <body>
@@ -414,25 +501,28 @@ $certificates = $stmt->fetchAll();
     <div class="main-content">
         <!-- Top Bar -->
         <div class="top-bar">
-            <div class="search-box">
-                <input type="text" placeholder="Search for courses, assignments...">
-                <i class="bi bi-search"></i>
-            </div>
+            <form class="search-box" method="GET" action="certificates.php">
+                <input type="text" name="search" placeholder="Search certificates by course or instructor..." 
+                       value="<?php echo htmlspecialchars($searchQuery); ?>">
+                <button type="submit">
+                    <i class="bi bi-search"></i>
+                </button>
+            </form>
             
             <div class="user-section">
-    <div class="user-info" onclick="window.location.href='settings.php'" style="cursor: pointer;">
-        <span style="font-weight: 600; color: #333;">
-            <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>
-        </span>
-        <div class="user-avatar">
-            <?php if (!empty($user['avatar']) && file_exists($user['avatar'])): ?>
-                <img src="<?php echo htmlspecialchars($user['avatar']); ?>" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
-            <?php else: ?>
-                <?php echo strtoupper(substr($_SESSION['first_name'], 0, 1)); ?>
-            <?php endif; ?>
-        </div>
-    </div>
-</div>
+                <div class="user-info" onclick="window.location.href='settings.php'">
+                    <span style="font-weight: 600; color: #333;">
+                        <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>
+                    </span>
+                    <div class="user-avatar">
+                        <?php if (!empty($user['avatar']) && file_exists($user['avatar'])): ?>
+                            <img src="<?php echo htmlspecialchars($user['avatar']); ?>" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                        <?php else: ?>
+                            <?php echo strtoupper(substr($_SESSION['first_name'], 0, 1)); ?>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Content Area -->
@@ -441,6 +531,19 @@ $certificates = $stmt->fetchAll();
                 <h1><i class="bi bi-award"></i> My Certificates</h1>
                 <p class="text-muted">View and download your earned certificates</p>
             </div>
+
+            <?php if (!empty($searchQuery)): ?>
+                <div class="search-results-info">
+                    <span>
+                        <i class="bi bi-search"></i>
+                        <strong><?php echo count($certificates); ?></strong> result(s) found for 
+                        "<strong><?php echo htmlspecialchars($searchQuery); ?></strong>"
+                    </span>
+                    <button class="clear-search" onclick="window.location.href='certificates.php'">
+                        <i class="bi bi-x"></i> Clear Search
+                    </button>
+                </div>
+            <?php endif; ?>
 
             <?php if (count($certificates) > 0): ?>
                 <div class="certificates-grid">
@@ -454,6 +557,14 @@ $certificates = $stmt->fetchAll();
                             'linear-gradient(135deg, #30cfd0 0%, #330867 100%)',
                         ];
                         $gradient = $gradients[$cert['certificateID'] % count($gradients)];
+                        
+                        // Highlight search terms
+                        $courseTitle = htmlspecialchars($cert['courseTitle']);
+                        $instructorName = htmlspecialchars($cert['instructorName']);
+                        if (!empty($searchQuery)) {
+                            $courseTitle = preg_replace('/(' . preg_quote($searchQuery, '/') . ')/i', '<mark>$1</mark>', $courseTitle);
+                            $instructorName = preg_replace('/(' . preg_quote($searchQuery, '/') . ')/i', '<mark>$1</mark>', $instructorName);
+                        }
                     ?>
                         <div class="certificate-card" onclick="window.location.href='view_certificate.php?id=<?php echo $cert['certificateUUID']; ?>'">
                             <div class="certificate-preview" style="background: <?php echo $gradient; ?>">
@@ -468,11 +579,11 @@ $certificates = $stmt->fetchAll();
                                 </div>
                             </div>
                             <div class="certificate-body">
-                                <div class="certificate-title"><?php echo htmlspecialchars($cert['courseTitle']); ?></div>
+                                <div class="certificate-title"><?php echo $courseTitle; ?></div>
                                 <div class="certificate-meta">
                                     <div class="meta-item">
                                         <i class="bi bi-person"></i>
-                                        <span>Instructor: <?php echo htmlspecialchars($cert['instructorName']); ?></span>
+                                        <span>Instructor: <?php echo $instructorName; ?></span>
                                     </div>
                                     <div class="meta-item">
                                         <i class="bi bi-calendar-check"></i>
@@ -497,10 +608,18 @@ $certificates = $stmt->fetchAll();
                 </div>
             <?php else: ?>
                 <div class="empty-state">
-                    <i class="bi bi-award"></i>
-                    <h3>No Certificates Yet</h3>
-                    <p>Complete courses to earn certificates and showcase your achievements</p>
-                    <a href="browse_courses.php" class="btn-browse">Browse Courses</a>
+                    <i class="bi bi-search"></i>
+                    <?php if (!empty($searchQuery)): ?>
+                        <h3>No Certificates Found</h3>
+                        <p>No certificates match your search for "<?php echo htmlspecialchars($searchQuery); ?>"</p>
+                        <button class="btn-browse" onclick="window.location.href='certificates.php'">
+                            <i class="bi bi-arrow-left"></i> View All Certificates
+                        </button>
+                    <?php else: ?>
+                        <h3>No Certificates Yet</h3>
+                        <p>Complete courses to earn certificates and showcase your achievements</p>
+                        <a href="browse_courses.php" class="btn-browse">Browse Courses</a>
+                    <?php endif; ?>
                 </div>
             <?php endif; ?>
         </div>
