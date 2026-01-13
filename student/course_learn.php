@@ -14,10 +14,10 @@ $userID  = $_SESSION['user_id'];
 $courseID = $_GET['id'] ?? 0;
 
 /* =====================
-   CHECK IF STUDENT FAILED THE QUIZ - BLOCK ACCESS TO LESSONS
+   CHECK IF STUDENT FAILED THE QUIZ - BLOCK ACCESS ONLY IF NO RETAKE PAYMENT
 ===================== */
 $stmt = $conn->prepare("
-    SELECT qr.passed, qr.status 
+    SELECT qr.passed, qr.status, qr.takenAt
     FROM quiz_results qr
     JOIN quizzes q ON qr.quizID = q.quizID
     WHERE q.courseID = ? AND qr.userID = ?
@@ -27,11 +27,28 @@ $stmt = $conn->prepare("
 $stmt->execute([$courseID, $userID]);
 $quizResult = $stmt->fetch();
 
-// If student failed the quiz, block access to course content
+// Check if student failed and hasn't paid for retake
 if ($quizResult && $quizResult['status'] == 'failed' && $quizResult['passed'] == 0) {
-    $_SESSION['error'] = "Access denied. You must pay to retake this course after failing the quiz.";
-    header('Location: retake_course.php?id=' . $courseID);
-    exit();
+    // Check if they've paid for retake AFTER failing
+    $stmt = $conn->prepare("
+        SELECT COUNT(*) as retake_payment_count
+        FROM payments p
+        JOIN enrollments e ON p.enrollmentID = e.enrollmentID
+        WHERE e.courseID = ? 
+        AND e.userID = ?
+        AND p.paymentDate > ?
+        AND p.status = 'completed'
+    ");
+    $stmt->execute([$courseID, $userID, $quizResult['takenAt']]);
+    $retakePayment = $stmt->fetch();
+    
+    // If no retake payment found, redirect to retake payment page
+    if ($retakePayment['retake_payment_count'] == 0) {
+        $_SESSION['error'] = "Access denied. You must pay to retake this course after failing the quiz.";
+        header('Location: retake_course.php?id=' . $courseID);
+        exit();
+    }
+    // If retake payment exists, allow access to continue
 }
 
 /* =====================

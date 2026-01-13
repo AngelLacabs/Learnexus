@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 12, 2026 at 07:33 AM
+-- Generation Time: Jan 13, 2026 at 12:56 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -74,7 +74,9 @@ CREATE TABLE `certificates` (
 --
 
 INSERT INTO `certificates` (`certificateID`, `enrollmentID`, `courseID`, `userID`, `certificateUUID`, `issuedAt`, `instructorName`, `studentName`, `courseTitle`) VALUES
-(1, 1, 2, 2, 'a259ccd4-8e2c-4dda-bc9d-7cbc80a314a1', '2026-01-12 06:04:17', 'Andrew Coral', 'Andrew B. Coral', 'Data Administration');
+(1, 1, 2, 2, 'a259ccd4-8e2c-4dda-bc9d-7cbc80a314a1', '2026-01-12 06:04:17', 'Andrew Coral', 'Andrew B. Coral', 'Data Administration'),
+(2, 5, 4, 2, 'c4519743-f1b2-4e80-9f1c-ab72f272adc2', '2026-01-13 04:39:54', 'Andrew Coral', 'Andrew B. Coral', 'RIPH'),
+(3, 7, 3, 2, 'cert_6965e4736b4cf7.16107855', '2026-01-13 06:21:39', NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -129,8 +131,10 @@ CREATE TABLE `courses` (
 
 INSERT INTO `courses` (`courseID`, `teacherID`, `title`, `description`, `price`, `category`, `status`, `passingScore`, `createdAt`) VALUES
 (2, 3, 'Data Administration', '', 100.00, 'Programming', 'published', 70, '2026-01-11 10:21:25'),
-(3, 3, 'SAD', '', 50.00, 'Design', 'draft', 70, '2026-01-12 06:18:05'),
-(4, 3, 'RIPH', '', 10.00, 'Programming', 'published', 70, '2026-01-12 06:21:37');
+(3, 3, 'SAD', '', 50.00, 'Design', 'published', 70, '2026-01-12 06:18:05'),
+(4, 3, 'RIPH', '', 10.00, 'Marketing', 'published', 70, '2026-01-12 06:21:37'),
+(5, 3, 'TEST1', '', 50.00, 'Programming', 'published', 70, '2026-01-12 07:10:22'),
+(7, 3, 'Art Appreciation', '', 10.00, 'Programming', 'published', 70, '2026-01-13 06:23:37');
 
 -- --------------------------------------------------------
 
@@ -157,7 +161,13 @@ INSERT INTO `email_otp` (`emailOtpID`, `email`, `otpCode`, `userID`, `expiresAt`
 (8, 'coralandrew7@gmail.com', '620305', NULL, '2026-01-10 18:21:38', 0, '2026-01-11 01:11:38'),
 (10, 'gelicakes.rodrigo66@gmail.com', '858689', NULL, '2026-01-11 00:49:05', 0, '2026-01-11 07:39:05'),
 (11, 'paduakim085@gmail.com', '628521', NULL, '2026-01-11 01:22:24', 0, '2026-01-11 08:12:24'),
-(12, 'marasigan.juliamae@gmail.com', '426840', NULL, '2026-01-11 23:40:54', 0, '2026-01-12 06:30:54');
+(12, 'marasigan.juliamae@gmail.com', '426840', NULL, '2026-01-11 23:40:54', 0, '2026-01-12 06:30:54'),
+(13, 'andrewacadz@gmail.com', '118286', NULL, '2026-01-12 19:09:24', 0, '2026-01-13 01:59:24'),
+(14, 'andrewacadz@gmail.com', '597724', NULL, '2026-01-12 19:20:28', 0, '2026-01-13 02:10:28'),
+(15, 'andrewacadz@gmail.com', '639394', NULL, '2026-01-12 19:30:00', 0, '2026-01-13 02:20:00'),
+(16, 'andrewacadz@gmail.com', '249351', NULL, '2026-01-12 19:35:17', 0, '2026-01-13 02:25:17'),
+(17, 'andrewacadz@gmail.com', '597231', NULL, '2026-01-12 19:41:27', 0, '2026-01-13 02:31:27'),
+(18, 'andrewacadz@gmail.com', '300600', NULL, '2026-01-12 19:46:59', 0, '2026-01-13 02:36:59');
 
 -- --------------------------------------------------------
 
@@ -181,7 +191,10 @@ CREATE TABLE `enrollments` (
 --
 
 INSERT INTO `enrollments` (`enrollmentID`, `userID`, `courseID`, `paymentID`, `progressPercentage`, `enrolledAt`, `completedAt`, `status`) VALUES
-(1, 2, 2, 3, 100.00, '2026-01-11 15:32:17', '2026-01-12 06:00:38', 'completed');
+(1, 2, 2, 3, 100.00, '2026-01-11 15:32:17', '2026-01-12 22:47:46', 'completed'),
+(5, 2, 4, 12, 100.00, '2026-01-13 04:30:06', '2026-01-12 22:47:36', 'completed'),
+(7, 2, 3, 14, 100.00, '2026-01-13 06:01:41', '2026-01-13 00:20:05', 'completed'),
+(19, 2, 7, 32, 100.00, '2026-01-13 11:34:15', '2026-01-13 11:54:52', 'completed');
 
 -- --------------------------------------------------------
 
@@ -204,7 +217,10 @@ CREATE TABLE `lessons` (
 INSERT INTO `lessons` (`lessonID`, `courseID`, `title`, `filename`, `uploadedAt`) VALUES
 (2, 2, 'Part 1', 'uploads/lessons/6963b390b09cf_Self Intro.pdf', '2026-01-11 14:28:32'),
 (3, 3, 'SAD - Intro Lesson', 'uploads/lessons/6964921d42278_FINALIZING-LMS.drawio.pdf', '2026-01-12 06:18:05'),
-(4, 4, 'RIPH - Intro Lesson', 'uploads/lessons/696492f1ec86a_myDB.pdf', '2026-01-12 06:21:37');
+(4, 4, 'RIPH - Intro Lesson', 'uploads/lessons/696492f1ec86a_myDB.pdf', '2026-01-12 06:21:37'),
+(5, 5, 'TEST1 - Intro Lesson', 'uploads/lessons/69649e5ecd0ec_Mermaid Notation.pdf', '2026-01-12 07:10:22'),
+(7, 4, 'Lesson 1', '../uploads/lessons/6965cb3f88d0c_FINALIZING-LMS.drawio.pdf', '2026-01-13 04:34:07'),
+(10, 7, 'Art Appreciation - Intro Lesson', '../uploads/lessons/6965e4e96d9ec_LESSON WEEK 10-12.pdf', '2026-01-13 06:23:37');
 
 -- --------------------------------------------------------
 
@@ -224,7 +240,11 @@ CREATE TABLE `lesson_completions` (
 --
 
 INSERT INTO `lesson_completions` (`id`, `userID`, `lessonID`, `completedAt`) VALUES
-(22, 2, 2, '2026-01-12 14:00:29');
+(22, 2, 2, '2026-01-12 14:00:29'),
+(27, 2, 4, '2026-01-13 12:39:44'),
+(28, 2, 7, '2026-01-13 12:39:45'),
+(29, 2, 3, '2026-01-13 14:21:34'),
+(45, 2, 10, '2026-01-13 19:54:52');
 
 -- --------------------------------------------------------
 
@@ -269,7 +289,13 @@ INSERT INTO `payments` (`paymentID`, `enrollmentID`, `userID`, `courseID`, `amou
 (5, 1, 2, 2, 100.00, '65648183083769645', 'completed', '2026-01-12 05:52:49', '2026-01-12 05:52:49'),
 (6, 1, 2, 2, 100.00, '17P05731LP463472L', 'completed', '2026-01-12 05:55:35', '2026-01-12 05:55:35'),
 (7, 1, 2, 2, 100.00, '2MW68986YN407984D', 'completed', '2026-01-12 05:57:50', '2026-01-12 05:57:50'),
-(8, 1, 2, 2, 100.00, '5VS99243D90050401', 'completed', '2026-01-12 06:00:23', '2026-01-12 06:00:23');
+(8, 1, 2, 2, 100.00, '5VS99243D90050401', 'completed', '2026-01-12 06:00:23', '2026-01-12 06:00:23'),
+(12, 5, 2, 4, 10.00, '967593466N745394Y', 'completed', '2026-01-13 04:30:06', '2026-01-13 04:30:06'),
+(14, 7, 2, 3, 50.00, '88B76882SS637902L', 'completed', '2026-01-13 06:01:41', '2026-01-13 06:01:41'),
+(32, 19, 2, 7, 10.00, '7D096846L1341280F', 'completed', '2026-01-13 11:34:15', '2026-01-13 11:34:15'),
+(33, 19, 2, 7, 100.00, '2P659505NP894524E', 'completed', '2026-01-13 11:44:30', '2026-01-13 11:44:30'),
+(34, 19, 2, 7, 100.00, '5G315536UA928160H', 'completed', '2026-01-13 11:46:28', '2026-01-13 11:46:28'),
+(35, 19, 2, 7, 100.00, '33N818398H3803617', 'completed', '2026-01-13 11:50:16', '2026-01-13 11:50:16');
 
 -- --------------------------------------------------------
 
@@ -308,7 +334,22 @@ CREATE TABLE `quizzes` (
 --
 
 INSERT INTO `quizzes` (`quizID`, `courseID`, `title`, `description`, `allowRetake`, `passingScore`, `timeLimitMinutes`, `createdAt`) VALUES
-(1, 2, 'QUIZ 1', '', 1, 70, NULL, '2026-01-11 17:52:13');
+(1, 2, 'QUIZ 1', '', 1, 70, NULL, '2026-01-11 17:52:13'),
+(2, 4, 'FINAL EXAM', '', 0, 75, NULL, '2026-01-13 04:38:28'),
+(4, 7, 'Final Exam', '', 1, 70, NULL, '2026-01-13 11:52:54');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `quiz_answers`
+--
+
+CREATE TABLE `quiz_answers` (
+  `answerID` int(11) NOT NULL,
+  `quizResultID` int(11) NOT NULL,
+  `questionID` int(11) NOT NULL,
+  `selectedOption` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -334,7 +375,9 @@ CREATE TABLE `quiz_questions` (
 
 INSERT INTO `quiz_questions` (`questionID`, `quizID`, `question`, `option1`, `option2`, `option3`, `option4`, `correct_option`, `createdAt`) VALUES
 (3, 1, 'tulog kana?', 'yes', 'no', 'maybe', 'pake mo', 0, '2026-01-11 19:38:48'),
-(4, 1, 'Ye_?', 's', 'b', 'd', 'p', 0, '2026-01-11 20:14:49');
+(4, 1, 'Ye_?', 's', 'b', 'd', 'p', 0, '2026-01-11 20:14:49'),
+(5, 2, 'hep hep?', 'hooray', 'notize', 'help', 'idk', 0, '2026-01-13 04:39:06'),
+(8, 4, 'Who painted Mona Lisa', 'Ewan', 'Me', 'Vincent Van Gogh', 'Siya', 2, '2026-01-13 11:54:26');
 
 -- --------------------------------------------------------
 
@@ -361,7 +404,8 @@ CREATE TABLE `quiz_results` (
 --
 
 INSERT INTO `quiz_results` (`resultID`, `enrollmentID`, `userID`, `quizID`, `score`, `totalPoints`, `percentage`, `status`, `submittedAt`, `passed`, `takenAt`) VALUES
-(12, 1, 2, 1, 2.00, NULL, 100.00, 'passed', '2026-01-12 06:00:38', 1, '2026-01-12 14:00:38');
+(12, 1, 2, 1, 2.00, NULL, 100.00, 'passed', '2026-01-12 06:00:38', 1, '2026-01-12 14:00:38'),
+(13, 5, 2, 2, 1.00, NULL, 100.00, 'passed', '2026-01-13 04:39:50', 1, '2026-01-13 12:39:50');
 
 -- --------------------------------------------------------
 
@@ -550,6 +594,14 @@ ALTER TABLE `quizzes`
   ADD KEY `courseID` (`courseID`);
 
 --
+-- Indexes for table `quiz_answers`
+--
+ALTER TABLE `quiz_answers`
+  ADD PRIMARY KEY (`answerID`),
+  ADD KEY `quizResultID` (`quizResultID`),
+  ADD KEY `questionID` (`questionID`);
+
+--
 -- Indexes for table `quiz_questions`
 --
 ALTER TABLE `quiz_questions`
@@ -605,7 +657,7 @@ ALTER TABLE `vouchers`
 -- AUTO_INCREMENT for table `certificates`
 --
 ALTER TABLE `certificates`
-  MODIFY `certificateID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `certificateID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `choices`
@@ -623,31 +675,31 @@ ALTER TABLE `contents`
 -- AUTO_INCREMENT for table `courses`
 --
 ALTER TABLE `courses`
-  MODIFY `courseID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `courseID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `email_otp`
 --
 ALTER TABLE `email_otp`
-  MODIFY `emailOtpID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `emailOtpID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT for table `enrollments`
 --
 ALTER TABLE `enrollments`
-  MODIFY `enrollmentID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `enrollmentID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
 -- AUTO_INCREMENT for table `lessons`
 --
 ALTER TABLE `lessons`
-  MODIFY `lessonID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `lessonID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `lesson_completions`
 --
 ALTER TABLE `lesson_completions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=46;
 
 --
 -- AUTO_INCREMENT for table `modules`
@@ -659,7 +711,7 @@ ALTER TABLE `modules`
 -- AUTO_INCREMENT for table `payments`
 --
 ALTER TABLE `payments`
-  MODIFY `paymentID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `paymentID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=36;
 
 --
 -- AUTO_INCREMENT for table `questions`
@@ -671,19 +723,25 @@ ALTER TABLE `questions`
 -- AUTO_INCREMENT for table `quizzes`
 --
 ALTER TABLE `quizzes`
-  MODIFY `quizID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `quizID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT for table `quiz_answers`
+--
+ALTER TABLE `quiz_answers`
+  MODIFY `answerID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `quiz_questions`
 --
 ALTER TABLE `quiz_questions`
-  MODIFY `questionID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `questionID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `quiz_results`
 --
 ALTER TABLE `quiz_results`
-  MODIFY `resultID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `resultID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
 
 --
 -- AUTO_INCREMENT for table `sms_feedback`
@@ -701,7 +759,7 @@ ALTER TABLE `sms_otp`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `userID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `userID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `vouchers`
@@ -784,6 +842,13 @@ ALTER TABLE `questions`
 --
 ALTER TABLE `quizzes`
   ADD CONSTRAINT `quizzes_ibfk_1` FOREIGN KEY (`courseID`) REFERENCES `courses` (`courseID`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `quiz_answers`
+--
+ALTER TABLE `quiz_answers`
+  ADD CONSTRAINT `quiz_answers_ibfk_1` FOREIGN KEY (`quizResultID`) REFERENCES `quiz_results` (`resultID`) ON DELETE CASCADE,
+  ADD CONSTRAINT `quiz_answers_ibfk_2` FOREIGN KEY (`questionID`) REFERENCES `quiz_questions` (`questionID`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `quiz_questions`

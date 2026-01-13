@@ -49,10 +49,12 @@ try {
     ");
     $stmt->execute([$enrollmentID, $userID, $courseID, $amountPHP, $orderID]);
     
-    // 3. Reset progress to 0%
+    // 3. Reset progress to 0% and set status back to 'active'
     $stmt = $conn->prepare("
         UPDATE enrollments 
-        SET progressPercentage = 0 
+        SET progressPercentage = 0,
+            status = 'active',
+            completedAt = NULL
         WHERE enrollmentID = ?
     ");
     $stmt->execute([$enrollmentID]);
@@ -67,7 +69,7 @@ try {
     ");
     $stmt->execute([$userID, $courseID]);
     
-    // 5. Delete previous quiz results
+    // 5. Delete previous quiz results (so they can retake the quiz)
     $stmt = $conn->prepare("
         DELETE FROM quiz_results 
         WHERE userID = ? 
@@ -82,7 +84,7 @@ try {
     
     echo json_encode([
         'success' => true,
-        'message' => 'Payment successful. Course has been reset.',
+        'message' => 'Payment successful. You can now restart the course.',
         'orderID' => $orderID
     ]);
     

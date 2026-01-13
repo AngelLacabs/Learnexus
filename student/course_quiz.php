@@ -10,9 +10,9 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
 $userID = $_SESSION['user_id'];
 $courseID = $_GET['id'] ?? 0;
 
-// CHECK IF STUDENT ALREADY FAILED - BLOCK RETAKE WITHOUT PAYMENT
+// CHECK IF STUDENT ALREADY FAILED - Allow retake if they've paid
 $stmt = $conn->prepare("
-    SELECT qr.passed, qr.status 
+    SELECT qr.passed, qr.status, qr.takenAt
     FROM quiz_results qr
     JOIN quizzes q ON qr.quizID = q.quizID
     WHERE q.courseID = ? AND qr.userID = ?
@@ -22,11 +22,27 @@ $stmt = $conn->prepare("
 $stmt->execute([$courseID, $userID]);
 $previousResult = $stmt->fetch();
 
-// If student failed the last attempt, they must pay to retake
+// If student failed, check if they paid for retake
 if ($previousResult && $previousResult['passed'] == 0) {
-    $_SESSION['error'] = "You must pay to retake this course after failing the quiz.";
-    header('Location: retake_course.php?id=' . $courseID);
-    exit();
+    // Check if they've paid for retake AFTER failing
+    $stmt = $conn->prepare("
+        SELECT COUNT(*) as retake_payment_count
+        FROM payments p
+        JOIN enrollments e ON p.enrollmentID = e.enrollmentID
+        WHERE e.courseID = ? 
+        AND e.userID = ?
+        AND p.paymentDate > ?
+        AND p.status = 'completed'
+    ");
+    $stmt->execute([$courseID, $userID, $previousResult['takenAt']]);
+    $retakePayment = $stmt->fetch();
+    
+    // If no retake payment found, redirect to retake payment page
+    if ($retakePayment['retake_payment_count'] == 0) {
+        $_SESSION['error'] = "You must pay to retake this course after failing the quiz.";
+        header('Location: retake_course.php?id=' . $courseID);
+        exit();
+    }
 }
 
 // Get course info
@@ -49,7 +65,7 @@ if (!$quiz) {
 
 $quizID = $quiz['quizID'];
 
-// Fetch quiz questions (matching teacher's format)
+// Fetch quiz questions
 $stmt = $conn->prepare("SELECT * FROM quiz_questions WHERE quizID = ? ORDER BY questionID ASC");
 $stmt->execute([$quizID]);
 $questions = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -58,7 +74,7 @@ if (empty($questions)) {
     die("<h3>No questions available for this quiz yet.</h3>");
 }
 
-// Check if student already took the quiz
+// Check if student already took the quiz (and hasn't paid for retake)
 $stmt = $conn->prepare("
     SELECT * FROM quiz_results 
     WHERE quizID = ? AND userID = ?
@@ -68,21 +84,69 @@ $stmt = $conn->prepare("
 $stmt->execute([$quizID, $userID]);
 $existingResult = $stmt->fetch(PDO::FETCH_ASSOC);
 
-$submitted = $existingResult ? true : false;
+$submitted = false;
 $results = [];
 $score = 0;
 $total = count($questions);
 $passed = 0;
 
-if ($submitted) {
-    $score = $existingResult['score'];
-    $passed = $existingResult['passed'];
+// Only show existing result if they haven't paid for retake
+if ($existingResult) {
+    // Check if there's a retake payment AFTER this result
+    $stmt = $conn->prepare("
+        SELECT COUNT(*) as retake_count
+        FROM payments p
+        JOIN enrollments e ON p.enrollmentID = e.enrollmentID
+        WHERE e.courseID = ? 
+        AND e.userID = ?
+        AND p.paymentDate > ?
+        AND p.status = 'completed'
+    ");
+    $stmt->execute([$courseID, $userID, $existingResult['takenAt']]);
+    $retakeCheck = $stmt->fetch();
     
-    // Reconstruct results for review (if you stored answers, retrieve them)
-    // For now, we'll just show the questions
+    // If no retake payment, show existing result
+    if ($retakeCheck['retake_count'] == 0) {
+        $submitted = true;
+        $score = $existingResult['score'];
+        $passed = $existingResult['passed'];
+        
+        // Get the stored answers if available
+        $stmt = $conn->prepare("
+            SELECT qa.questionID, qa.selectedOption, qq.correct_option
+            FROM quiz_answers qa
+            JOIN quiz_questions qq ON qa.questionID = qq.questionID
+            WHERE qa.quizResultID = ?
+        ");
+        $stmt->execute([$existingResult['resultID']]);
+        $storedAnswers = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Reconstruct results for review
+        foreach ($questions as $q) {
+            $studentAnswer = -1;
+            foreach ($storedAnswers as $sa) {
+                if ($sa['questionID'] == $q['questionID']) {
+                    $studentAnswer = (int)$sa['selectedOption'];
+                    break;
+                }
+            }
+            
+            $results[] = [
+                'question' => $q['question'],
+                'options' => [
+                    $q['option1'],
+                    $q['option2'],
+                    $q['option3'],
+                    $q['option4']
+                ],
+                'correct' => (int)$q['correct_option'],
+                'student' => $studentAnswer
+            ];
+        }
+    }
 }
 
-// Handle new submission if not already submitted
+// Handle new submission
 if (!$submitted && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $answers = $_POST['answers'] ?? [];
 
@@ -96,8 +160,8 @@ if (!$submitted && $_SERVER['REQUEST_METHOD'] === 'POST') {
     // Calculate score
     foreach ($questions as $q) {
         $qid = $q['questionID'];
-        $correct = (int)$q['correct_option']; // 0=A, 1=B, 2=C, 3=D
-        $studentAnswer = (int)($answers[$qid] ?? -1);
+        $correct = (int)$q['correct_option']; // 0, 1, 2, or 3
+        $studentAnswer = isset($answers[$qid]) ? (int)$answers[$qid] : -1;
         
         if ($studentAnswer === $correct) {
             $score++;
@@ -127,6 +191,16 @@ if (!$submitted && $_SERVER['REQUEST_METHOD'] === 'POST') {
         VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
     ");
     $stmt->execute([$enrollmentID, $userID, $quizID, $score, $percentage, $passed, $quizStatus]);
+    $resultID = $conn->lastInsertId();
+    
+    // Save individual answers for review
+    foreach ($answers as $questionID => $selectedOption) {
+        $stmt = $conn->prepare("
+            INSERT INTO quiz_answers (quizResultID, questionID, selectedOption)
+            VALUES (?, ?, ?)
+        ");
+        $stmt->execute([$resultID, (int)$questionID, (int)$selectedOption]);
+    }
     
     // Update enrollment status if passed
     if ($passed) {

@@ -22,17 +22,19 @@ $stmt = $conn->prepare("
         u.avatar as instructorAvatar,
         p.amount as paidAmount,
         p.transactionReference,
-        CASE WHEN e.status = 'completed' THEN 1 ELSE 0 END as isCompleted
-
+        CASE WHEN e.status = 'completed' THEN 1 ELSE 0 END as isCompleted,
+        qr.status AS quizStatus
     FROM enrollments e
     JOIN courses c ON e.courseID = c.courseID
     JOIN users u ON c.teacherID = u.userID
     LEFT JOIN payments p ON e.paymentID = p.paymentID
+    LEFT JOIN quiz_results qr ON e.enrollmentID = qr.enrollmentID
     WHERE e.userID = ? AND e.status IN ('active', 'completed')
     ORDER BY 
         CASE WHEN e.progressPercentage >= 100 THEN 1 ELSE 0 END ASC,
         e.enrolledAt DESC
 ");
+
 $stmt->execute([$userID]);
 $enrolledCourses = $stmt->fetchAll();
 
@@ -377,6 +379,11 @@ foreach ($enrolledCourses as $course) {
             font-size: 13px;
             font-weight: 600;
         }
+        .badge-primary {
+    background: #ffebee;
+    color: #c62828;
+}
+
     </style>
 </head>
 <body>
@@ -562,13 +569,22 @@ foreach ($enrolledCourses as $course) {
                             </div>
                             
                             <div class="course-actions">
-                                <a href="course_content.php?id=<?php echo $course['courseID']; ?>" class="btn-review">
-                                    <i class="bi bi-eye"></i> Review Course
-                                </a>
-                                <button class="btn-delete" onclick="confirmDelete(<?php echo $course['enrollmentID']; ?>, '<?php echo htmlspecialchars(addslashes($course['title'])); ?>')">
-                                    <i class="bi bi-trash"></i> Remove
-                                </button>
-                            </div>
+    <?php if ($course['quizStatus'] === 'failed'): ?>
+        <span class="badge badge-primary">Failed</span>
+        <a href="retake_course.php?id=<?php echo $course['courseID']; ?>" class="btn-continue">
+            Retake Course → 
+        </a>
+    <?php else: ?>
+        <span class="badge badge-success">Passed</span>
+        <a href="course_content.php?id=<?php echo $course['courseID']; ?>" class="btn-review">
+            <i class="bi bi-eye"></i> Review Course
+        </a>
+    <?php endif; ?>
+    <button class="btn-delete" onclick="confirmDelete(<?php echo $course['enrollmentID']; ?>, '<?php echo htmlspecialchars(addslashes($course['title'])); ?>')">
+        <i class="bi bi-trash"></i> Remove
+    </button>
+</div>
+
                         </div>
                     </div>
                 <?php endforeach; ?>
