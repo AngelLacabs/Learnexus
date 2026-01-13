@@ -47,12 +47,13 @@ $stmt = $conn->prepare("
     SELECT q.*,
            (SELECT COUNT(*) FROM quiz_questions WHERE quizID = q.quizID) as questionCount,
            (SELECT MAX(takenAt) FROM quiz_results WHERE quizID = q.quizID AND userID = ?) as lastAttempt,
-           (SELECT passed FROM quiz_results WHERE quizID = q.quizID AND userID = ? ORDER BY takenAt DESC LIMIT 1) as hasPassed
+           (SELECT passed FROM quiz_results WHERE quizID = q.quizID AND userID = ? ORDER BY takenAt DESC LIMIT 1) as hasPassed,
+           (SELECT score FROM quiz_results WHERE quizID = q.quizID AND userID = ? ORDER BY takenAt DESC LIMIT 1) as lastScore
     FROM quizzes q
     WHERE q.courseID = ?
     ORDER BY q.quizID ASC
 ");
-$stmt->execute([$userID, $userID, $courseID]);
+$stmt->execute([$userID, $userID, $userID, $courseID]);
 $quizzes = $stmt->fetchAll();
 
 // Calculate progress
@@ -62,16 +63,52 @@ $passedQuizzes = count(array_filter($quizzes, fn($q) => $q['hasPassed']));
 $completedItems = $completedLessons + $passedQuizzes;
 $progressPercentage = $totalItems > 0 ? round(($completedItems / $totalItems) * 100) : 0;
 
-// Update progress
-$stmt = $conn->prepare("UPDATE enrollments SET progressPercentage = ? WHERE enrollmentID = ?");
-$stmt->execute([$progressPercentage, $enrollment['enrollmentID']]);
+// Update progress and check completion
+$isCompleted = ($progressPercentage >= 100);
+$stmt = $conn->prepare("UPDATE enrollments SET progressPercentage = ?, completedAt = ? WHERE enrollmentID = ?");
+$stmt->execute([$progressPercentage, $isCompleted ? date('Y-m-d H:i:s') : null, $enrollment['enrollmentID']]);
 
-// Get current lesson
+// Check if certificate exists
+$certificateUUID = null;
+if ($isCompleted) {
+    $stmt = $conn->prepare("SELECT certificateUUID FROM certificates WHERE enrollmentID = ?");
+    $stmt->execute([$enrollment['enrollmentID']]);
+    $cert = $stmt->fetch();
+    
+    if (!$cert) {
+        // Generate certificate
+        $uuid = uniqid('cert_', true);
+        $stmt = $conn->prepare("
+            INSERT INTO certificates (certificateUUID, userID, courseID, enrollmentID, issuedAt) 
+            VALUES (?, ?, ?, ?, NOW())
+        ");
+        $stmt->execute([$uuid, $userID, $courseID, $enrollment['enrollmentID']]);
+        $certificateUUID = $uuid;
+    } else {
+        $certificateUUID = $cert['certificateUUID'];
+    }
+}
+
+// Get current view (lesson or quiz)
 $currentLessonID = $_GET['lesson_id'] ?? null;
+$currentQuizID = $_GET['quiz_id'] ?? null;
 $currentLesson = null;
+$currentQuiz = null;
 
 if ($currentLessonID) {
-    $currentLesson = array_filter($lessons, fn($l) => $l['lessonID'] == $currentLessonID)[0] ?? null;
+    foreach ($lessons as $lesson) {
+        if ($lesson['lessonID'] == $currentLessonID) {
+            $currentLesson = $lesson;
+            break;
+        }
+    }
+} elseif ($currentQuizID) {
+    foreach ($quizzes as $quiz) {
+        if ($quiz['quizID'] == $currentQuizID) {
+            $currentQuiz = $quiz;
+            break;
+        }
+    }
 } elseif (!empty($lessons)) {
     $currentLesson = $lessons[0];
     $currentLessonID = $currentLesson['lessonID'];
@@ -172,11 +209,11 @@ if ($currentLessonID) {
         .lesson-item:hover, .quiz-item:hover {
             background: #f8f9fa;
         }
-        .lesson-item.active {
+        .lesson-item.active, .quiz-item.active {
             background: #e3f2fd;
             border-left: 4px solid #1e88e5;
         }
-        .lesson-item.completed {
+        .lesson-item.completed, .quiz-item.completed {
             background: #f1f8f4;
         }
         .item-icon {
@@ -311,6 +348,10 @@ if ($currentLessonID) {
             background: #e3f2fd;
             color: #1e88e5;
         }
+        .badge-quiz {
+            background: #fff3e0;
+            color: #fb8c00;
+        }
         .btn-complete {
             background: #43a047;
             color: white;
@@ -323,6 +364,21 @@ if ($currentLessonID) {
         .btn-complete:hover {
             background: #388e3c;
             color: white;
+        }
+        .quiz-summary {
+            background: #f8f9fa;
+            padding: 24px;
+            border-radius: 8px;
+            margin: 24px 0;
+        }
+        .quiz-summary .stat {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .quiz-summary .stat:last-child {
+            border-bottom: none;
         }
     </style>
 </head>
@@ -352,7 +408,7 @@ if ($currentLessonID) {
             <div class="content-list">
                 <?php if (!empty($lessons)): ?>
                     <div class="section-header">
-                        <i class="bi bi-book"></i> Lessons
+                        <i class="bi bi-book"></i> LESSONS
                     </div>
                     <?php foreach ($lessons as $index => $lesson): ?>
                         <div class="lesson-item <?php echo ($currentLessonID == $lesson['lessonID']) ? 'active' : ''; ?> <?php echo $lesson['isCompleted'] ? 'completed' : ''; ?>" 
@@ -374,11 +430,11 @@ if ($currentLessonID) {
                 
                 <?php if (!empty($quizzes)): ?>
                     <div class="section-header">
-                        <i class="bi bi-clipboard-check"></i> Assessments
+                        <i class="bi bi-clipboard-check"></i> ASSESSMENTS
                     </div>
                     <?php foreach ($quizzes as $quiz): ?>
-                        <div class="quiz-item <?php echo $quiz['hasPassed'] ? 'completed' : ''; ?>" 
-                             onclick="window.location.href='take_quiz.php?quiz_id=<?php echo $quiz['quizID']; ?>'">
+                        <div class="quiz-item <?php echo ($currentQuizID == $quiz['quizID']) ? 'active' : ''; ?> <?php echo $quiz['hasPassed'] ? 'completed' : ''; ?>" 
+                             onclick="window.location.href='?id=<?php echo $courseID; ?>&quiz_id=<?php echo $quiz['quizID']; ?>'">
                             <div class="item-icon <?php echo $quiz['hasPassed'] ? 'completed' : 'quiz'; ?>">
                                 <?php if ($quiz['hasPassed']): ?>
                                     <i class="bi bi-check-lg"></i>
@@ -409,18 +465,19 @@ if ($currentLessonID) {
             </div>
             
             <div class="content-area">
-                <?php if ($progressPercentage >= 100): ?>
+                <?php if ($isCompleted): ?>
                     <div class="completion-banner">
                         <i class="bi bi-trophy" style="font-size: 48px; margin-bottom: 16px;"></i>
                         <h4>Congratulations! 🎉</h4>
                         <p class="mb-3">You've completed all lessons and quizzes in this course!</p>
-                        <button class="btn btn-light" onclick="window.location.href='view_certificate.php?enrollment_id=<?php echo $enrollment['enrollmentID']; ?>'">
+                        <button class="btn btn-light" onclick="window.location.href='view_certificate.php?id=<?php echo $certificateUUID; ?>'">
                             <i class="bi bi-award"></i> View Certificate
                         </button>
                     </div>
                 <?php endif; ?>
                 
                 <?php if ($currentLesson): ?>
+                    <!-- Lesson Content -->
                     <div class="content-viewer">
                         <span class="badge-custom badge-reading">
                             <i class="bi bi-file-pdf"></i> Reading Material
@@ -477,13 +534,60 @@ if ($currentLessonID) {
                                     <button class="btn btn-primary" onclick="window.location.href='?id=<?php echo $courseID; ?>&lesson_id=<?php echo $nextLesson['lessonID']; ?>'">
                                         Next Lesson <i class="bi bi-arrow-right"></i>
                                     </button>
-                                <?php elseif (!empty($quizzes)): ?>
-                                    <button class="btn btn-primary" onclick="window.location.href='take_quiz.php?quiz_id=<?php echo $quizzes[0]['quizID']; ?>'">
-                                        Take Quiz <i class="bi bi-arrow-right"></i>
+                                <?php elseif (!empty($quizzes) && !$isCompleted): ?>
+                                    <button class="btn btn-primary" onclick="window.location.href='?id=<?php echo $courseID; ?>&quiz_id=<?php echo $quizzes[0]['quizID']; ?>'">
+                                        View Quiz <i class="bi bi-arrow-right"></i>
                                     </button>
                                 <?php endif; ?>
                             </div>
                         </div>
+                    </div>
+                <?php elseif ($currentQuiz): ?>
+                    <!-- Quiz Content -->
+                    <div class="content-viewer">
+                        <span class="badge-custom badge-quiz">
+                            <i class="bi bi-clipboard-check"></i> Assessment
+                        </span>
+                        <h3><?php echo htmlspecialchars($currentQuiz['title']); ?></h3>
+                        <p class="text-muted">Test your knowledge with this quiz.</p>
+                        
+                        <div class="quiz-summary">
+                            <div class="stat">
+                                <span><strong>Questions:</strong></span>
+                                <span><?php echo $currentQuiz['questionCount']; ?></span>
+                            </div>
+                            <div class="stat">
+                                <span><strong>Passing Score:</strong></span>
+                                <span><?php echo $currentQuiz['passingScore']; ?>%</span>
+                            </div>
+                            <div class="stat">
+                                <span><strong>Status:</strong></span>
+                                <span>
+                                    <?php if ($currentQuiz['hasPassed']): ?>
+                                        <span class="badge bg-success">Passed (<?php echo $currentQuiz['lastScore']; ?>%)</span>
+                                    <?php elseif ($currentQuiz['lastAttempt']): ?>
+                                        <span class="badge bg-warning">Not Passed (<?php echo $currentQuiz['lastScore']; ?>%)</span>
+                                    <?php else: ?>
+                                        <span class="badge bg-secondary">Not Attempted</span>
+                                    <?php endif; ?>
+                                </span>
+                            </div>
+                            <?php if ($currentQuiz['lastAttempt']): ?>
+                            <div class="stat">
+                                <span><strong>Last Attempt:</strong></span>
+                                <span><?php echo date('M d, Y g:i A', strtotime($currentQuiz['lastAttempt'])); ?></span>
+                            </div>
+                            <?php endif; ?>
+                        </div>
+                        
+                        <?php if ($currentQuiz['hasPassed']): ?>
+                            <div class="alert alert-success">
+                                <i class="bi bi-check-circle"></i>
+                                <strong>Quiz passed!</strong> You've successfully completed this assessment with a score of <?php echo $currentQuiz['lastScore']; ?>%.
+                            </div>
+                        <?php endif; ?>
+                        
+        
                     </div>
                 <?php else: ?>
                     <div class="empty-state">
