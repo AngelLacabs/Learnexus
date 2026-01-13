@@ -1,468 +1,535 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 require_once '../database/db_connect.php';
 
-/* =====================
-   AUTH CHECK
-===================== */
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
     header('Location: ../index.php');
     exit();
 }
 
-$userID  = $_SESSION['user_id'];
-$courseID = $_GET['course'] ?? 0;
+$userID = $_SESSION['user_id'];
 
-/* =====================
-   GET USER INFO
-===================== */
-$stmt = $conn->prepare("SELECT firstName, lastName, middleInitial FROM users WHERE userID = ?");
-$stmt->execute([$userID]);
-$user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-if (!$user) {
-    die("User not found.");
-}
-
-$studentName = $user['firstName'] . ' ' . ($user['middleInitial'] ? $user['middleInitial'] . '. ' : '') . $user['lastName'];
-
-/* =====================
-   GET COURSE INFO
-===================== */
+// Get all certificates for this user
 $stmt = $conn->prepare("
-    SELECT c.*, 
-           CONCAT(u.firstName, ' ', u.lastName) as instructorName,
-           e.enrollmentID,
-           e.completedAt
-    FROM courses c
+    SELECT 
+        cert.*,
+        c.title as courseTitle,
+        c.description as courseDescription,
+        CONCAT(u.firstName, ' ', u.lastName) as instructorName,
+        e.completedAt,
+        e.progressPercentage
+    FROM certificates cert
+    JOIN enrollments e ON cert.enrollmentID = e.enrollmentID
+    JOIN courses c ON cert.courseID = c.courseID
     JOIN users u ON c.teacherID = u.userID
-    LEFT JOIN enrollments e ON c.courseID = e.courseID AND e.userID = ?
-    WHERE c.courseID = ?
+    WHERE cert.userID = ?
+    ORDER BY cert.issuedAt DESC
 ");
-$stmt->execute([$userID, $courseID]);
-$course = $stmt->fetch(PDO::FETCH_ASSOC);
-
-if (!$course) {
-    die("Course not found.");
-}
-
-/* =====================
-   LESSON COMPLETION CHECK
-===================== */
-$stmt = $conn->prepare("SELECT COUNT(*) FROM lessons WHERE courseID = ?");
-$stmt->execute([$courseID]);
-$totalLessons = (int)$stmt->fetchColumn();
-
-$stmt = $conn->prepare("
-    SELECT COUNT(*) 
-    FROM lesson_completions 
-    WHERE userID = ?
-      AND lessonID IN (
-        SELECT lessonID FROM lessons WHERE courseID = ?
-      )
-");
-$stmt->execute([$userID, $courseID]);
-$completedLessons = (int)$stmt->fetchColumn();
-
-$allLessonsCompleted = $totalLessons > 0 && $completedLessons === $totalLessons;
-
-/* =====================
-   QUIZ CHECK
-===================== */
-$stmt = $conn->prepare("SELECT quizID FROM quizzes WHERE courseID = ?");
-$stmt->execute([$courseID]);
-$quizID = $stmt->fetchColumn();
-
-$quizPassed = false;
-$quizScore = 0;
-
-if ($quizID) {
-    $stmt = $conn->prepare("
-        SELECT status, percentage 
-        FROM quiz_results 
-        WHERE userID = ? AND quizID = ?
-        ORDER BY takenAt DESC
-        LIMIT 1
-    ");
-    $stmt->execute([$userID, $quizID]);
-    $quizResult = $stmt->fetch(PDO::FETCH_ASSOC);
-    
-    if ($quizResult) {
-        $quizPassed = $quizResult['status'] === 'passed';
-        $quizScore = $quizResult['percentage'];
-    }
-}
-
-/* =====================
-   HARD BLOCK (SECURITY)
-===================== */
-if (!$allLessonsCompleted || !$quizPassed) {
-    ?>
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <title>Certificate Locked</title>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-        <style>
-            body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
-            .lock-card { background: white; padding: 60px 40px; border-radius: 20px; text-align: center; max-width: 500px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
-            .lock-icon { font-size: 80px; color: #ff9800; margin-bottom: 20px; }
-        </style>
-    </head>
-    <body>
-        <div class="lock-card">
-            <i class="bi bi-lock-fill lock-icon"></i>
-            <h3>Certificate Locked</h3>
-            <p class="text-muted mb-4">
-                <?php if (!$allLessonsCompleted): ?>
-                    You must complete all <?= $totalLessons ?> lessons first.<br>
-                    Progress: <?= $completedLessons ?>/<?= $totalLessons ?> completed
-                <?php else: ?>
-                    You must pass the quiz to unlock your certificate.<br>
-                    Required: 70% | Your score: <?= round($quizScore, 1) ?>%
-                <?php endif; ?>
-            </p>
-            <a href="course_learn.php?id=<?= $courseID ?>" class="btn btn-primary">
-                <i class="bi bi-arrow-left"></i> Go Back to Course
-            </a>
-        </div>
-    </body>
-    </html>
-    <?php
-    exit();
-}
-
-/* =====================
-   CHECK/CREATE CERTIFICATE
-===================== */
-$stmt = $conn->prepare("SELECT * FROM certificates WHERE userID = ? AND courseID = ?");
-$stmt->execute([$userID, $courseID]);
-$certificate = $stmt->fetch(PDO::FETCH_ASSOC);
-
-// Create certificate if it doesn't exist
-if (!$certificate) {
-    $certificateUUID = sprintf(
-        '%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
-        mt_rand(0, 0xffff), mt_rand(0, 0xffff),
-        mt_rand(0, 0xffff),
-        mt_rand(0, 0x0fff) | 0x4000,
-        mt_rand(0, 0x3fff) | 0x8000,
-        mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
-    );
-    
-    $stmt = $conn->prepare("
-        INSERT INTO certificates (enrollmentID, courseID, userID, certificateUUID, instructorName, studentName, courseTitle, issuedAt)
-        VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
-    ");
-    $stmt->execute([
-        $course['enrollmentID'],
-        $courseID,
-        $userID,
-        $certificateUUID,
-        $course['instructorName'],
-        $studentName,
-        $course['title']
-    ]);
-    
-    // Fetch the newly created certificate
-    $stmt = $conn->prepare("SELECT * FROM certificates WHERE userID = ? AND courseID = ?");
-    $stmt->execute([$userID, $courseID]);
-    $certificate = $stmt->fetch(PDO::FETCH_ASSOC);
-}
-
-$issueDate = date('F d, Y', strtotime($certificate['issuedAt']));
+$stmt->execute([$userID]);
+$certificates = $stmt->fetchAll();
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Certificate - <?= htmlspecialchars($course['title']) ?></title>
-<link rel="icon" type="image/png" href="../images/Learnexus.png">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Certificates - Learnexus</title>
+    <link rel="icon" type="image/png" href="../images/Learnexus.png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body {
+            background: #f8f9fa;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
 
-<style>
-body {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    min-height: 100vh;
-    padding: 40px 20px;
-    font-family: 'Georgia', serif;
-}
+        .sidebar {
+            width: 260px;
+            height: 100vh;
+            background: white;
+            position: fixed;
+            left: 0;
+            top: 0;
+            border-right: 1px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+        }
 
-.certificate-container {
-    max-width: 900px;
-    margin: 0 auto;
-}
+        .sidebar-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
 
-.certificate {
-    background: white;
-    padding: 60px;
-    border: 15px solid #667eea;
-    border-radius: 20px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-    text-align: center;
-    position: relative;
-    overflow: hidden;
-}
+        .brand {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1e88e5;
+            text-decoration: none;
+        }
 
-.certificate::before {
-    content: '';
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    right: 20px;
-    bottom: 20px;
-    border: 3px solid #764ba2;
-    border-radius: 10px;
-    pointer-events: none;
-}
+        .sidebar-menu {
+            flex: 1;
+            padding: 20px 0;
+            overflow-y: auto;
+        }
 
-.certificate-header {
-    margin-bottom: 30px;
-}
+        .menu-item {
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #666;
+            text-decoration: none;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
 
-.certificate-logo {
-    font-size: 48px;
-    font-weight: bold;
-    color: #667eea;
-    margin-bottom: 10px;
-}
+        .menu-item:hover {
+            background: #f8f9fa;
+            color: #1e88e5;
+        }
 
-.certificate-title {
-    font-size: 42px;
-    font-weight: bold;
-    color: #333;
-    margin-bottom: 10px;
-    text-transform: uppercase;
-    letter-spacing: 3px;
-}
+        .menu-item.active {
+            background: #e3f2fd;
+            color: #1e88e5;
+            border-left-color: #1e88e5;
+            font-weight: 600;
+        }
 
-.certificate-subtitle {
-    font-size: 18px;
-    color: #666;
-    font-style: italic;
-}
+        .menu-item i {
+            font-size: 20px;
+            width: 24px;
+        }
 
-.certificate-body {
-    margin: 40px 0;
-    padding: 30px 0;
-}
+        .sidebar-footer {
+            padding: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
 
-.recipient-text {
-    font-size: 20px;
-    color: #666;
-    margin-bottom: 15px;
-}
+        .main-content {
+            margin-left: 260px;
+            min-height: 100vh;
+        }
 
-.recipient-name {
-    font-size: 48px;
-    font-weight: bold;
-    color: #667eea;
-    margin: 20px 0;
-    font-family: 'Brush Script MT', cursive;
-}
+        .top-bar {
+            background: white;
+            padding: 20px 40px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-.completion-text {
-    font-size: 18px;
-    color: #666;
-    margin: 20px 0;
-    line-height: 1.8;
-}
+        .search-box {
+            position: relative;
+            width: 400px;
+        }
 
-.course-name {
-    font-size: 32px;
-    font-weight: bold;
-    color: #333;
-    margin: 25px 0;
-}
+        .search-box input {
+            width: 100%;
+            padding: 10px 40px 10px 16px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
 
-.certificate-footer {
-    margin-top: 50px;
-    display: flex;
-    justify-content: space-around;
-    align-items: flex-end;
-}
+        .search-box i {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+        }
 
-.signature-block {
-    text-align: center;
-    min-width: 200px;
-}
+        .user-section {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
 
-.signature-line {
-    border-top: 2px solid #333;
-    margin-bottom: 8px;
-    padding-top: 5px;
-    font-weight: bold;
-    color: #333;
-}
+        .notification-icon {
+            position: relative;
+            cursor: pointer;
+        }
 
-.signature-label {
-    font-size: 14px;
-    color: #666;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
+        .notification-badge {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background: #f44336;
+            color: white;
+            font-size: 10px;
+            padding: 2px 5px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
 
-.certificate-id {
-    margin-top: 30px;
-    font-size: 12px;
-    color: #999;
-    letter-spacing: 1px;
-}
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+        }
 
-.action-buttons {
-    margin-top: 30px;
-    display: flex;
-    gap: 15px;
-    justify-content: center;
-}
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #1e88e5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
 
-.btn-download {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 12px 30px;
-    border: none;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: transform 0.2s;
-}
+        .content-area {
+            padding: 40px;
+        }
 
-.btn-download:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-}
+        .page-header {
+            margin-bottom: 32px;
+        }
 
-.btn-back {
-    background: white;
-    color: #667eea;
-    padding: 12px 30px;
-    border: 2px solid #667eea;
-    border-radius: 8px;
-    font-weight: 600;
-    text-decoration: none;
-    display: inline-block;
-    transition: all 0.2s;
-}
+        .page-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
 
-.btn-back:hover {
-    background: #667eea;
-    color: white;
-}
+        .certificates-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 24px;
+        }
 
-.seal {
-    position: absolute;
-    bottom: 60px;
-    right: 60px;
-    width: 100px;
-    height: 100px;
-    border: 5px solid #764ba2;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(118, 75, 162, 0.1);
-    font-size: 12px;
-    color: #764ba2;
-    font-weight: bold;
-    text-align: center;
-    line-height: 1.2;
-}
+        .certificate-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
 
-@media print {
-    body {
-        background: white;
-        padding: 0;
-    }
-    .action-buttons {
-        display: none;
-    }
-}
-</style>
+        .certificate-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+        }
+
+        .certificate-preview {
+            height: 220px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding: 32px;
+            color: white;
+        }
+
+        .certificate-preview-content {
+            text-align: center;
+            width: 100%;
+        }
+
+        .certificate-preview h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .certificate-badge {
+            width: 60px;
+            height: 60px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+        }
+
+        .certificate-badge i {
+            font-size: 32px;
+        }
+
+        .certificate-body {
+            padding: 20px;
+        }
+
+        .certificate-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .certificate-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .meta-item i {
+            color: #999;
+        }
+
+        .certificate-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-view {
+            flex: 1;
+            padding: 10px;
+            background: #1e88e5;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-view:hover {
+            background: #1976d2;
+        }
+
+        .btn-download {
+            padding: 10px 16px;
+            background: transparent;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-download:hover {
+            background: #f8f9fa;
+            border-color: #ccc;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 40px;
+            background: white;
+            border-radius: 12px;
+        }
+
+        .empty-state i {
+            font-size: 64px;
+            color: #ddd;
+            margin-bottom: 20px;
+        }
+
+        .empty-state h3 {
+            font-size: 24px;
+            color: #666;
+            margin-bottom: 12px;
+        }
+
+        .empty-state p {
+            color: #999;
+            margin-bottom: 24px;
+        }
+
+        .btn-browse {
+            padding: 12px 32px;
+            background: #1e88e5;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-browse:hover {
+            background: #1976d2;
+            color: white;
+        }
+    </style>
 </head>
 <body>
-
-<div class="certificate-container">
-    <div class="certificate" id="certificate">
-        <div class="certificate-header">
-            <div class="certificate-logo">LEARNEXUS</div>
-            <div class="certificate-title">Certificate of Completion</div>
-            <div class="certificate-subtitle">This is to certify that</div>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <a href="dashboard.php" class="brand">LEARNEXUS</a>
         </div>
         
-        <div class="certificate-body">
-            <div class="recipient-name"><?= htmlspecialchars($studentName) ?></div>
-            
-            <div class="completion-text">
-                has successfully completed the course
-            </div>
-            
-            <div class="course-name"><?= htmlspecialchars($course['title']) ?></div>
-            
-            <div class="completion-text">
-                with a passing score, demonstrating proficiency and dedication<br>
-                in the subject matter.
-            </div>
+        <div class="sidebar-menu">
+            <a href="dashboard.php" class="menu-item">
+                <i class="bi bi-grid"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="browse_courses.php" class="menu-item">
+                <i class="bi bi-book"></i>
+                <span>Course Catalog</span>
+            </a>
+            <a href="my_courses.php" class="menu-item">
+                <i class="bi bi-collection"></i>
+                <span>My Courses</span>
+            </a>
+            <a href="certificates.php" class="menu-item active">
+                <i class="bi bi-award"></i>
+                <span>Certificates</span>
+            </a>
+            <a href="vouchers.php" class="menu-item">
+                <i class="bi bi-ticket-perforated"></i>
+                <span>Vouchers</span>
+            </a>
+            <a href="settings.php" class="menu-item">
+                <i class="bi bi-gear"></i>
+                <span>Settings</span>
+            </a>
         </div>
         
-        <div class="certificate-footer">
-            <div class="signature-block">
-                <div class="signature-line"><?= htmlspecialchars($course['instructorName']) ?></div>
-                <div class="signature-label">Instructor</div>
-            </div>
-            
-            <div class="signature-block">
-                <div class="signature-line"><?= $issueDate ?></div>
-                <div class="signature-label">Date Issued</div>
-            </div>
-        </div>
-        
-        <div class="certificate-id">
-            Certificate ID: <?= strtoupper($certificate['certificateUUID']) ?>
-        </div>
-        
-        <div class="seal">
-            <div>
-                VERIFIED<br>
-                LEARNEXUS
-            </div>
+        <div class="sidebar-footer">
+            <a href="../logout.php" class="menu-item">
+                <i class="bi bi-box-arrow-left"></i>
+                <span>Logout</span>
+            </a>
         </div>
     </div>
-    
-    <div class="action-buttons">
-        <button onclick="window.print()" class="btn-download">
-            <i class="bi bi-printer"></i> Print Certificate
-        </button>
-        <button onclick="downloadCertificate()" class="btn-download">
-            <i class="bi bi-download"></i> Download PDF
-        </button>
-        <a href="dashboard.php" class="btn-back">
-            <i class="bi bi-house"></i> Back to Dashboard
-        </a>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="search-box">
+                <input type="text" placeholder="Search for courses, assignments...">
+                <i class="bi bi-search"></i>
+            </div>
+            
+            <div class="user-section">
+                <div class="notification-icon">
+                    <i class="bi bi-bell" style="font-size: 22px; color: #666;"></i>
+                    <span class="notification-badge">3</span>
+                </div>
+                <div class="user-info">
+                    <span style="font-weight: 600; color: #333;">
+                        <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>
+                    </span>
+                    <div class="user-avatar">
+                        <?php echo strtoupper(substr($_SESSION['first_name'], 0, 1)); ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Area -->
+        <div class="content-area">
+            <div class="page-header">
+                <h1><i class="bi bi-award"></i> My Certificates</h1>
+                <p class="text-muted">View and download your earned certificates</p>
+            </div>
+
+            <?php if (count($certificates) > 0): ?>
+                <div class="certificates-grid">
+                    <?php foreach ($certificates as $cert): 
+                        $gradients = [
+                            'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                            'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                            'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+                            'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+                            'linear-gradient(135deg, #30cfd0 0%, #330867 100%)',
+                        ];
+                        $gradient = $gradients[$cert['certificateID'] % count($gradients)];
+                    ?>
+                        <div class="certificate-card" onclick="window.location.href='view_certificate.php?id=<?php echo $cert['certificateUUID']; ?>'">
+                            <div class="certificate-preview" style="background: <?php echo $gradient; ?>">
+                                <div class="certificate-preview-content">
+                                    <div class="certificate-badge">
+                                        <i class="bi bi-award-fill"></i>
+                                    </div>
+                                    <h3>Certificate of Completion</h3>
+                                    <p style="font-size: 14px; opacity: 0.9; margin: 0;">
+                                        <?php echo htmlspecialchars($cert['courseTitle']); ?>
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="certificate-body">
+                                <div class="certificate-title"><?php echo htmlspecialchars($cert['courseTitle']); ?></div>
+                                <div class="certificate-meta">
+                                    <div class="meta-item">
+                                        <i class="bi bi-person"></i>
+                                        <span>Instructor: <?php echo htmlspecialchars($cert['instructorName']); ?></span>
+                                    </div>
+                                    <div class="meta-item">
+                                        <i class="bi bi-calendar-check"></i>
+                                        <span>Issued: <?php echo date('F d, Y', strtotime($cert['issuedAt'])); ?></span>
+                                    </div>
+                                    <div class="meta-item">
+                                        <i class="bi bi-hash"></i>
+                                        <span>ID: <?php echo htmlspecialchars(substr($cert['certificateUUID'], 0, 8)); ?></span>
+                                    </div>
+                                </div>
+                                <div class="certificate-actions">
+                                    <button class="btn-view" onclick="event.stopPropagation(); window.location.href='view_certificate.php?id=<?php echo $cert['certificateUUID']; ?>'">
+                                        <i class="bi bi-eye"></i> View Certificate
+                                    </button>
+                                    <button class="btn-download" onclick="event.stopPropagation(); downloadCertificate('<?php echo $cert['certificateUUID']; ?>')">
+                                        <i class="bi bi-download"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php else: ?>
+                <div class="empty-state">
+                    <i class="bi bi-award"></i>
+                    <h3>No Certificates Yet</h3>
+                    <p>Complete courses to earn certificates and showcase your achievements</p>
+                    <a href="browse_courses.php" class="btn-browse">Browse Courses</a>
+                </div>
+            <?php endif; ?>
+        </div>
     </div>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function downloadCertificate(uuid) {
+            // Show loading
+            Swal.fire({
+                title: 'Preparing Download',
+                text: 'Generating your certificate...',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
 
-<script>
-function downloadCertificate() {
-    const element = document.getElementById('certificate');
-    const opt = {
-        margin: 0.5,
-        filename: 'Certificate_<?= str_replace(' ', '_', $course['title']) ?>_<?= str_replace(' ', '_', $studentName) ?>.pdf',
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, logging: false },
-        jsPDF: { unit: 'in', format: 'letter', orientation: 'landscape' }
-    };
-    
-    html2pdf().set(opt).from(element).save();
-}
-</script>
-
+            // Simulate download preparation
+            setTimeout(() => {
+                window.open(`download_certificate.php?id=${uuid}`, '_blank');
+                Swal.close();
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Download Started',
+                    text: 'Your certificate is being downloaded',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            }, 1000);
+        }
+    </script>
 </body>
 </html>

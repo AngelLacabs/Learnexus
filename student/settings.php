@@ -124,6 +124,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_password'])) {
         $error = "Current password is incorrect";
     }
 }
+
+// Handle account deletion
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
+    $confirmPassword = $_POST['deletePassword'];
+    
+    if (password_verify($confirmPassword, $user['passwordHash'])) {
+        // Delete avatar file if exists
+        if (!empty($user['avatar']) && file_exists($user['avatar'])) {
+            unlink($user['avatar']);
+        }
+        
+        // Delete user account
+        $stmt = $conn->prepare("DELETE FROM users WHERE userID = ?");
+        if ($stmt->execute([$userID])) {
+            // Destroy session
+            session_destroy();
+            
+            // Start new session for redirect message
+            session_start();
+            $_SESSION['account_deleted'] = true;
+            
+            // Redirect immediately
+            header('Location: ../index.php');
+            exit();
+        } else {
+            $error = "Failed to delete account. Please try again.";
+        }
+    } else {
+        $error = "Incorrect password. Account deletion cancelled.";
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -138,12 +169,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_password'])) {
         body { background: #f8f9fa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
         .top-nav { background: linear-gradient(180deg, #e8f0fe 0%, #f8f9fa 100%); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; }
         .brand {
-    font-size: 20px;
-    font-weight: 700;
-    color: #1a73e8;
-    cursor: pointer;
-}
-
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a73e8;
+            cursor: pointer;
+        }
         .nav-menu { display: flex; gap: 30px; }
         .nav-link { color: #666; text-decoration: none; font-weight: 500; }
         .nav-link:hover { color: #1a73e8; }
@@ -165,16 +195,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_password'])) {
         .btn-save { background: #1e88e5; color: white; padding: 10px 30px; border: none; border-radius: 8px; font-weight: 500; }
         .btn-save:hover { background: #1565c0; }
         .btn-logout { background: #f5f5f5; color: #666; padding: 10px 20px; border: none; border-radius: 8px; width: 100%; margin-top: 20px; }
+        .btn-delete { background: #dc3545; color: white; padding: 10px 30px; border: none; border-radius: 8px; font-weight: 500; margin-top: 30px; }
+        .btn-delete:hover { background: #c82333; }
+        .danger-zone { border-top: 2px solid #fee; padding-top: 30px; margin-top: 40px; }
+        .danger-zone-title { color: #dc3545; font-weight: 600; margin-bottom: 10px; }
         #avatarInput { display: none; }
     </style>
 </head>
 <body>
     <!-- Top Navigation -->
     <div class="top-nav">
-    <a href="dashboard.php" class="brand" style="text-decoration: none;">
-        LEARNEXUS
-    </a>
-
+        <a href="dashboard.php" class="brand" style="text-decoration: none;">
+            LEARNEXUS
+        </a>
         <div class="nav-menu">
             <a href="dashboard.php" class="nav-link">Dashboard</a>
             <a href="course_catalog.php" class="nav-link">Course Catalog</a>
@@ -301,12 +334,60 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_password'])) {
                         
                         <button type="submit" class="btn-save">Update Password</button>
                     </form>
+                    
+                    <!-- Danger Zone -->
+                    <div class="danger-zone">
+                        <div class="danger-zone-title">
+                            <i class="bi bi-exclamation-triangle"></i> Danger Zone
+                        </div>
+                        <p class="text-muted mb-3">Once you delete your account, there is no going back. Please be certain.</p>
+                        <button type="button" class="btn-delete" onclick="confirmDeleteAccount()">
+                            <i class="bi bi-trash"></i> Delete Account
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
+        function confirmDeleteAccount() {
+            Swal.fire({
+                title: 'Delete Account?',
+                text: "This action cannot be undone! All your data will be permanently deleted.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, delete my account',
+                cancelButtonText: 'Cancel',
+                input: 'password',
+                inputLabel: 'Enter your password to confirm',
+                inputPlaceholder: 'Your password',
+                inputAttributes: {
+                    autocapitalize: 'off',
+                    autocorrect: 'off'
+                },
+                preConfirm: (password) => {
+                    if (!password) {
+                        Swal.showValidationMessage('Password is required');
+                    }
+                    return password;
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.innerHTML = `
+                        <input type="hidden" name="delete_account" value="1">
+                        <input type="hidden" name="deletePassword" value="${result.value}">
+                    `;
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            });
+        }
+
         document.querySelectorAll('.sidebar-menu li').forEach(item => {
             item.addEventListener('click', function() {
                 document.querySelectorAll('.sidebar-menu li').forEach(li => li.classList.remove('active'));
@@ -326,13 +407,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_password'])) {
         }
 
         <?php if (isset($success)): ?>
-       Swal.fire({
-    icon: 'success',
-    title: 'Success!',
-    text: '<?php echo $success; ?>',
-    confirmButtonText: 'OK'
-});
-
+        Swal.fire({
+            icon: 'success',
+            title: 'Success!',
+            text: '<?php echo $success; ?>',
+            confirmButtonText: 'OK'
+        });
         <?php endif; ?>
 
         <?php if (isset($error)): ?>

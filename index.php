@@ -37,6 +37,24 @@ if ($successMessage) {
     </script>';
   unset($_SESSION['success']);
 }
+
+// Check if account was deleted
+if (isset($_SESSION['account_deleted'])) {
+  echo '<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        Swal.fire({
+            icon: "success",
+            title: "Account Deleted",
+            text: "Your account has been successfully deleted.",
+            confirmButtonColor: "#3085d6",
+            confirmButtonText: "OK",
+            timer: 3000,
+            timerProgressBar: true
+        });
+    });
+    </script>';
+  unset($_SESSION['account_deleted']);
+}
 ?>
 <div class="container-fluid vh-100">
   <div class="row h-100">
