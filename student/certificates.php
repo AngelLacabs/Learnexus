@@ -416,10 +416,6 @@ $certificates = $stmt->fetchAll();
             </div>
             
             <div class="user-section">
-                <div class="notification-icon">
-                    <i class="bi bi-bell" style="font-size: 22px; color: #666;"></i>
-                    <span class="notification-badge">3</span>
-                </div>
                 <div class="user-info">
                     <span style="font-weight: 600; color: #333;">
                         <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>

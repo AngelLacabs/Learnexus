@@ -314,7 +314,6 @@ $totalPublished = $stmt->fetch()['total'];
         </div>
         
         <div class="user-section">
-            <i class="bi bi-bell" style="font-size: 22px; color: #666; cursor: pointer;"></i>
             <a href="settings.php" style="text-decoration: none;">
                 <span style="font-weight: 600; color: #333; cursor: pointer;">
                     <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>

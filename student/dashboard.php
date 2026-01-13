@@ -96,20 +96,28 @@ $dailyMotivationStudent = $studentMotivations[$dayOfYear % count($studentMotivat
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             background-color: #f8f9fa;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            overflow-x: hidden;
         }
         
         .sidebar {
             min-height: 100vh;
             background: linear-gradient(180deg, #e8f0fe 0%, #f8f9fa 100%);
-            padding-top: 20px;
+            padding: 20px 0;
             position: fixed;
             left: 0;
             top: 0;
             width: 250px;
             box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+            z-index: 1000;
         }
         
         .sidebar .brand {
@@ -150,6 +158,7 @@ $dailyMotivationStudent = $studentMotivations[$dayOfYear % count($studentMotivat
         .main-content {
             margin-left: 250px;
             padding: 20px 40px;
+            min-height: 100vh;
         }
         
         .header-section {
@@ -190,28 +199,6 @@ $dailyMotivationStudent = $studentMotivations[$dayOfYear % count($studentMotivat
             gap: 15px;
         }
         
-        .notification-icon {
-            position: relative;
-            font-size: 22px;
-            color: #666;
-            cursor: pointer;
-        }
-        
-        .notification-badge {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background: #ff5252;
-            color: white;
-            border-radius: 50%;
-            width: 18px;
-            height: 18px;
-            font-size: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
         .user-info {
             display: flex;
             align-items: center;
@@ -249,7 +236,7 @@ $dailyMotivationStudent = $studentMotivations[$dayOfYear % count($studentMotivat
         .welcome-banner h2 {
             font-size: 32px;
             font-weight: 700;
-            margin-bottom: 10px;
+            margin: 0;
         }
         
         .stats-container {
@@ -315,8 +302,9 @@ $dailyMotivationStudent = $studentMotivations[$dayOfYear % count($studentMotivat
         
         .course-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
             gap: 20px;
+            margin-bottom: 40px;
         }
         
         .course-card {
@@ -325,6 +313,8 @@ $dailyMotivationStudent = $studentMotivations[$dayOfYear % count($studentMotivat
             overflow: hidden;
             box-shadow: 0 2px 8px rgba(0,0,0,0.05);
             transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
         }
         
         .course-card:hover {
@@ -335,11 +325,11 @@ $dailyMotivationStudent = $studentMotivations[$dayOfYear % count($studentMotivat
         .course-image {
             width: 100%;
             height: 180px;
-            background: #e0e0e0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #999;
+            color: white;
             font-size: 14px;
             position: relative;
         }
@@ -354,6 +344,7 @@ $dailyMotivationStudent = $studentMotivations[$dayOfYear % count($studentMotivat
             font-size: 12px;
             font-weight: 600;
             color: #333;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         
         .quiz-status-badge {
@@ -367,6 +358,7 @@ $dailyMotivationStudent = $studentMotivations[$dayOfYear % count($studentMotivat
             display: flex;
             align-items: center;
             gap: 5px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         
         .quiz-status-badge.passed {
@@ -386,6 +378,9 @@ $dailyMotivationStudent = $studentMotivations[$dayOfYear % count($studentMotivat
         
         .course-body {
             padding: 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
         }
         
         .course-category {
@@ -401,6 +396,7 @@ $dailyMotivationStudent = $studentMotivations[$dayOfYear % count($studentMotivat
             font-weight: 600;
             color: #333;
             margin-bottom: 8px;
+            line-height: 1.4;
         }
         
         .course-instructor {
@@ -415,6 +411,7 @@ $dailyMotivationStudent = $studentMotivations[$dayOfYear % count($studentMotivat
             border-radius: 8px;
             margin-bottom: 12px;
             font-size: 12px;
+            line-height: 1.5;
         }
         
         .quiz-info.passed {
@@ -437,6 +434,7 @@ $dailyMotivationStudent = $studentMotivations[$dayOfYear % count($studentMotivat
             border-radius: 10px;
             background: #f0f0f0;
             margin-bottom: 15px;
+            margin-top: auto;
         }
         
         .progress-bar {
@@ -453,6 +451,7 @@ $dailyMotivationStudent = $studentMotivations[$dayOfYear % count($studentMotivat
             font-weight: 500;
             width: 100%;
             transition: background 0.2s;
+            cursor: pointer;
         }
         
         .btn-resume:hover {
@@ -469,22 +468,12 @@ $dailyMotivationStudent = $studentMotivations[$dayOfYear % count($studentMotivat
             font-weight: 500;
             width: 100%;
             transition: background 0.2s;
+            cursor: pointer;
         }
         
         .btn-retake:hover {
             background: #f57c00;
             color: white;
-        }
-        
-        .btn-disabled {
-            background: #ccc;
-            color: #666;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-weight: 500;
-            width: 100%;
-            cursor: not-allowed;
         }
         
         .logout-btn {
@@ -500,11 +489,86 @@ $dailyMotivationStudent = $studentMotivations[$dayOfYear % count($studentMotivat
             border-radius: 8px;
             font-weight: 500;
             transition: all 0.2s;
+            cursor: pointer;
         }
         
         .logout-btn:hover {
             background: #f5f5f5;
             border-color: #ccc;
+        }
+
+        .empty-state {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .empty-state i {
+            font-size: 64px;
+            color: #e0e0e0;
+            margin-bottom: 20px;
+        }
+
+        .empty-state h3 {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .empty-state p {
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .empty-state .btn {
+            background: #1e88e5;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 8px;
+            text-decoration: none;
+            display: inline-block;
+            font-weight: 500;
+        }
+
+        .empty-state .btn:hover {
+            background: #1565c0;
+        }
+
+        @media (max-width: 1200px) {
+            .course-grid {
+                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 200px;
+            }
+
+            .main-content {
+                margin-left: 200px;
+                padding: 15px 20px;
+            }
+
+            .stats-container {
+                grid-template-columns: 1fr;
+            }
+
+            .course-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .search-box {
+                width: 100%;
+                max-width: 300px;
+            }
+
+            .header-section {
+                flex-direction: column;
+                gap: 15px;
+            }
         }
     </style>
 </head>
@@ -551,21 +615,14 @@ $dailyMotivationStudent = $studentMotivations[$dayOfYear % count($studentMotivat
                 <input type="text" placeholder="Search for courses, assignments...">
             </div>
             
-            <div class="user-section">
-                <div class="notification-icon">
-                    <i class="bi bi-bell"></i>
-                    <span class="notification-badge">3</span>
-                </div>
-                
-                <div class="user-info" onclick="window.location.href='settings.php'" style="cursor: pointer;">
-                    <span style="font-weight: 600; color: #333;"><?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?></span>
-                    <div class="user-avatar">
-                        <?php if (!empty($userAvatar) && file_exists($userAvatar)): ?>
-                            <img src="<?php echo htmlspecialchars($userAvatar); ?>" alt="Avatar">
-                        <?php else: ?>
-                            <?php echo strtoupper(substr($_SESSION['first_name'], 0, 1)); ?>
-                        <?php endif; ?>
-                    </div>
+            <div class="user-info" onclick="window.location.href='settings.php'" style="cursor: pointer;">
+                <span style="font-weight: 600; color: #333;"><?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?></span>
+                <div class="user-avatar">
+                    <?php if (!empty($userAvatar) && file_exists($userAvatar)): ?>
+                        <img src="<?php echo htmlspecialchars($userAvatar); ?>" alt="Avatar">
+                    <?php else: ?>
+                        <?php echo strtoupper(substr($_SESSION['first_name'], 0, 1)); ?>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -627,7 +684,7 @@ $dailyMotivationStudent = $studentMotivations[$dayOfYear % count($studentMotivat
                                 <?php endif; ?>
                             <?php endif; ?>
                             
-                            <span>Course Image</span>
+                            <span>📚</span>
                         </div>
                         <div class="course-body">
                             <div class="course-category"><?php echo htmlspecialchars($course['category'] ?? 'General'); ?></div>
@@ -653,15 +710,15 @@ $dailyMotivationStudent = $studentMotivations[$dayOfYear % count($studentMotivat
                             </div>
                             
                             <?php if ($course['resultID'] && $course['quizStatus'] == 'failed'): ?>
-                                <button class="btn btn-retake" onclick="window.location.href='retake_course.php?id=<?php echo $course['courseID']; ?>'">
+                                <button class="btn-retake" onclick="window.location.href='retake_course.php?id=<?php echo $course['courseID']; ?>'">
                                     <i class="bi bi-credit-card"></i> Pay to Retake
                                 </button>
                             <?php elseif ($course['passed'] == 1): ?>
-                                <button class="btn btn-resume" onclick="window.location.href='view_certificate.php?courseID=<?php echo $course['courseID']; ?>'">
+                                <button class="btn-resume" onclick="window.location.href='view_certificate.php?courseID=<?php echo $course['courseID']; ?>'">
                                     <i class="bi bi-award"></i> View Certificate
                                 </button>
                             <?php else: ?>
-                                <button class="btn btn-resume" onclick="window.location.href='course_view.php?id=<?php echo $course['courseID']; ?>'">
+                                <button class="btn-resume" onclick="window.location.href='course_view.php?id=<?php echo $course['courseID']; ?>'">
                                     <i class="bi bi-play-circle"></i> Resume
                                 </button>
                             <?php endif; ?>
@@ -669,11 +726,13 @@ $dailyMotivationStudent = $studentMotivations[$dayOfYear % count($studentMotivat
                     </div>
                 <?php endforeach; ?>
             <?php else: ?>
-                <div class="col-12">
-                    <div class="alert alert-info">
-                        <i class="bi bi-info-circle"></i>
-                        You haven't enrolled in any courses yet. Visit the <a href="course_catalog.php">Course Catalog</a> to get started!
-                    </div>
+                <div class="empty-state" style="grid-column: 1/-1;">
+                    <i class="bi bi-book"></i>
+                    <h3>No Courses in Progress</h3>
+                    <p>You haven't enrolled in any courses yet. Start your learning journey today!</p>
+                    <a href="course_catalog.php" class="btn">
+                        <i class="bi bi-search"></i> Browse Courses
+                    </a>
                 </div>
             <?php endif; ?>
         </div>
