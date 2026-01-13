@@ -1,0 +1,22 @@
+[2026-01-13 14:18:45] Webhook request received | {"method":"POST","ip":"127.0.0.1","payload_size":140}
+[2026-01-13 14:18:45] ERROR: Missing Authorization header
+[2026-01-13 14:19:07] Webhook request received | {"method":"POST","ip":"127.0.0.1","payload_size":140}
+[2026-01-13 14:19:07] Auth check | {"header":"Bearer learnexus_web..."}
+[2026-01-13 14:19:07] Processing redemption | {"code":"REWARD-SJZG","order":"ORDER-TEST-001","student":"learnexus-5"}
+[2026-01-13 14:19:07] ERROR: Voucher not found | {"code":"REWARD-SJZG"}
+[2026-01-13 14:21:06] Webhook request received | {"method":"POST","ip":"127.0.0.1","payload_size":141}
+[2026-01-13 14:21:06] Auth check | {"header":"Bearer learnexus_web..."}
+[2026-01-13 14:21:06] Processing redemption | {"code":"GETSOLE-5XNU","order":"ORDER-TEST-001","student":"learnexus-5"}
+[2026-01-13 14:21:06] ERROR: Database exception | {"message":"SQLSTATE[42S22]: Column not found: 1054 Unknown column 'redeemedAt' in 'field list'"}
+[2026-01-13 14:21:39] Webhook request received | {"method":"POST","ip":"127.0.0.1","payload_size":141}
+[2026-01-13 14:21:39] Auth check | {"header":"Bearer learnexus_web..."}
+[2026-01-13 14:21:39] Processing redemption | {"code":"GETSOLE-5XNU","order":"ORDER-TEST-001","student":"learnexus-5"}
+[2026-01-13 14:21:39] SUCCESS: Voucher redeemed | {"code":"GETSOLE-5XNU","order":"ORDER-TEST-001","discount":450}
+[2026-01-13 14:48:43] Webhook request received | {"method":"POST","ip":"127.0.0.1","payload_size":210}
+[2026-01-13 14:48:43] Auth check | {"header":"Bearer learnexus_web..."}
+[2026-01-13 14:48:43] Processing redemption | {"code":"REWARD-SAXH","order":"TEST-1768312123","student":"learnexus-test"}
+[2026-01-13 14:48:43] ERROR: Voucher not found | {"code":"REWARD-SAXH"}
+[2026-01-13 15:00:08] Webhook request received | {"method":"POST","ip":"127.0.0.1","payload_size":218}
+[2026-01-13 15:00:08] Auth check | {"header":"Bearer learnexus_web..."}
+[2026-01-13 15:00:08] Processing redemption | {"code":"GETSOLE-UZZS","order":"SO-20260113150008-7025","student":"learnexus-9"}
+[2026-01-13 15:00:08] SUCCESS: Voucher redeemed | {"code":"GETSOLE-UZZS","order":"SO-20260113150008-7025","discount":359.88}

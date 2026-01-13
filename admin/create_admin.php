@@ -1,5 +1,5 @@
 <?php
-require_once '../database/db_connect.php';
+require_once __DIR__ . '/../database/db_connect.php';
 
 $email = 'learnexuspupstc@gmail.com';
 $password = 'learnexus1829263061';
