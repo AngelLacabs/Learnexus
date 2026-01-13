@@ -135,3 +135,12 @@
         <span>Payments</span>
     </a>
 </li>
+
+<!-- Add this to the sidebar menu -->
+<li class="menu-item">
+    <a class="menu-link <?php echo basename($_SERVER['PHP_SELF']) === 'certificates.php' ? 'active' : ''; ?>" 
+       href="certificates.php">
+        <i class="bi bi-award"></i>
+        <span>Certificates</span>
+    </a>
+</li>

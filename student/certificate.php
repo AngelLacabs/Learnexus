@@ -174,7 +174,43 @@ if (!$certificate) {
 
 $issueDate = date('F d, Y', strtotime($certificate['issuedAt']));
 ?>
+/* =====================
+   TRACK CERTIFICATE VIEW
+===================== */
+function trackCertificateView($conn, $certificateID, $userID) {
+    try {
+        // Update view count in certificates table
+        $stmt = $conn->prepare("
+            UPDATE certificates 
+            SET downloadCount = COALESCE(downloadCount, 0) + 1 
+            WHERE certificateID = ?
+        ");
+        $stmt->execute([$certificateID]);
+        
+        // Log the download/view
+        $stmt = $conn->prepare("
+            INSERT INTO certificate_downloads (certificateID, userID, ipAddress, userAgent)
+            VALUES (?, ?, ?, ?)
+        ");
+        $stmt->execute([
+            $certificateID,
+            $userID,
+            $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1',
+            $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown'
+        ]);
+    } catch (Exception $e) {
+        // Silently fail - don't break certificate display
+        error_log("Certificate tracking error: " . $e->getMessage());
+    }
+}
 
+// Track this view/download if admin is viewing
+if (isset($certificate['certificateID']) && isset($_GET['admin']) && $_GET['admin'] == 1) {
+    trackCertificateView($conn, $certificate['certificateID'], $userID);
+}
+
+// Call this function when certificate is viewed/generated
+trackCertificateDownload($conn, $certificate['certificateID'], $userID);
 <!DOCTYPE html>
 <html lang="en">
 <head>
