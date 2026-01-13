@@ -381,3 +381,44 @@ body {
 .timeline-content h6 {
     margin-bottom: 5px;
 }
+
+/* SMS Feedback Specific Styles */
+.message-preview {
+    max-width: 300px;
+    word-wrap: break-word;
+}
+
+.view-message {
+    font-size: 0.85rem;
+    text-decoration: none;
+}
+
+.view-message:hover {
+    text-decoration: underline;
+}
+
+/* Status badges */
+.badge.bg-warning {
+    color: #000;
+}
+
+/* Pagination */
+.pagination .page-item.active .page-link {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+/* Modal styles */
+.modal-body .message-content {
+    max-height: 400px;
+    overflow-y: auto;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 5px;
+    border: 1px solid #dee2e6;
+}
+
+/* Action buttons */
+.btn-group-sm .btn {
+    padding: 0.25rem 0.5rem;
+}
