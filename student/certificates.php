@@ -10,6 +10,10 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
 }
 
 $userID = $_SESSION['user_id'];
+// Get user data including avatar
+$userStmt = $conn->prepare("SELECT avatar FROM users WHERE userID = ?");
+$userStmt->execute([$userID]);
+$user = $userStmt->fetch();
 
 // Get all certificates for this user
 $stmt = $conn->prepare("
@@ -416,15 +420,19 @@ $certificates = $stmt->fetchAll();
             </div>
             
             <div class="user-section">
-                <div class="user-info">
-                    <span style="font-weight: 600; color: #333;">
-                        <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>
-                    </span>
-                    <div class="user-avatar">
-                        <?php echo strtoupper(substr($_SESSION['first_name'], 0, 1)); ?>
-                    </div>
-                </div>
-            </div>
+    <div class="user-info" onclick="window.location.href='settings.php'" style="cursor: pointer;">
+        <span style="font-weight: 600; color: #333;">
+            <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>
+        </span>
+        <div class="user-avatar">
+            <?php if (!empty($user['avatar']) && file_exists($user['avatar'])): ?>
+                <img src="<?php echo htmlspecialchars($user['avatar']); ?>" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+            <?php else: ?>
+                <?php echo strtoupper(substr($_SESSION['first_name'], 0, 1)); ?>
+            <?php endif; ?>
+        </div>
+    </div>
+</div>
         </div>
 
         <!-- Content Area -->
