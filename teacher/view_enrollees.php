@@ -44,10 +44,6 @@ $enrollees = $stmt->fetchAll();
         <h4><?php echo htmlspecialchars($course['title']); ?></h4>
         <p class="text-muted">Total of <?php echo count($enrollees); ?> Enrollees</p>
         
-        <div class="text-end mb-3">
-            <button class="btn btn-primary">View Enrollees' Status</button>
-        </div>
-        
         <div class="card">
             <div class="card-body">
                 <table class="table">

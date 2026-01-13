@@ -122,7 +122,6 @@ $page_title = "My Courses - Learnexus";
             <a href="enrollees.php" class="nav-link">Enrollees</a>
         </div>
         <div class="user-section">
-            <i class="bi bi-bell" style="font-size: 22px; color: #666; cursor: pointer;"></i>
             <a href="settings.php" style="font-weight: 600; color: #333; text-decoration: none;">
                 <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>
             </a>
