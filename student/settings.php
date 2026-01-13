@@ -323,13 +323,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
                         
                         <div class="mb-3">
                             <label class="form-label">New Password</label>
-                            <input type="password" name="newPassword" class="form-control" required>
+                            <div class="input-group">
+                                <input type="password" name="newPassword" class="form-control" required>
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword(this)">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
                             <small class="text-muted">Min. 6 characters</small>
                         </div>
                         
                         <div class="mb-3">
                             <label class="form-label">Confirm Password</label>
-                            <input type="password" name="confirmPassword" class="form-control" required>
+                            <div class="input-group">
+                                <input type="password" name="confirmPassword" class="form-control" required>
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword(this)">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
                         </div>
                         
                         <button type="submit" class="btn-save">Update Password</button>
@@ -354,21 +364,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
         function confirmDeleteAccount() {
             Swal.fire({
                 title: 'Delete Account?',
-                text: "This action cannot be undone! All your data will be permanently deleted.",
+                html: `
+                    <p style="color: #666; margin-bottom: 20px;">This action cannot be undone! All your data will be permanently deleted.</p>
+                    <label style="display: block; text-align: left; margin-bottom: 8px; font-weight: 500;">Enter your password to confirm</label>
+                    <div style="position: relative;">
+                        <input type="password" id="deletePasswordInput" class="swal2-input" placeholder="Your password" style="width: 100%; padding-right: 45px;">
+                        <button type="button" onclick="toggleDeletePassword()" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; padding: 5px;">
+                            <i class="bi bi-eye" id="deletePasswordIcon" style="font-size: 18px; color: #666;"></i>
+                        </button>
+                    </div>
+                `,
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#dc3545',
                 cancelButtonColor: '#6c757d',
                 confirmButtonText: 'Yes, delete my account',
                 cancelButtonText: 'Cancel',
-                input: 'password',
-                inputLabel: 'Enter your password to confirm',
-                inputPlaceholder: 'Your password',
-                inputAttributes: {
-                    autocapitalize: 'off',
-                    autocorrect: 'off'
-                },
-                preConfirm: (password) => {
+                focusConfirm: false,
+                preConfirm: () => {
+                    const password = document.getElementById('deletePasswordInput').value;
                     if (!password) {
                         Swal.showValidationMessage('Password is required');
                     }
@@ -388,6 +402,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
             });
         }
 
+        function toggleDeletePassword() {
+            const input = document.getElementById('deletePasswordInput');
+            const icon = document.getElementById('deletePasswordIcon');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('bi-eye');
+                icon.classList.add('bi-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('bi-eye-slash');
+                icon.classList.add('bi-eye');
+            }
+        }
+
+        function togglePassword(button) {
+            const input = button.previousElementSibling;
+            const icon = button.querySelector('i');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('bi-eye');
+                icon.classList.add('bi-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('bi-eye-slash');
+                icon.classList.add('bi-eye');
+            }
+        }
+
         document.querySelectorAll('.sidebar-menu li').forEach(item => {
             item.addEventListener('click', function() {
                 document.querySelectorAll('.sidebar-menu li').forEach(li => li.classList.remove('active'));
@@ -400,11 +444,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
                 document.getElementById(tab + '-tab').style.display = 'block';
             });
         });
-
-        function togglePassword(button) {
-            const input = button.previousElementSibling;
-            input.type = input.type === 'password' ? 'text' : 'password';
-        }
 
         <?php if (isset($success)): ?>
         Swal.fire({
