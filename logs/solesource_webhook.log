@@ -20,3 +20,22 @@
 [2026-01-13 15:00:08] Auth check | {"header":"Bearer learnexus_web..."}
 [2026-01-13 15:00:08] Processing redemption | {"code":"GETSOLE-UZZS","order":"SO-20260113150008-7025","student":"learnexus-9"}
 [2026-01-13 15:00:08] SUCCESS: Voucher redeemed | {"code":"GETSOLE-UZZS","order":"SO-20260113150008-7025","discount":359.88}
+[2026-01-13 16:45:55] Webhook request received | {"method":"POST","ip":"127.0.0.1","payload_size":43}
+[2026-01-13 16:45:55] ERROR: Invalid payload | {"raw":"{\"voucher_id\":\"ABC123\",\"status\":\"redeemed\"}"}
+[2026-01-13 17:00:11] Webhook request received | {"method":"GET","ip":"127.0.0.1","payload_size":0}
+[2026-01-13 17:00:11] ERROR: Invalid payload | {"raw":""}
+[2026-01-13 17:01:01] Webhook request received | {"method":"GET","ip":"127.0.0.1","payload_size":0}
+[2026-01-13 17:01:01] ERROR: Invalid payload | {"raw":""}
+[2026-01-13 17:05:11] Webhook request received | {"method":"POST","ip":"127.0.0.1","payload_size":43}
+[2026-01-13 17:05:11] ERROR: Invalid payload | {"raw":"{\"voucher_id\":\"ABC123\",\"status\":\"redeemed\"}"}
+[2026-01-13 17:08:51] Webhook request received | {"method":"POST","ip":"127.0.0.1","payload_size":210}
+[2026-01-13 17:08:51] Auth check | {"header":"missing"}
+[2026-01-13 17:08:51] ERROR: Missing Authorization header
+[2026-01-13 17:09:45] Webhook request received | {"method":"POST","ip":"127.0.0.1","payload_size":210}
+[2026-01-13 17:09:45] Auth check | {"header":"Bearer learnexus_web..."}
+[2026-01-13 17:09:45] Processing redemption | {"code":"REWARD-SAXH","order":"TEST-1768312123","student":"learnexus-test"}
+[2026-01-13 17:09:45] ERROR: Voucher not found | {"code":"REWARD-SAXH"}
+[2026-01-13 17:22:54] Webhook request received | {"method":"POST","ip":"127.0.0.1","payload_size":231}
+[2026-01-13 17:22:54] Auth check | {"header":"Bearer learnexus_web..."}
+[2026-01-13 17:22:54] Processing redemption | {"code":"GETSOLE-37WK","order":"SO-20260113172258-7705","student":"learnexus-10"}
+[2026-01-13 17:22:54] SUCCESS: Voucher redeemed | {"code":"GETSOLE-37WK","order":"SO-20260113172258-7705","discount":1079.3999999999999}

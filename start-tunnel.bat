@@ -1,23 +1,48 @@
 @echo off
-REM Learnexus Cloudflare Tunnel Starter
-REM This exposes your localhost Learnexus to the internet so SoleSource can send webhooks
+REM Learnexus Cloudflare Tunnel Starter (host-based vhost)
+REM This script assumes you created a local vhost learnexus.local for the project.
 
 echo ========================================
-echo Starting Cloudflare Tunnel for Learnexus
+echo Starting Cloudflare Tunnel for Learnexus (learnexus.local)
 echo ========================================
 echo.
-echo This will expose: http://localhost/Learnexus
+echo BEFORE RUNNING:
+echo - Add an Apache VirtualHost pointing learnexus.local -> C:\xampp\htdocs\Learnexus
+echo   Example (add to C:\xampp\apache\conf\extra\httpd-vhosts.conf):
 echo.
-echo IMPORTANT: Copy the generated URL (https://xxxx.trycloudflare.com)
-echo and send it to SoleSource team to update their webhook config!
+echo   ^<VirtualHost *:80^>
+echo       ServerName learnexus.local
+echo       DocumentRoot "C:/xampp/htdocs/Learnexus"
+echo       ^<Directory "C:/xampp/htdocs/Learnexus"^>
+echo           Options Indexes FollowSymLinks
+echo           AllowOverride All
+echo           Require all granted
+echo       ^</Directory^>
+echo   ^</VirtualHost^>
 echo.
-echo The webhook endpoint will be at:
-echo https://xxxx.trycloudflare.com/solesource_webhook.php
+echo - Add to hosts file (run editor as Administrator):
+echo     127.0.0.1 learnexus.local
 echo.
-echo Press Ctrl+C to stop the tunnel
-echo ========================================
+echo - Restart Apache after adding vhost and hosts entry.
 echo.
+echo When complete, this script will start cloudflared and point it at http://learnexus.local
+echo.
+echo Press any key to continue or Ctrl+C to abort...
+pause>nul
 
-cloudflared tunnel --url http://localhost/Learnexus
+echo Starting cloudflared tunnel to http://learnexus.local
+cloudflared tunnel --url http://learnexus.local
 
 pause
+echo.
+echo Also add a fallback vhost for localhost to avoid redirects to XAMPP dashboard:
+echo.
+echo   ^<VirtualHost *:80^>
+echo       ServerName localhost
+echo       DocumentRoot "C:/xampp/htdocs"
+echo.
+echo       ^<Directory "C:/xampp/htdocs"^>
+echo           AllowOverride All
+echo           Require all granted
+echo       ^</Directory^>
+echo   ^</VirtualHost^>
