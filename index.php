@@ -3,17 +3,21 @@ session_start();
 $page_title = "Login - Learnexus";
 include 'header.php';
 
+// Redirect logged-in users based on role (guard against missing session keys)
 if (isset($_SESSION['user_id'])) {
-  switch ($_SESSION['role']) {
-    case 'student':
-      header('Location: student/dashboard.php');
-      exit();
-    case 'instructor':
-      header('Location: teacher/dashboard.php');
-      exit();
-    case 'admin':
-      header('Location: admin/dashboard.php');
-      exit();
+  $role = $_SESSION['role'] ?? null;
+  if ($role) {
+    switch ($role) {
+      case 'student':
+        header('Location: student/dashboard.php');
+        exit();
+      case 'instructor':
+        header('Location: teacher/dashboard.php');
+        exit();
+      case 'admin':
+        header('Location: admin/dashboard.php');
+        exit();
+    }
   }
 }
 

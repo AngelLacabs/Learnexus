@@ -173,6 +173,55 @@ if (!$certificate) {
     $certificate = $stmt->fetch(PDO::FETCH_ASSOC);
 }
 
+// =====================
+// SOLESOURCE INTEGRATION: Generate voucher for completed course
+// Check if voucher already exists for this certificate
+// =====================
+error_log("=== SOLESOURCE DEBUG: Starting voucher generation for certificate " . $certificate['certificateID']);
+
+try {
+    require_once '../helpers/solesource_api.php';
+    error_log("SOLESOURCE DEBUG: Helper file loaded successfully");
+    
+    // Check if voucher already exists for this certificate
+    $stmt = $conn->prepare("SELECT voucherID FROM vouchers WHERE certificateID = ? LIMIT 1");
+    $stmt->execute([$certificate['certificateID']]);
+    $existingVoucher = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    error_log("SOLESOURCE DEBUG: Existing voucher check - " . ($existingVoucher ? "Found ID: " . $existingVoucher['voucherID'] : "None found"));
+    
+    if (!$existingVoucher) {
+        error_log("SOLESOURCE DEBUG: Calling solesource_generate_voucher...");
+        
+        // Generate new voucher
+        $voucherResponse = solesource_generate_voucher(
+            $userID, 
+            $certificate['certificateID'],
+            [
+                'discount-type' => 'percent',
+                'discount-value' => 12  // 12% discount for course completion
+            ]
+        );
+        
+        error_log("SOLESOURCE DEBUG: API Response - " . json_encode($voucherResponse));
+        
+        if ($voucherResponse['ok'] ?? false) {
+            $_SESSION['new_voucher_code'] = $voucherResponse['code'];
+            $_SESSION['show_voucher_toast'] = true;
+            error_log("SoleSource: ✅ Voucher generated for user $userID - Code: " . $voucherResponse['code']);
+        } else {
+            error_log("SoleSource: ❌ Failed to generate voucher for user $userID - " . json_encode($voucherResponse));
+        }
+    } else {
+        error_log("SoleSource: Voucher already exists for certificate " . $certificate['certificateID']);
+    }
+} catch (Exception $e) {
+    error_log("SoleSource: ❌ EXCEPTION - " . $e->getMessage() . " | File: " . $e->getFile() . " | Line: " . $e->getLine());
+    error_log("SoleSource: Stack trace - " . $e->getTraceAsString());
+} catch (Error $e) {
+    error_log("SoleSource: ❌ FATAL ERROR - " . $e->getMessage() . " | File: " . $e->getFile() . " | Line: " . $e->getLine());
+}
+
 /* =====================
    TRACK CERTIFICATE VIEW
 ===================== */
@@ -216,6 +265,10 @@ $issueDate = date('F d, Y', strtotime($certificate['issuedAt']));
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Certificate - <?= htmlspecialchars($course['title']) ?></title>
+<link rel="icon" href="../images/Learnexus.png">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <link rel="icon" type="image/png" href="../images/Learnexus.png">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
@@ -450,6 +503,37 @@ body {
 </style>
 </head>
 <body>
+
+<!-- Voucher Toast Notification -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    <?php if ($_SESSION['show_voucher_toast'] ?? false): ?>
+    Swal.fire({
+        icon: 'success',
+        title: 'Congratulations! 🎉',
+        html: `
+            <p style="margin: 10px 0; font-size: 16px;">You've completed this course!</p>
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 12px; margin: 15px 0; color: white;">
+                <p style="margin-bottom: 10px; font-size: 11px; color: rgba(255,255,255,0.8); text-transform: uppercase; letter-spacing: 1px;">Your SoleSource Voucher Code</p>
+                <p style="font-size: 24px; font-weight: bold; font-family: monospace; letter-spacing: 3px; margin: 0;">
+                    <?php echo htmlspecialchars($_SESSION['new_voucher_code'] ?? ''); ?>
+                </p>
+            </div>
+            <p style="font-size: 14px; color: #666; margin-bottom: 0;">Get 12% off your next purchase at <strong>SoleSource</strong>!<br><small style="color: #999;">View your vouchers page for more details.</small></p>
+        `,
+        confirmButtonText: 'View My Vouchers',
+        confirmButtonColor: '#667eea',
+        allowOutsideClick: false,
+        allowEscapeKey: false
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location.href = 'vouchers.php';
+        }
+    });
+    <?php unset($_SESSION['show_voucher_toast']); ?>
+    <?php endif; ?>
+});
+</script>
 
 <div class="certificate-container">
     <div class="certificate" id="certificate">
