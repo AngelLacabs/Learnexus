@@ -395,8 +395,8 @@ $certificates = $stmt->fetchAll();
                                 <?php else: ?>
                                     <h3 class="h5 fw-bold mb-3">No Certificates Yet</h3>
                                     <p class="text-muted mb-4">Complete courses to earn certificates</p>
-                                    <a href="course_catalog.php" class="btn btn-primary rounded-pill px-4">
-                                        <i class="bi bi-search me-2"></i>Browse Courses
+                                    <a href="course_catalog.php" class="btn btn-primary rounded-pill px-4 fw-semibold">
+                                    <i class="bi bi-search me-2"></i>Browse Courses
                                     </a>
                                 <?php endif; ?>
                             </div>
