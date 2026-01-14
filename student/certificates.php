@@ -72,8 +72,6 @@ $certificates = $stmt->fetchAll();
     <style>
         :root {
             --sidebar-width: 260px;
-            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --gradient-accent: linear-gradient(135deg, #1a73e8 0%, #4285f4 100%);
         }
 
         body {
@@ -81,28 +79,26 @@ $certificates = $stmt->fetchAll();
             min-height: 100vh;
         }
 
+        /* Sidebar - EXACTLY matching dashboard */
         .sidebar {
             background: linear-gradient(180deg, #e8f0fe 0%, #f0f4ff 50%, #f8f9fa 100%);
-            width: var(--sidebar-width);
             box-shadow: 4px 0 20px rgba(0,0,0,0.08);
-            transition: transform 0.3s ease;
         }
 
         .sidebar-brand {
             font-size: 1.5rem;
             font-weight: 800;
-            background: var(--gradient-accent);
+            background: linear-gradient(135deg, #1a73e8 0%, #4285f4 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            letter-spacing: 1px;
         }
 
+        /* Navigation - EXACTLY matching dashboard */
         .nav-link {
             border-radius: 12px;
             transition: all 0.2s ease;
             position: relative;
-            color: #444;
         }
 
         .nav-link::before {
@@ -118,18 +114,12 @@ $certificates = $stmt->fetchAll();
             transition: height 0.25s ease;
         }
 
-        .nav-link:hover {
-            background: rgba(102, 126, 234, 0.1);
-            color: #1a73e8;
-            transform: translateX(4px);
-        }
-
         .nav-link:hover::before {
             height: 60%;
         }
 
         .nav-link.active {
-            background: var(--gradient-primary);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white !important;
             box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
         }
@@ -138,6 +128,7 @@ $certificates = $stmt->fetchAll();
             display: none;
         }
 
+        /* Hamburger - EXACTLY matching dashboard */
         .hamburger-btn {
             width: 50px;
             height: 50px;
@@ -169,22 +160,14 @@ $certificates = $stmt->fetchAll();
             transform: translateY(-8px) rotate(-45deg);
         }
 
-        @media (min-width: 993px) {
+        /* Main Content Margin - EXACTLY matching dashboard */
+        @media (min-width: 992px) {
             .main-content {
                 margin-left: var(--sidebar-width);
             }
         }
 
-        @media (max-width: 992px) {
-            .sidebar {
-                transform: translateX(-100%);
-                z-index: 1050;
-            }
-            .sidebar.show {
-                transform: translateX(0);
-            }
-        }
-
+        /* Certificates specific styles */
         .card-hover {
             transition: transform 0.2s, box-shadow 0.2s;
             cursor: pointer;
@@ -219,7 +202,7 @@ $certificates = $stmt->fetchAll();
     </div>
 
     <!-- Sidebar -->
-    <aside class="sidebar offcanvas-lg offcanvas-start position-fixed top-0 start-0 h-100" id="sidebar" tabindex="-1">
+    <aside class="sidebar offcanvas-lg offcanvas-start position-fixed top-0 start-0 h-100" style="width: var(--sidebar-width);" id="sidebar">
         <div class="offcanvas-header d-lg-none border-bottom">
             <h5 class="offcanvas-title sidebar-brand">LEARNEXUS</h5>
         </div>
@@ -228,31 +211,31 @@ $certificates = $stmt->fetchAll();
             <div class="sidebar-brand px-4 py-4 mb-4 d-none d-lg-block">LEARNEXUS</div>
             
             <nav class="flex-grow-1 px-3">
-                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2" href="dashboard.php">
+                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium" href="dashboard.php">
                     <i class="bi bi-grid fs-5"></i><span>Dashboard</span>
                 </a>
-                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2" href="course_catalog.php">
+                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium" href="course_catalog.php">
                     <i class="bi bi-book fs-5"></i><span>Course Catalog</span>
                 </a>
-                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2" href="my_courses.php">
+                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium" href="my_courses.php">
                     <i class="bi bi-journal-bookmark fs-5"></i><span>My Courses</span>
                 </a>
-                <a class="nav-link active d-flex align-items-center gap-3 px-3 py-3 mb-2" href="certificates.php">
+                <a class="nav-link active d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium" href="certificates.php">
                     <i class="bi bi-award fs-5"></i><span>Certificates</span>
                 </a>
-                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2" href="vouchers.php">
+                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium" href="vouchers.php">
                     <i class="bi bi-ticket-perforated fs-5"></i><span>Vouchers</span>
                 </a>
-                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2" href="settings.php">
+                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium" href="settings.php">
                     <i class="bi bi-gear fs-5"></i><span>Settings</span>
                 </a>
-                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2" href="ai_tutor.php">
+                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium" href="ai_chatbot.php">
                     <i class="bi bi-robot fs-5"></i><span>AI Tutor</span>
                 </a>
             </nav>
             
             <div class="p-3 mt-auto">
-                <button class="btn btn-outline-danger w-100 rounded-pill py-2 fw-semibold" onclick="window.location.href='../logout.php'">
+                <button class="btn btn-outline-danger w-100 rounded-pill fw-semibold" onclick="window.location.href='../logout.php'">
                     <i class="bi bi-box-arrow-left me-2"></i>Logout
                 </button>
             </div>
@@ -266,7 +249,7 @@ $certificates = $stmt->fetchAll();
             <div class="row mb-4">
                 <div class="col-12">
                     <div class="card border-0 rounded-4 shadow-sm">
-                        <div class="card-body p-3 d-flex justify-content-between align-items-center">
+                        <div class="card-body p-3 d-flex justify-content-between align-items-center gap-3">
                             <form method="GET" class="d-flex gap-2 flex-grow-1" style="max-width: 500px;">
                                 <input type="text" name="search" class="form-control rounded-pill" 
                                        placeholder="Search certificates..." 
@@ -276,14 +259,15 @@ $certificates = $stmt->fetchAll();
                                 </button>
                             </form>
                             
-                            <div class="d-flex align-items-center gap-3" onclick="window.location.href='settings.php'" role="button">
-                                <span class="fw-semibold d-none d-sm-inline">
+                            <div class="d-flex align-items-center gap-3" onclick="window.location.href='settings.php'" role="button" style="flex-shrink: 0;">
+                                <span class="fw-semibold d-none d-sm-inline text-nowrap">
                                     <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>
                                 </span>
                                 <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold" 
-                                     style="width: 45px; height: 45px; background: var(--gradient-primary);">
+                                     style="width: 45px; height: 45px; min-width: 45px; background: linear-gradient(135deg, #667eea, #764ba2);">
                                     <?php if (!empty($user['avatar']) && file_exists($user['avatar'])): ?>
-                                        <img src="<?php echo htmlspecialchars($user['avatar']); ?>" alt="Avatar" class="w-100 h-100 rounded-circle object-fit-cover">
+                                        <img src="<?php echo htmlspecialchars($user['avatar']); ?>" alt="Avatar" 
+                                             class="w-100 h-100 rounded-circle object-fit-cover">
                                     <?php else: ?>
                                         <?php echo strtoupper(substr($_SESSION['first_name'], 0, 1)); ?>
                                     <?php endif; ?>
@@ -409,6 +393,7 @@ $certificates = $stmt->fetchAll();
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // Hamburger animation
         const hamburgerBtn = document.getElementById('hamburgerBtn');
         const sidebar = document.getElementById('sidebar');
 
@@ -416,6 +401,25 @@ $certificates = $stmt->fetchAll();
             sidebar.addEventListener('show.bs.offcanvas', () => hamburgerBtn.classList.add('active'));
             sidebar.addEventListener('hide.bs.offcanvas', () => hamburgerBtn.classList.remove('active'));
         }
+
+        // Active nav state
+        const navLinks = document.querySelectorAll('.sidebar .nav-link');
+        const currentPage = window.location.pathname.split('/').pop();
+        
+        navLinks.forEach(link => {
+            if (link.getAttribute('href') === currentPage) {
+                navLinks.forEach(l => l.classList.remove('active'));
+                link.classList.add('active');
+            }
+            
+            // Close sidebar
+            link.addEventListener('click', () => {
+                if (window.innerWidth <= 992) {
+                    const offcanvas = bootstrap.Offcanvas.getInstance(sidebar);
+                    if (offcanvas) offcanvas.hide();
+                }
+            });
+        });
 
         function downloadCertificate(uuid) {
             Swal.fire({
