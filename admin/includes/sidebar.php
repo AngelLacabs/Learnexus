@@ -63,13 +63,6 @@
         <!-- Divider -->
         <!-- <li class="menu-divider"></li> -->
 
-        <!-- SMS Feedback -->
-        <li class="menu-item">
-            <a href="sms-feedback.php" class="menu-link <?php echo basename($_SERVER['PHP_SELF']) == 'sms-feedback.php' ? 'active' : ''; ?>">
-                <i class="bi bi-chat-dots"></i>
-                <span>SMS Feedback</span>
-            </a>
-        </li>
 
         <!-- Announcements -->
         <!-- <li class="menu-item">

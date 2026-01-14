@@ -118,6 +118,28 @@ try {
 $page_title = "User Profile - " . $user['firstName'] . ' ' . $user['lastName'];
 include 'includes/header.php';
 include 'includes/sidebar.php';
+
+// Determine where to go back to. Default to users list but prefer an explicit return param when provided.
+$backUrl = 'users.php';
+if (!empty($_GET['return'])) {
+    $decodedReturn = urldecode($_GET['return']);
+    $parsed = parse_url($decodedReturn);
+    // only accept relative paths (no scheme/host) to avoid open redirect
+    if (!isset($parsed['scheme']) && !isset($parsed['host'])) {
+        $backUrl = $decodedReturn;
+    }
+} elseif (!empty($_SERVER['HTTP_REFERER'])) {
+    // If referer is an internal path, use it as a fallback
+    $ref = parse_url($_SERVER['HTTP_REFERER']);
+    if (!isset($ref['scheme']) && !isset($ref['host'])) {
+        $backUrl = $_SERVER['HTTP_REFERER'];
+    } else {
+        // if it's an internal host match, use path+query
+        if (isset($ref['host']) && $ref['host'] === $_SERVER['HTTP_HOST']) {
+            $backUrl = $ref['path'] . (isset($ref['query']) ? '?' . $ref['query'] : '');
+        }
+    }
+}
 ?>
 
 <div class="main-content">
@@ -125,7 +147,7 @@ include 'includes/sidebar.php';
         <!-- Page Header -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div class="d-flex align-items-center">
-                <a href="users.php" class="btn btn-outline-secondary me-3">
+                <a href="<?= htmlspecialchars($backUrl) ?>" class="btn btn-outline-secondary me-3">
                     <i class="bi bi-arrow-left"></i>
                 </a>
                 <div>

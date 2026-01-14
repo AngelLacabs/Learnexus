@@ -342,7 +342,7 @@ include 'includes/sidebar.php';
                                         </td>
                                         <td>
                                             <div class="btn-group btn-group-sm">
-                                                <a href="user_view.php?id=<?php echo $user['userID']; ?>" 
+                                                <a href="user_view.php?id=<?php echo $user['userID']; ?>&return=<?php echo urlencode($_SERVER['REQUEST_URI']); ?>" 
                                                    class="btn btn-outline-primary" 
                                                    data-bs-toggle="tooltip" 
                                                    title="View">

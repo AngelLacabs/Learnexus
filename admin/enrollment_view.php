@@ -513,7 +513,7 @@ include 'includes/sidebar.php';
                                 </a>
                             <?php endif; ?>
                             
-                            <a href="user_view.php?id=<?php echo $enrollment['userID']; ?>" class="btn btn-outline-primary">
+                            <a href="user_view.php?id=<?php echo $enrollment['userID']; ?>&return=<?php echo urlencode($_SERVER['REQUEST_URI']); ?>" class="btn btn-outline-primary">
                                 <i class="bi bi-person me-2"></i>View Student Profile
                             </a>
                             

@@ -403,7 +403,7 @@ include 'includes/sidebar.php';
                             <?php if (!empty($course['teacherPhone'])): ?>
                                 <p class="text-muted mb-3"><?php echo htmlspecialchars($course['teacherPhone']); ?></p>
                             <?php endif; ?>
-                            <a href="user_view.php?id=<?php echo $course['teacherID']; ?>" class="btn btn-sm btn-outline-primary">View Teacher Profile</a>
+                            <a href="user_view.php?id=<?php echo $course['teacherID']; ?>&return=<?php echo urlencode($_SERVER['REQUEST_URI']); ?>" class="btn btn-sm btn-outline-primary">View Teacher Profile</a>
                         </div>
                         <hr>
                         <div class="text-center">
