@@ -70,7 +70,7 @@ foreach ($enrolledCourses as $course) {
             min-height: 100vh;
         }
 
-        /* Sidebar - EXACTLY matching dashboard */
+        /* Sidebar */
         .sidebar {
             background: linear-gradient(180deg, #e8f0fe 0%, #f0f4ff 50%, #f8f9fa 100%);
             box-shadow: 4px 0 20px rgba(0,0,0,0.08);
@@ -85,7 +85,7 @@ foreach ($enrolledCourses as $course) {
             background-clip: text;
         }
 
-        /* Navigation - EXACTLY matching dashboard */
+        /* Navigation */
         .nav-link {
             border-radius: 12px;
             transition: all 0.2s ease;
@@ -119,7 +119,7 @@ foreach ($enrolledCourses as $course) {
             display: none;
         }
 
-        /* Hamburger - EXACTLY matching dashboard */
+        /* Hamburger */
         .hamburger-btn {
             width: 50px;
             height: 50px;
@@ -158,7 +158,48 @@ foreach ($enrolledCourses as $course) {
             }
         }
 
-        /* My Courses specific styles */
+        .search-input {
+            padding-left: 2.5rem;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+            border-radius: 25px !important;
+        }
+
+        .search-input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.15);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+            z-index: 10;
+        }
+
+        .search-input:focus ~ .search-icon {
+            color: #667eea;
+        }
+
+        .clear-search {
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #999;
+            cursor: pointer;
+            display: none;
+            z-index: 10;
+        }
+
+        .clear-search.show {
+            display: block;
+        }
+
         .card-hover {
             transition: transform 0.2s, box-shadow 0.2s;
         }
@@ -168,7 +209,6 @@ foreach ($enrolledCourses as $course) {
             box-shadow: 0 8px 24px rgba(0,0,0,0.12) !important;
         }
 
-        /* Progress Bar Gradient */
         .progress-gradient {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
         }
@@ -239,10 +279,16 @@ foreach ($enrolledCourses as $course) {
                 <div class="col-12">
                     <div class="card border-0 rounded-4 shadow-sm">
                         <div class="card-body p-3 d-flex justify-content-between align-items-center gap-3">
+                            <!-- NEW SEARCH BAR -->
                             <div class="position-relative" style="flex: 1; max-width: 500px;">
-                                <i class="bi bi-search search-icon position-absolute top-50 start-0 translate-middle-y ms-3"></i>
-                                <input type="text" id="courseSearch" class="form-control search-input rounded-pill ps-5" 
-                                       placeholder="Search your courses..." autocomplete="off">
+                                <i class="bi bi-search search-icon"></i>
+                                <input type="text" id="courseSearch" 
+                                       class="form-control search-input ps-5" 
+                                       placeholder="Search your courses..." 
+                                       autocomplete="off">
+                                <button type="button" class="clear-search" id="clearSearch">
+                                    <i class="bi bi-x-circle-fill"></i>
+                                </button>
                             </div>
                             
                             <div class="d-flex align-items-center gap-3" onclick="window.location.href='settings.php'" role="button" style="flex-shrink: 0;">
@@ -452,13 +498,43 @@ foreach ($enrolledCourses as $course) {
             });
         });
 
-        // Search
-        document.getElementById('courseSearch').addEventListener('input', function() {
-            const term = this.value.toLowerCase();
-            document.querySelectorAll('[data-course-id]').forEach(card => {
+        // NEW SEARCH FUNCTIONALITY 
+        const searchInput = document.getElementById('courseSearch');
+        const clearSearchBtn = document.getElementById('clearSearch');
+        const courseCards = document.querySelectorAll('[data-course-id]');
+
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase().trim();
+            clearSearchBtn.classList.toggle('show', searchTerm.length > 0);
+            
+            // Filter courses
+            let visibleCount = 0;
+            courseCards.forEach(card => {
                 const text = card.textContent.toLowerCase();
-                card.style.display = text.includes(term) ? '' : 'none';
+                const matches = text.includes(searchTerm);
+                card.style.display = matches ? '' : 'none';
+                if (matches) visibleCount++;
             });
+        });
+
+        clearSearchBtn.addEventListener('click', function() {
+            searchInput.value = '';
+            clearSearchBtn.classList.remove('show');
+            
+            // Show all courses
+            courseCards.forEach(card => {
+                card.style.display = '';
+            });
+            
+            searchInput.focus();
+        });
+
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                searchInput.value = '';
+                clearSearchBtn.classList.remove('show');
+                courseCards.forEach(card => card.style.display = '');
+            }
         });
 
         // Delete confirmation
