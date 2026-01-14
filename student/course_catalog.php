@@ -69,7 +69,7 @@ $totalPublished = $stmt->fetch()['total'];
             min-height: 100vh;
         }
 
-        /* Sidebar - EXACTLY matching dashboard */
+        /* Sidebar */
         .sidebar {
             background: linear-gradient(180deg, #e8f0fe 0%, #f0f4ff 50%, #f8f9fa 100%);
             box-shadow: 4px 0 20px rgba(0,0,0,0.08);
@@ -118,7 +118,7 @@ $totalPublished = $stmt->fetch()['total'];
             display: none;
         }
 
-        /* Hamburger - EXACTLY matching dashboard */
+        /* Hamburger */
         .hamburger-btn {
             width: 50px;
             height: 50px;
@@ -157,7 +157,45 @@ $totalPublished = $stmt->fetch()['total'];
             }
         }
 
-        /* Course Catalog specific styles */
+        .search-input {
+            padding-left: 2.5rem;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.15);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+        }
+
+        .search-input:focus ~ .search-icon {
+            color: #667eea;
+        }
+
+        .clear-search {
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #999;
+            cursor: pointer;
+            display: none;
+        }
+
+        .clear-search.show {
+            display: block;
+        }
+
         .card-hover {
             transition: transform 0.2s, box-shadow 0.2s;
             cursor: pointer;
@@ -175,7 +213,7 @@ $totalPublished = $stmt->fetch()['total'];
     </style>
 </head>
 <body>
-    <!-- Hamburger Button (Mobile) - EXACTLY matching dashboard -->
+    <!-- Hamburger Button -->
     <div class="position-fixed top-0 start-0 p-3 d-lg-none" style="z-index: 1100;">
         <button class="hamburger-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" id="hamburgerBtn">
             <div class="hamburger-icon d-flex flex-column align-items-center justify-content-center">
@@ -186,7 +224,7 @@ $totalPublished = $stmt->fetch()['total'];
         </button>
     </div>
 
-    <!-- Sidebar - EXACTLY matching dashboard -->
+    <!-- Sidebar -->
     <aside class="sidebar offcanvas-lg offcanvas-start position-fixed top-0 start-0 h-100" style="width: var(--sidebar-width);" id="sidebar">
         <div class="offcanvas-header d-lg-none border-bottom">
             <h5 class="offcanvas-title sidebar-brand">LEARNEXUS</h5>
@@ -230,19 +268,25 @@ $totalPublished = $stmt->fetch()['total'];
     <!-- Main Content -->
     <main class="main-content p-3 p-lg-4">
         <div class="container-fluid">
-            <!-- Header -->
+            <!-- Header with NEW Search Bar -->
             <div class="row mb-4">
                 <div class="col-12">
                     <div class="card border-0 rounded-4 shadow-sm">
                         <div class="card-body p-3 d-flex justify-content-between align-items-center gap-3">
-                            <form method="GET" class="d-flex gap-2 flex-grow-1" style="max-width: 600px;">
-                                <input type="text" name="search" class="form-control rounded-pill" 
-                                       placeholder="What do you want to learn today?" 
-                                       value="<?php echo htmlspecialchars($searchQuery); ?>">
-                                <button type="submit" class="btn btn-primary rounded-pill px-4">
-                                    <i class="bi bi-search"></i>
-                                </button>
-                            </form>
+                           
+                            <div class="position-relative" style="flex: 1; max-width: 500px;">
+                                <form method="GET" class="position-relative w-100">
+                                    <i class="bi bi-search search-icon position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                                    <input type="text" name="search" id="courseSearch" 
+                                           class="form-control search-input rounded-pill ps-5" 
+                                           placeholder="Search courses..." 
+                                           value="<?php echo htmlspecialchars($searchQuery); ?>" 
+                                           autocomplete="off">
+                                    <button type="button" class="clear-search" id="clearSearch">
+                                        <i class="bi bi-x-circle-fill"></i>
+                                    </button>
+                                </form>
+                            </div>
                             
                             <div class="d-flex align-items-center gap-3" onclick="window.location.href='settings.php'" role="button" style="flex-shrink: 0;">
                                 <span class="fw-semibold d-none d-sm-inline text-nowrap">
@@ -349,7 +393,7 @@ $totalPublished = $stmt->fetch()['total'];
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Hamburger animation - EXACTLY matching dashboard
+        // Hamburger animation
         const hamburgerBtn = document.getElementById('hamburgerBtn');
         const sidebar = document.getElementById('sidebar');
 
@@ -358,7 +402,7 @@ $totalPublished = $stmt->fetch()['total'];
             sidebar.addEventListener('hide.bs.offcanvas', () => hamburgerBtn.classList.remove('active'));
         }
 
-        // Active nav state - EXACTLY matching dashboard
+        // Active nav state 
         const navLinks = document.querySelectorAll('.sidebar .nav-link');
         const currentPage = window.location.pathname.split('/').pop();
         
@@ -368,13 +412,46 @@ $totalPublished = $stmt->fetch()['total'];
                 link.classList.add('active');
             }
             
-            // Close sidebar on mobile when clicking a link - EXACTLY matching dashboard
+            // Close sidebar on mobile when clicking a link
             link.addEventListener('click', () => {
                 if (window.innerWidth <= 992) {
                     const offcanvas = bootstrap.Offcanvas.getInstance(sidebar);
                     if (offcanvas) offcanvas.hide();
                 }
             });
+        });
+
+        // NEW SEARCH FUNCTIONALITY 
+        const searchInput = document.getElementById('courseSearch');
+        const clearSearchBtn = document.getElementById('clearSearch');
+
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.trim();
+            clearSearchBtn.classList.toggle('show', searchTerm.length > 0);
+            
+            // Auto-submit form when typing (with slight delay)
+            if (searchTerm !== "<?php echo $searchQuery; ?>") {
+                clearTimeout(this.searchTimer);
+                this.searchTimer = setTimeout(() => {
+                    if (searchTerm.length > 0 || searchTerm.length === 0) {
+                        this.form.submit();
+                    }
+                }, 500);
+            }
+        });
+
+        clearSearchBtn.addEventListener('click', function() {
+            searchInput.value = '';
+            clearSearchBtn.classList.remove('show');
+            searchInput.form.submit();
+        });
+
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                searchInput.value = '';
+                clearSearchBtn.classList.remove('show');
+                searchInput.form.submit();
+            }
         });
     </script>
 </body>
