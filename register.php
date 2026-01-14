@@ -16,381 +16,525 @@ $session_error = $_SESSION['error'] ?? null;
 if (isset($_SESSION['register_data'])) unset($_SESSION['register_data']);
 if (isset($_SESSION['error'])) unset($_SESSION['error']);
 ?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title><?php echo $page_title; ?></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #ffffff;
+        }
+        .left-side {
+            background-color: #D7DFF0;
+            min-height: 100vh;
+        }
+        .register-container {
+            max-width: 500px;
+            width: 100%;
+        }
+        .welcome-text {
+            color: #333;
+            font-weight: 700;
+            text-align: center;
+        }
+        .register-title {
+            color: #333;
+            font-weight: 600;
+            text-align: center;
+        }
+        .register-description {
+            color: #666;
+            line-height: 1.5;
+            text-align: center;
+        }
+        .form-control {
+            padding: 0.75rem;
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            font-size: 1rem;
+        }
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        .btn-register {
+            background-color: #667eea;
+            color: white;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 0.375rem;
+            width: 100%;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+        .btn-register:hover {
+            background-color: #5a67d8;
+        }
+        .btn-back {
+            background-color: #f8f9fa;
+            color: #666;
+            border: 1px solid #dee2e6;
+            padding: 0.75rem;
+            border-radius: 0.375rem;
+            width: 100%;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+        .btn-back:hover {
+            background-color: #e9ecef;
+        }
+        .register-header {
+            margin-bottom: 2rem;
+        }
+        .role-card {
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid #dee2e6;
+        }
+        .role-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        .role-card.selected {
+            border-color: #667eea !important;
+            background-color: rgba(102, 126, 234, 0.05);
+        }
+        .logo-img {
+            max-width: 650px;
+            width: 100%;
+            height: auto;
+        }
+        .password-toggle {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: none;
+            color: #6c757d;
+            cursor: pointer;
+            padding: 5px;
+            font-size: 1rem;
+            z-index: 10;
+        }
+        .password-toggle:hover {
+            color: #667eea;
+        }
+        .password-input-group {
+            position: relative;
+        }
+        .password-input-group input {
+            padding-right: 45px;
+        }
+        .login-link {
+            color: #666;
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+        .login-link a {
+            color: #667eea;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+        .role-icon {
+            width: 50px;
+            height: 50px;
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(102, 126, 234, 0.1);
+            border-radius: 50%;
+        }
+        .form-label {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+        .text-danger {
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+        .input-group .btn {
+            border-left: 0;
+            background-color: #f8f9fa;
+        }
+        .input-group .btn:hover {
+            background-color: #e9ecef;
+        }
+        .is-invalid {
+            border-color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row min-vh-100">
+            <div class="col-12 col-md-6 left-side d-flex align-items-center justify-content-center p-3 p-md-5">
+                <img src="images/Learnexus.png" alt="Learnexus Logo" class="logo-img">
+            </div>
 
-<div class="container-fluid vh-100">
-  <div class="row h-100">
-    <div class="col-md-6 d-flex align-items-center justify-content-center">
-      <div class="w-100 px-4" style="max-width: 400px;">
-        <div class="text-center mb-5">
-          <h1 class="display-4 fw-bold text-primary">LEARNEXUS</h1>
+            <div class="col-12 col-md-6 d-flex align-items-center justify-content-center p-3 p-md-5">
+                <div class="register-container">
+                    <?php if (empty($role)): ?>
+                        <!-- Role Selection Page -->
+                        <div class="register-header text-center">
+                            <div class="welcome-text fs-2 fs-md-1 mb-1">Join Learnexus</div>
+                            <div class="register-title fs-3 fs-md-2 mb-2">Create Your Account</div>
+                            <div class="register-description fs-6 mb-4">
+                                Start managing your courses and tracking your progress today
+                            </div>
+                        </div>
+
+                        <div class="text-center mb-4">
+                            <h5 class="mb-3">What's your Role?</h5>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-12 col-sm-6 mb-3">
+                                <div class="card role-card h-100" data-role="student">
+                                    <div class="card-body text-center">
+                                        <div class="role-icon">
+                                            <i class="fas fa-graduation-cap fa-2x text-primary"></i>
+                                        </div>
+                                        <h6 class="card-title fw-bold">Student</h6>
+                                        <p class="text-muted small mb-0">Access courses and track progress</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-12 col-sm-6 mb-3">
+                                <div class="card role-card h-100" data-role="instructor">
+                                    <div class="card-body text-center">
+                                        <div class="role-icon">
+                                            <i class="fas fa-chalkboard-teacher fa-2x text-success"></i>
+                                        </div>
+                                        <h6 class="card-title fw-bold">Instructor</h6>
+                                        <p class="text-muted small mb-0">Create and manage courses</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <form id="roleForm" method="GET" action="register.php">
+                            <input type="hidden" name="role" id="selectedRole" value="">
+                        </form>
+
+                        <button type="button" class="btn btn-register mb-3" id="nextBtn" disabled>Next</button>
+
+                        <div class="login-link">
+                            <p class="mb-0">Already have an account? <a href="index.php">Login here</a></p>
+                        </div>
+
+                    <?php else: ?>
+                        <!-- Registration Form Page -->
+                        <div class="register-header text-center">
+                            <div class="welcome-text fs-2 fs-md-1 mb-1"><?php echo ucfirst($role); ?> Registration</div>
+                            <div class="register-description fs-6 mb-4">
+                                Please fill in your details to create your account
+                            </div>
+                        </div>
+
+                        <form method="POST" action="register_process.php" id="registrationForm" novalidate>
+                            <input type="hidden" name="role" value="<?php echo htmlspecialchars($role); ?>">
+
+                            <div class="row mb-3">
+                                <div class="col-12 col-md-6 mb-3">
+                                    <label for="firstName" class="form-label">First Name *</label>
+                                    <input type="text" class="form-control" id="firstName" name="firstName"
+                                        value="<?php echo htmlspecialchars($submitted_data['firstName'] ?? ''); ?>" required>
+                                    <small class="text-danger d-none" id="firstNameError">First Name is required</small>
+                                </div>
+                                <div class="col-12 col-md-6 mb-3">
+                                    <label for="lastName" class="form-label">Last Name *</label>
+                                    <input type="text" class="form-control" id="lastName" name="lastName"
+                                        value="<?php echo htmlspecialchars($submitted_data['lastName'] ?? ''); ?>" required>
+                                    <small class="text-danger d-none" id="lastNameError">Last Name is required</small>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="middleInitial" class="form-label">Middle Initial</label>
+                                <input type="text" class="form-control" id="middleInitial" name="middleInitial" maxlength="5"
+                                    value="<?php echo htmlspecialchars($submitted_data['middleInitial'] ?? ''); ?>">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email Address *</label>
+                                <input type="email" class="form-control" id="email" name="email"
+                                    value="<?php echo htmlspecialchars($submitted_data['email'] ?? ''); ?>"
+                                    placeholder="<?php echo $role == 'student' ? 'student@learnexus.edu' : 'instructor@learnexus.edu'; ?>" required>
+                                <small class="text-danger d-none" id="emailError">Valid email is required</small>
+                            </div>
+
+                            <?php if ($role == 'student'): ?>
+                                <div class="mb-3">
+                                    <label for="studentNumber" class="form-label">Student Number *</label>
+                                    <input type="text" class="form-control" id="studentNumber" name="studentNumber"
+                                        value="<?php echo htmlspecialchars($submitted_data['studentNumber'] ?? ''); ?>" required>
+                                    <small class="text-danger d-none" id="studentNumberError">Student Number is required</small>
+                                </div>
+                            <?php else: ?>
+                                <div class="mb-3">
+                                    <label for="teacherNumber" class="form-label">Teacher Number *</label>
+                                    <input type="text" class="form-control" id="teacherNumber" name="teacherNumber"
+                                        value="<?php echo htmlspecialchars($submitted_data['teacherNumber'] ?? ''); ?>" required>
+                                    <small class="text-danger d-none" id="teacherNumberError">Teacher Number is required</small>
+                                </div>
+                            <?php endif; ?>
+
+                            <div class="mb-3">
+                                <label for="phone" class="form-label">Phone Number *</label>
+                                <input type="text" class="form-control" id="phone" name="phone"
+                                    value="<?php echo htmlspecialchars($submitted_data['phone'] ?? ''); ?>"
+                                    maxlength="11" inputmode="numeric" required>
+                                <small class="text-muted">Must be exactly 11 digits (e.g., 09123456789)</small>
+                                <small class="text-danger d-none" id="phoneError">Phone number must be exactly 11 digits</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password *</label>
+                                <div class="password-input-group">
+                                    <input type="password" class="form-control" id="password" name="password" required
+                                        autocomplete="new-password" autocapitalize="off" autocorrect="off" spellcheck="false">
+                                    <button type="button" class="password-toggle" id="togglePassword">
+                                        <i class="fas fa-eye-slash"></i>
+                                    </button>
+                                </div>
+                                <small class="text-danger d-none" id="passwordError">Password is required</small>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="confirm_password" class="form-label">Confirm Password *</label>
+                                <div class="password-input-group">
+                                    <input type="password" class="form-control" id="confirm_password" name="confirm_password" required
+                                        autocomplete="new-password" autocapitalize="off" autocorrect="off" spellcheck="false">
+                                    <button type="button" class="password-toggle" id="toggleConfirmPassword">
+                                        <i class="fas fa-eye-slash"></i>
+                                    </button>
+                                </div>
+                                <small class="text-danger d-none" id="confirmPasswordError">Passwords do not match</small>
+                            </div>
+
+                            <div class="row g-3 mb-4">
+                                <div class="col-6">
+                                    <a href="register.php" class="btn btn-back">Back</a>
+                                </div>
+                                <div class="col-6">
+                                    <button type="submit" class="btn btn-register">Create Account</button>
+                                </div>
+                            </div>
+
+                            <div class="login-link">
+                                <p class="mb-0">Already have an account? <a href="index.php">Login here</a></p>
+                            </div>
+                        </form>
+                    <?php endif; ?>
+                </div>
+            </div>
         </div>
-
-        <?php if (empty($role)): ?>
-          <h2 class="h3 fw-bold text-center mb-4">Create your account</h2>
-          <p class="text-muted text-center mb-4">Join Learnexus to start managing your courses and tracking your progress today.</p>
-
-          <div class="card shadow-sm border-0">
-            <div class="card-body">
-              <h5 class="card-title text-center mb-4">What's your Role?</h5>
-
-              <div class="row">
-                <div class="col-md-6 mb-3">
-                  <div class="card role-card h-100 border-2" data-role="student">
-                    <div class="card-body text-center">
-                      <div class="mb-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="#0d6efd" class="bi bi-mortarboard" viewBox="0 0 16 16">
-                          <path d="M8.211 2.047a.5.5 0 0 0-.422 0l-7.5 3.5a.5.5 0 0 0 .025.917l7.5 3a.5.5 0 0 0 .372 0L14 7.14V13a1 1 0 0 0-1 1v2h3v-2a1 1 0 0 0-1-1V6.739l.686-.275a.5.5 0 0 0 .025-.917l-7.5-3.5Z" />
-                          <path d="M4.176 9.032a.5.5 0 0 0-.656.327l-.5 1.7a.5.5 0 0 0 .294.605l4.5 1.8a.5.5 0 0 0 .372 0l4.5-1.8a.5.5 0 0 0 .294-.605l-.5-1.7a.5.5 0 0 0-.656-.327L8 10.466 4.176 9.032Z" />
-                        </svg>
-                      </div>
-                      <h6 class="card-title">Student</h6>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="col-md-6 mb-3">
-                  <div class="card role-card h-100 border-2" data-role="instructor">
-                    <div class="card-body text-center">
-                      <div class="mb-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="#198754" class="bi bi-person-badge" viewBox="0 0 16 16">
-                          <path d="M6.5 2a.5.5 0 0 0 0 1h3a.5.5 0 0 0 0-1h-3zM11 8a3 3 0 1 1-6 0 3 3 0 0 1 6 0z" />
-                          <path d="M4.5 0A2.5 2.5 0 0 0 2 2.5V14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V2.5A2.5 2.5 0 0 0 11.5 0h-7zM3 2.5A1.5 1.5 0 0 1 4.5 1h7A1.5 1.5 0 0 1 13 2.5v10.795a4.2 4.2 0 0 0-.776-.492C11.392 12.387 10.063 12 8 12s-3.392.387-4.224.803a4.2 4.2 0 0 0-.776.492V2.5z" />
-                        </svg>
-                      </div>
-                      <h6 class="card-title">Instructor</h6>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <form id="roleForm" method="GET" action="register.php">
-                <input type="hidden" name="role" id="selectedRole" value="">
-              </form>
-
-              <button type="button" class="btn btn-primary btn-lg w-100 mt-3" id="nextBtn" disabled>Next</button>
-
-              <div class="text-center mt-3">
-                <p class="text-muted">Already have an account? <a href="index.php" class="fw-medium text-decoration-none">Login here</a></p>
-              </div>
-            </div>
-          </div>
-
-        <?php else: ?>
-          <h2 class="h3 fw-bold text-center mb-4"><?php echo ucfirst($role); ?> Registration</h2>
-
-          <form method="POST" action="register_process.php" id="registrationForm" novalidate>
-            <input type="hidden" name="role" value="<?php echo htmlspecialchars($role); ?>">
-
-            <div class="row mb-3">
-              <div class="col-md-6">
-                <label for="firstName" class="form-label fw-medium">First Name *</label>
-                <input type="text" class="form-control form-control-lg" id="firstName" name="firstName"
-                  value="<?php echo htmlspecialchars($submitted_data['firstName'] ?? ''); ?>" required>
-                <small class="text-danger d-none" id="firstNameError">First Name is required</small>
-              </div>
-              <div class="col-md-6">
-                <label for="lastName" class="form-label fw-medium">Last Name *</label>
-                <input type="text" class="form-control form-control-lg" id="lastName" name="lastName"
-                  value="<?php echo htmlspecialchars($submitted_data['lastName'] ?? ''); ?>" required>
-                <small class="text-danger d-none" id="lastNameError">Last Name is required</small>
-              </div>
-            </div>
-
-            <div class="mb-3">
-              <label for="middleInitial" class="form-label fw-medium">Middle Initial</label>
-              <input type="text" class="form-control form-control-lg" id="middleInitial" name="middleInitial" maxlength="5"
-                value="<?php echo htmlspecialchars($submitted_data['middleInitial'] ?? ''); ?>">
-            </div>
-
-            <div class="mb-3">
-              <label for="email" class="form-label fw-medium">Email Address *</label>
-              <input type="email" class="form-control form-control-lg" id="email" name="email"
-                value="<?php echo htmlspecialchars($submitted_data['email'] ?? ''); ?>"
-                placeholder="<?php echo $role == 'student' ? 'student@learnexus.edu' : 'instructor@learnexus.edu'; ?>" required>
-              <small class="text-danger d-none" id="emailError">Valid email is required</small>
-            </div>
-
-            <?php if ($role == 'student'): ?>
-              <div class="mb-3">
-                <label for="studentNumber" class="form-label fw-medium">Student Number *</label>
-                <input type="text" class="form-control form-control-lg" id="studentNumber" name="studentNumber"
-                  value="<?php echo htmlspecialchars($submitted_data['studentNumber'] ?? ''); ?>" required>
-                <small class="text-danger d-none" id="studentNumberError">Student Number is required</small>
-              </div>
-            <?php else: ?>
-              <div class="mb-3">
-                <label for="teacherNumber" class="form-label fw-medium">Teacher Number *</label>
-                <input type="text" class="form-control form-control-lg" id="teacherNumber" name="teacherNumber"
-                  value="<?php echo htmlspecialchars($submitted_data['teacherNumber'] ?? ''); ?>" required>
-                <small class="text-danger d-none" id="teacherNumberError">Teacher Number is required</small>
-              </div>
-            <?php endif; ?>
-
-            <div class="mb-3">
-              <label for="phone" class="form-label fw-medium">Phone Number *</label>
-              <input type="text" class="form-control form-control-lg" id="phone" name="phone"
-                value="<?php echo htmlspecialchars($submitted_data['phone'] ?? ''); ?>"
-                maxlength="11" inputmode="numeric" required>
-              <small class="text-muted">Must be exactly 11 digits (e.g., 09123456789)</small>
-              <small class="text-danger d-none" id="phoneError">Phone number must be exactly 11 digits</small>
-            </div>
-
-            <div class="mb-3">
-              <label for="password" class="form-label fw-medium">Password *</label>
-              <div class="input-group">
-                <input type="password" class="form-control form-control-lg" id="password" name="password" required
-                  autocomplete="new-password" autocapitalize="off" autocorrect="off" spellcheck="false">
-                <button class="btn btn-outline-secondary" type="button" id="togglePassword">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-eye" viewBox="0 0 16 16">
-                    <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z" />
-                    <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z" />
-                  </svg>
-                </button>
-              </div>
-              <small class="text-danger d-none" id="passwordError">Password is required</small>
-            </div>
-
-            <div class="mb-4">
-              <label for="confirm_password" class="form-label fw-medium">Confirm Password *</label>
-              <div class="input-group">
-                <input type="password" class="form-control form-control-lg" id="confirm_password" name="confirm_password" required
-                  autocomplete="new-password" autocapitalize="off" autocorrect="off" spellcheck="false">
-                <button class="btn btn-outline-secondary" type="button" id="toggleConfirmPassword">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-eye" viewBox="0 0 16 16">
-                    <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z" />
-                    <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z" />
-                  </svg>
-                </button>
-              </div>
-              <small class="text-danger d-none" id="confirmPasswordError">Passwords do not match</small>
-            </div>
-
-            <div class="d-flex gap-2">
-              <a href="register.php" class="btn btn-outline-secondary btn-lg w-50">Back</a>
-              <button type="submit" class="btn btn-primary btn-lg w-50">Create Account</button>
-            </div>
-
-            <div class="text-center mt-3">
-              <p class="text-muted">Already have an account? <a href="index.php" class="fw-medium text-decoration-none">Login here</a></p>
-            </div>
-          </form>
-        <?php endif; ?>
-      </div>
     </div>
 
-    <div class="col-md-6 d-none d-md-block bg-light">
-      <div class="h-100 d-flex align-items-center justify-content-center"></div>
-    </div>
-  </div>
-</div>
-
-<style>
-  .role-card {
-    cursor: pointer;
-    transition: all 0.3s;
-  }
-
-  .role-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-  }
-
-  .role-card.selected {
-    border-color: #0d6efd !important;
-    background-color: #f8f9fa;
-  }
-
-  .input-group .btn {
-    border-left: 0;
-    background-color: #f8f9fa;
-  }
-
-  .input-group .btn:hover {
-    background-color: #e9ecef;
-  }
-
-  input[type="password"]::-ms-reveal,
-  input[type="password"]::-ms-clear {
-    display: none !important;
-  }
-</style>
-
-<script>
-  <?php if ($session_error): ?>
-    document.addEventListener('DOMContentLoaded', function() {
-      Swal.fire({
-        icon: 'error',
-        title: 'Registration Error',
-        html: '<?php echo addslashes($session_error); ?>',
-        confirmButtonColor: '#3085d6'
-      });
-    });
-  <?php endif; ?>
-
-  document.querySelectorAll('.role-card').forEach(card => {
-    card.addEventListener('click', function() {
-      document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
-      this.classList.add('selected');
-      document.getElementById('selectedRole').value = this.getAttribute('data-role');
-      document.getElementById('nextBtn').disabled = false;
-    });
-  });
-
-  document.getElementById('nextBtn')?.addEventListener('click', () => {
-    if (document.getElementById('selectedRole').value) {
-      document.getElementById('roleForm').submit();
-    }
-  });
-
-  <?php if (!empty($role)): ?>
-    document.addEventListener('DOMContentLoaded', function() {
-      const form = document.getElementById('registrationForm');
-      const fields = {
-        firstName: document.getElementById('firstName'),
-        lastName: document.getElementById('lastName'),
-        email: document.getElementById('email'),
-        phone: document.getElementById('phone'),
-        password: document.getElementById('password'),
-        confirm_password: document.getElementById('confirm_password')
-      };
-
-      <?php if ($role == 'student'): ?>
-        fields.studentNumber = document.getElementById('studentNumber');
-      <?php else: ?>
-        fields.teacherNumber = document.getElementById('teacherNumber');
-      <?php endif; ?>
-
-      const errors = {
-        firstName: document.getElementById('firstNameError'),
-        lastName: document.getElementById('lastNameError'),
-        email: document.getElementById('emailError'),
-        phone: document.getElementById('phoneError'),
-        password: document.getElementById('passwordError'),
-        confirmPassword: document.getElementById('confirmPasswordError'),
-        <?php if ($role == 'student'): ?>
-          studentNumber: document.getElementById('studentNumberError')
-        <?php else: ?>
-          teacherNumber: document.getElementById('teacherNumberError')
-        <?php endif; ?>
-      };
-
-      fields.phone.addEventListener('input', function() {
-        this.value = this.value.replace(/\D/g, '');
-      });
-
-      function validateField(field, errorElement) {
-        const value = field.value.trim();
-        if (value === '') {
-          errorElement.classList.remove('d-none');
-          field.classList.add('is-invalid');
-          return false;
-        } else {
-          errorElement.classList.add('d-none');
-          field.classList.remove('is-invalid');
-          return true;
-        }
-      }
-
-      function validateEmail() {
-        const value = fields.email.value.trim();
-        const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (value === '' || !regex.test(value)) {
-          errors.email.classList.remove('d-none');
-          fields.email.classList.add('is-invalid');
-          return false;
-        } else {
-          errors.email.classList.add('d-none');
-          fields.email.classList.remove('is-invalid');
-          return true;
-        }
-      }
-
-      function validatePhone() {
-        const value = fields.phone.value.trim();
-        if (value.length !== 11) {
-          errors.phone.classList.remove('d-none');
-          fields.phone.classList.add('is-invalid');
-          return false;
-        } else {
-          errors.phone.classList.add('d-none');
-          fields.phone.classList.remove('is-invalid');
-          return true;
-        }
-      }
-
-      function validatePasswordMatch() {
-        if (fields.password.value === '' || fields.confirm_password.value === '' || fields.password.value !== fields.confirm_password.value) {
-          errors.confirmPassword.classList.remove('d-none');
-          fields.confirm_password.classList.add('is-invalid');
-          if (fields.password.value === '') {
-            errors.password.classList.remove('d-none');
-            fields.password.classList.add('is-invalid');
-          }
-          return false;
-        } else {
-          errors.confirmPassword.classList.add('d-none');
-          errors.password.classList.add('d-none');
-          fields.confirm_password.classList.remove('is-invalid');
-          fields.password.classList.remove('is-invalid');
-          return true;
-        }
-      }
-
-      fields.firstName.addEventListener('input', () => validateField(fields.firstName, errors.firstName));
-      fields.lastName.addEventListener('input', () => validateField(fields.lastName, errors.lastName));
-      fields.email.addEventListener('input', validateEmail);
-      fields.phone.addEventListener('input', validatePhone);
-      fields.password.addEventListener('input', validatePasswordMatch);
-      fields.confirm_password.addEventListener('input', validatePasswordMatch);
-
-      <?php if ($role == 'student'): ?>
-        fields.studentNumber.addEventListener('input', () => validateField(fields.studentNumber, errors.studentNumber));
-      <?php else: ?>
-        fields.teacherNumber.addEventListener('input', () => validateField(fields.teacherNumber, errors.teacherNumber));
-      <?php endif; ?>
-
-      form.addEventListener('submit', function(e) {
-        let isValid = true;
-
-        isValid &= validateField(fields.firstName, errors.firstName);
-        isValid &= validateField(fields.lastName, errors.lastName);
-        isValid &= validateEmail();
-        isValid &= validatePhone();
-        isValid &= validatePasswordMatch();
-        <?php if ($role == 'student'): ?>
-          isValid &= validateField(fields.studentNumber, errors.studentNumber);
-        <?php else: ?>
-          isValid &= validateField(fields.teacherNumber, errors.teacherNumber);
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        <?php if ($session_error): ?>
+            document.addEventListener('DOMContentLoaded', function() {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Registration Error',
+                    html: '<?php echo addslashes($session_error); ?>',
+                    confirmButtonColor: '#667eea'
+                });
+            });
         <?php endif; ?>
 
-        if (!isValid) {
-          e.preventDefault();
-        }
-      });
+        // Role selection functionality
+        document.querySelectorAll('.role-card').forEach(card => {
+            card.addEventListener('click', function() {
+                document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
+                this.classList.add('selected');
+                document.getElementById('selectedRole').value = this.getAttribute('data-role');
+                document.getElementById('nextBtn').disabled = false;
+            });
+        });
 
-      const eyeOpen = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-eye" viewBox="0 0 16 16">
-    <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z"/>
-    <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z"/>
-  </svg>`;
+        document.getElementById('nextBtn')?.addEventListener('click', () => {
+            if (document.getElementById('selectedRole').value) {
+                document.getElementById('roleForm').submit();
+            }
+        });
 
-      const eyeClosed = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-eye-slash" viewBox="0 0 16 16">
-    <path d="m13.498 5.414 1.415-1.415 1.415 1.415-1.415 1.415 1.415 1.415-1.415 1.415-1.415-1.415-1.415 1.415-1.415-1.415 1.415-1.415-1.415-1.415 1.415-1.415-1.415 1.415z"/>
-    <path d="M8 3.5c-2.12 0-3.879 1.168-5.168 2.457A13.133 13.133 0 0 0 1.172 8c.058.087.122.183.195.288.335.48.83 1.12 1.465 1.755C4.121 11.332 5.881 12.5 8 12.5c2.12 0 3.879-1.168 5.168-2.457A13.134 13.134 0 0 0 14.828 8c-.058-.087-.122-.183-.195-.288-.335-.48-.83-1.12-1.465-1.755C11.879 4.668 10.119 3.5 8 3.5zM0 8s3-5.5 8-5.5S16 8 16 8s-3 5.5-8 5.5S0 8 0 8zm8 3.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/>
-  </svg>`;
+        <?php if (!empty($role)): ?>
+            document.addEventListener('DOMContentLoaded', function() {
+                const form = document.getElementById('registrationForm');
+                const fields = {
+                    firstName: document.getElementById('firstName'),
+                    lastName: document.getElementById('lastName'),
+                    email: document.getElementById('email'),
+                    phone: document.getElementById('phone'),
+                    password: document.getElementById('password'),
+                    confirm_password: document.getElementById('confirm_password')
+                };
 
-      document.getElementById('togglePassword').addEventListener('click', function() {
-        const type = fields.password.getAttribute('type') === 'password' ? 'text' : 'password';
-        fields.password.setAttribute('type', type);
-        this.innerHTML = type === 'password' ? eyeOpen : eyeClosed;
-      });
+                <?php if ($role == 'student'): ?>
+                    fields.studentNumber = document.getElementById('studentNumber');
+                <?php else: ?>
+                    fields.teacherNumber = document.getElementById('teacherNumber');
+                <?php endif; ?>
 
-      document.getElementById('toggleConfirmPassword').addEventListener('click', function() {
-        const type = fields.confirm_password.getAttribute('type') === 'password' ? 'text' : 'password';
-        fields.confirm_password.setAttribute('type', type);
-        this.innerHTML = type === 'password' ? eyeOpen : eyeClosed;
-      });
-    });
-  <?php endif; ?>
-</script>
+                const errors = {
+                    firstName: document.getElementById('firstNameError'),
+                    lastName: document.getElementById('lastNameError'),
+                    email: document.getElementById('emailError'),
+                    phone: document.getElementById('phoneError'),
+                    password: document.getElementById('passwordError'),
+                    confirmPassword: document.getElementById('confirmPasswordError'),
+                    <?php if ($role == 'student'): ?>
+                        studentNumber: document.getElementById('studentNumberError')
+                    <?php else: ?>
+                        teacherNumber: document.getElementById('teacherNumberError')
+                    <?php endif; ?>
+                };
 
-<?php include 'footer.php'; ?>
+                // Phone number validation (digits only)
+                fields.phone.addEventListener('input', function() {
+                    this.value = this.value.replace(/\D/g, '');
+                });
+
+                // Field validation functions
+                function validateField(field, errorElement) {
+                    const value = field.value.trim();
+                    if (value === '') {
+                        errorElement.classList.remove('d-none');
+                        field.classList.add('is-invalid');
+                        return false;
+                    } else {
+                        errorElement.classList.add('d-none');
+                        field.classList.remove('is-invalid');
+                        return true;
+                    }
+                }
+
+                function validateEmail() {
+                    const value = fields.email.value.trim();
+                    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    if (value === '' || !regex.test(value)) {
+                        errors.email.classList.remove('d-none');
+                        fields.email.classList.add('is-invalid');
+                        return false;
+                    } else {
+                        errors.email.classList.add('d-none');
+                        fields.email.classList.remove('is-invalid');
+                        return true;
+                    }
+                }
+
+                function validatePhone() {
+                    const value = fields.phone.value.trim();
+                    if (value.length !== 11) {
+                        errors.phone.classList.remove('d-none');
+                        fields.phone.classList.add('is-invalid');
+                        return false;
+                    } else {
+                        errors.phone.classList.add('d-none');
+                        fields.phone.classList.remove('is-invalid');
+                        return true;
+                    }
+                }
+
+                function validatePasswordMatch() {
+                    if (fields.password.value === '' || fields.confirm_password.value === '' || fields.password.value !== fields.confirm_password.value) {
+                        errors.confirmPassword.classList.remove('d-none');
+                        fields.confirm_password.classList.add('is-invalid');
+                        if (fields.password.value === '') {
+                            errors.password.classList.remove('d-none');
+                            fields.password.classList.add('is-invalid');
+                        }
+                        return false;
+                    } else {
+                        errors.confirmPassword.classList.add('d-none');
+                        errors.password.classList.add('d-none');
+                        fields.confirm_password.classList.remove('is-invalid');
+                        fields.password.classList.remove('is-invalid');
+                        return true;
+                    }
+                }
+
+                // Real-time validation
+                fields.firstName.addEventListener('input', () => validateField(fields.firstName, errors.firstName));
+                fields.lastName.addEventListener('input', () => validateField(fields.lastName, errors.lastName));
+                fields.email.addEventListener('input', validateEmail);
+                fields.phone.addEventListener('input', validatePhone);
+                fields.password.addEventListener('input', validatePasswordMatch);
+                fields.confirm_password.addEventListener('input', validatePasswordMatch);
+
+                <?php if ($role == 'student'): ?>
+                    fields.studentNumber.addEventListener('input', () => validateField(fields.studentNumber, errors.studentNumber));
+                <?php else: ?>
+                    fields.teacherNumber.addEventListener('input', () => validateField(fields.teacherNumber, errors.teacherNumber));
+                <?php endif; ?>
+
+                // Form submission validation
+                form.addEventListener('submit', function(e) {
+                    let isValid = true;
+
+                    isValid &= validateField(fields.firstName, errors.firstName);
+                    isValid &= validateField(fields.lastName, errors.lastName);
+                    isValid &= validateEmail();
+                    isValid &= validatePhone();
+                    isValid &= validatePasswordMatch();
+                    <?php if ($role == 'student'): ?>
+                        isValid &= validateField(fields.studentNumber, errors.studentNumber);
+                    <?php else: ?>
+                        isValid &= validateField(fields.teacherNumber, errors.teacherNumber);
+                    <?php endif; ?>
+
+                    if (!isValid) {
+                        e.preventDefault();
+                    }
+                });
+
+                // Password toggle functionality
+                document.getElementById('togglePassword').addEventListener('click', function() {
+                    const type = fields.password.getAttribute('type') === 'password' ? 'text' : 'password';
+                    fields.password.setAttribute('type', type);
+                    
+                    const icon = this.querySelector('i');
+                    if (type === 'text') {
+                        icon.classList.remove('fa-eye-slash');
+                        icon.classList.add('fa-eye');
+                    } else {
+                        icon.classList.remove('fa-eye');
+                        icon.classList.add('fa-eye-slash');
+                    }
+                });
+
+                document.getElementById('toggleConfirmPassword').addEventListener('click', function() {
+                    const type = fields.confirm_password.getAttribute('type') === 'password' ? 'text' : 'password';
+                    fields.confirm_password.setAttribute('type', type);
+                    
+                    const icon = this.querySelector('i');
+                    if (type === 'text') {
+                        icon.classList.remove('fa-eye-slash');
+                        icon.classList.add('fa-eye');
+                    } else {
+                        icon.classList.remove('fa-eye');
+                        icon.classList.add('fa-eye-slash');
+                    }
+                });
+            });
+        <?php endif; ?>
+    </script>
+</body>
+</html>
