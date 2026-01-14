@@ -73,9 +73,16 @@ $studentJoined = date('F d, Y', strtotime($certificate['student_joined']));
 /* =====================
    GET DOWNLOAD HISTORY
 ===================== */
-$stmt = $conn->prepare("SELECT * FROM certificate_downloads WHERE certificateID = ? ORDER BY downloadedAt DESC LIMIT 10");
-$stmt->execute([$certificateID]);
-$downloads = $stmt->fetchAll(PDO::FETCH_ASSOC);
+try {
+    $stmt = $conn->prepare("SELECT * FROM certificate_downloads WHERE certificateID = ? ORDER BY downloadedAt DESC LIMIT 10");
+    $stmt->execute([$certificateID]);
+    $downloads = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    // The `certificate_downloads` table may not exist yet on some installations.
+    // Log the full error for debugging and continue gracefully with an empty set.
+    error_log("Missing certificate_downloads table or query error: " . $e->getMessage());
+    $downloads = [];
+}
 ?>
 
 <!DOCTYPE html>
@@ -376,12 +383,8 @@ $downloads = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     </div>
                     <div class="card-body">
                         <div class="d-grid gap-2">
-                            <button onclick="verifyCertificate()" class="btn btn-warning">
-                                <i class="bi bi-shield-check me-2"></i> Verify Certificate
-                            </button>
-                            
                             <a href="mailto:<?= htmlspecialchars($certificate['student_email']) ?>?subject=Your Certificate of Completion&body=Dear <?= urlencode($certificate['studentName']) ?>,%0D%0A%0D%0AYour certificate for '<?= urlencode($certificate['courseTitle']) ?>' is ready.%0D%0A%0D%0AYou can view it here: [LINK]%0D%0A%0D%0ABest regards,%0D%0AThe LearnNexus Team" 
-                               class="btn btn-outline-primary">
+                               class="btn btn-primary">
                                 <i class="bi bi-envelope me-2"></i> Email Student
                             </a>
                         </div>
@@ -447,34 +450,7 @@ $downloads = $stmt->fetchAll(PDO::FETCH_ASSOC);
             });
         }
 
-        function verifyCertificate() {
-            const uuid = '<?= $certificate['certificateUUID'] ?>';
-            
-            Swal.fire({
-                title: 'Verify Certificate',
-                html: `Certificate ID: <strong>${uuid}</strong><br><br>
-                       This certificate was issued to:<br>
-                       <strong><?= addslashes($certificate['studentName']) ?></strong><br>
-                       For completing:<br>
-                       <strong><?= addslashes($certificate['courseTitle']) ?></strong><br><br>
-                       <small class="text-muted">Issued on: <?= $issuedDate ?></small>`,
-                icon: 'info',
-                showCancelButton: true,
-                confirmButtonText: 'Verify',
-                cancelButtonText: 'Close'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // In a real application, you would make an API call to verify
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Verified!',
-                        text: 'This certificate is authentic and valid.',
-                        timer: 2000,
-                        showConfirmButton: false
-                    });
-                }
-            });
-        }
+
     </script>
 </body>
 </html>

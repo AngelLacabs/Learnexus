@@ -171,9 +171,9 @@ include 'includes/sidebar.php';
             <?php unset($_SESSION['error']); ?>
         <?php endif; ?>
 
-        <!-- Statistics Cards -->
+        <!-- 3x3 Statistics Grid -->
         <div class="row g-3 mb-4">
-            <div class="col-lg-3 col-md-6">
+            <div class="col-lg-4 col-md-6">
                 <div class="card border-0 shadow-sm">
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center">
@@ -188,8 +188,8 @@ include 'includes/sidebar.php';
                     </div>
                 </div>
             </div>
-            
-            <div class="col-lg-3 col-md-6">
+
+            <div class="col-lg-4 col-md-6">
                 <div class="card border-0 shadow-sm">
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center">
@@ -204,11 +204,8 @@ include 'includes/sidebar.php';
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Status Breakdown -->
-        <div class="row g-3 mb-4">
-            <div class="col-lg-3 col-md-6">
+            <div class="col-lg-4 col-md-6">
                 <div class="card border-0 shadow-sm">
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center">
@@ -223,8 +220,8 @@ include 'includes/sidebar.php';
                     </div>
                 </div>
             </div>
-            
-            <div class="col-lg-3 col-md-6">
+
+            <div class="col-lg-4 col-md-6">
                 <div class="card border-0 shadow-sm">
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center">
@@ -239,8 +236,8 @@ include 'includes/sidebar.php';
                     </div>
                 </div>
             </div>
-            
-            <div class="col-lg-3 col-md-6">
+
+            <div class="col-lg-4 col-md-6">
                 <div class="card border-0 shadow-sm">
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center">
@@ -255,8 +252,8 @@ include 'includes/sidebar.php';
                     </div>
                 </div>
             </div>
-            
-            <div class="col-lg-3 col-md-6">
+
+            <div class="col-lg-4 col-md-6">
                 <div class="card border-0 shadow-sm">
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center">
@@ -271,6 +268,8 @@ include 'includes/sidebar.php';
                     </div>
                 </div>
             </div>
+
+
         </div>
 
         <!-- Filters Card -->
