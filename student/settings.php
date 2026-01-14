@@ -484,7 +484,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
                     <div class="card border-0 rounded-4 shadow-sm">
                         <div class="card-body p-3 d-flex justify-content-between align-items-center">
                             <div>
-                                <h4 class="mb-0 fw-bold">Settings</h4>
+                                <h4 class="mb-0 fw-bold"><i class="bi bi-gear me-2"></i>Settings</h4>
                             </div>
 
                             <div class="d-flex align-items-center gap-3" onclick="window.location.href='settings.php'"
@@ -618,7 +618,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
                                 </form>
                             </div>
 
-                            <!-- Security Tab -->
                             <div class="tab-content-section" id="security-tab">
                                 <div class="info-card">
                                     <div class="d-flex align-items-start gap-3">
@@ -786,7 +785,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
                     return password;
                 },
                 didOpen: () => {
-                    // Ensure Bootstrap styles are applied
                     const input = document.getElementById('deletePasswordInput');
                     const button = input.nextElementSibling;
                     if (button) {
@@ -816,7 +814,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
                 }
             });
         }
-        
+
         function toggleDeletePassword() {
             const input = document.getElementById('deletePasswordInput');
             const icon = document.getElementById('deletePasswordIcon');
