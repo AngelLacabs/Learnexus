@@ -297,7 +297,7 @@ $dailyMotivationStudent = $studentMotivations[date('z') % count($studentMotivati
                 <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium" href="settings.php">
                     <i class="bi bi-gear fs-5"></i><span>Settings</span>
                 </a>
-                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium" href="ai_tutor.php">
+                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium" href="ai_chatbot.php">
                     <i class="bi bi-robot fs-5"></i><span>AI Tutor</span>
                 </a>
             </nav>

@@ -29,17 +29,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['prompt'])) {
         exit;
     }
     
-    // Build knowledge base from database
-    $knowledge_base = "AVAILABLE COURSES AND INFORMATION:\n\n";
+    // Build categories list
+    $categories = [];
+    foreach ($result as $course) {
+        if (!in_array($course['category'], $categories)) {
+            $categories[] = $course['category'];
+        }
+    }
+    
+    // Build enhanced knowledge base from database
+    $knowledge_base = "AVAILABLE COURSES INFORMATION:\n\n";
+    $knowledge_base .= "CATEGORIES AVAILABLE: " . implode(', ', $categories) . "\n\n";
     
     foreach ($result as $course) {
-        $knowledge_base .= "Course Name: " . $course['title'] . "\n";
+        $knowledge_base .= "=== COURSE: " . $course['title'] . " ===\n";
         $knowledge_base .= "Category: " . $course['category'] . "\n";
-        $knowledge_base .= "Description: " . ($course['description'] ?: "No description available") . "\n";
+        $knowledge_base .= "Description: " . ($course['description'] ?: "A comprehensive course in " . $course['category']) . "\n";
         $knowledge_base .= "Price: ₱" . number_format($course['price'], 2) . "\n";
-        $knowledge_base .= "Passing Score Required: " . $course['passingScore'] . "%\n";
-        $knowledge_base .= "Status: " . ucfirst($course['status']) . "\n";
-        $knowledge_base .= "---\n\n";
+        $knowledge_base .= "Passing Score: " . $course['passingScore'] . "%\n";
+        $knowledge_base .= "Status: " . ucfirst($course['status']) . "\n\n";
     }
     
     // Get user question
@@ -50,26 +58,86 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['prompt'])) {
         exit;
     }
     
-    // Check if question is about courses
-    $course_keywords = ['course', 'courses', 'price', 'cost', 'available', 'offer', 'duration', 'how long', 'how much'];
+    // Check if question is about courses using comprehensive logic
+    $course_keywords = [
+        'course', 'courses', 'class', 'classes', 'subject', 'subjects',
+        'price', 'cost', 'fee', 'fees', 'how much',
+        'available', 'offer', 'offered', 'provide',
+        'duration', 'how long', 'time', 'length',
+        'category', 'categories', 'type', 'types',
+        'description', 'detail', 'info', 'information',
+        'passing', 'score', 'requirement', 'required',
+        'programming', 'design', 'business', // Add your actual categories from database
+        'what', 'which', 'tell me about', 'explain', 'show'
+    ];
+    
     $is_course_related = false;
+    $user_question_lower = strtolower($user_question);
     
     foreach ($course_keywords as $keyword) {
-        if (stripos($user_question, $keyword) !== false) {
+        if (strpos($user_question_lower, $keyword) !== false) {
             $is_course_related = true;
             break;
         }
     }
     
+    // Also check for broader patterns
+    $course_patterns = [
+        '/what.*course/i',
+        '/which.*course/i',
+        '/tell.*about.*course/i',
+        '/do you have.*course/i',
+        '/course.*available/i',
+        '/how.*cost/i',
+        '/how.*price/i',
+        '/what.*price/i',
+        '/course.*fee/i',
+        '/show.*course/i',
+        '/list.*course/i',
+        '/recommend.*course/i',
+        '/best.*course/i',
+        '/cheap.*course/i',
+        '/free.*course/i'
+    ];
+    
     if (!$is_course_related) {
-        echo "I can only answer questions about our available courses and their prices. Please ask about courses.";
+        foreach ($course_patterns as $pattern) {
+            if (preg_match($pattern, $user_question)) {
+                $is_course_related = true;
+                break;
+            }
+        }
+    }
+    
+    // If still not course-related, provide a more helpful message
+    if (!$is_course_related) {
+        echo "I'm your course assistant! I can help you with information about our available courses, including:\n\n";
+        echo "• Course titles and descriptions\n";
+        echo "• Pricing information\n";
+        echo "• Course categories\n";
+        echo "• Passing score requirements\n";
+        echo "• Available subjects\n\n";
+        echo "Try asking something like:\n";
+        echo "- 'What courses are available?'\n";
+        echo "- 'How much does the Web Development course cost?'\n";
+        echo "- 'Tell me about Programming courses'\n";
+        echo "- 'Show me all courses'\n";
+        echo "- 'What are the cheapest courses?'\n";
         exit;
     }
     
-    // Build prompt for Ollama
+    // Build enhanced prompt for Ollama
     $prompt = <<<EOT
-You are a helpful course assistant. Answer questions ONLY based on the course information provided below.
-If the answer cannot be found in the course data, respond with: "I don't have information about that. I can only help with questions about our available courses and their prices."
+You are a helpful and friendly course assistant for an online learning platform called LMS Learnexus.
+Use ONLY the course information provided below to answer questions.
+
+IMPORTANT GUIDELINES:
+1. Be concise, friendly, and helpful
+2. Format prices with PHP peso sign (₱)
+3. If listing multiple courses, use bullet points or clear formatting
+4. If the user asks about something not in the course data, politely say: "I don't have specific information about that in our course database. I can only help with questions about our available courses, their prices, categories, and requirements."
+5. When comparing prices or listing courses, organize the information clearly
+6. Always mention the course category when relevant
 
 --- COURSE DATA ---
 $knowledge_base
@@ -77,7 +145,7 @@ $knowledge_base
 
 Question: $user_question
 
-Answer (be concise and helpful):
+Answer (be helpful, use only the provided data, and format clearly):
 EOT;
     
     // Prepare request to Ollama API
@@ -87,9 +155,13 @@ EOT;
         'stream' => false,
         'options' => [
             'temperature' => 0.3,
-            'num_predict' => 150
+            'num_predict' => 200
         ]
     ]);
+    
+    // Debug logging (optional)
+    // error_log("User question: " . $user_question);
+    // error_log("Knowledge base: " . substr($knowledge_base, 0, 500));
     
     // Send request to Ollama
     $ch = curl_init('http://127.0.0.1:11434/api/generate');
@@ -405,7 +477,8 @@ $userAvatar = $stmt->fetchColumn();
             • Available courses and categories<br>
             • Course prices and fees<br>
             • Course descriptions and requirements<br>
-            • Passing score requirements
+            • Passing score requirements<br>
+            • Comparing course options
         </div>
         
         <div class="suggestions">
@@ -415,11 +488,17 @@ $userAvatar = $stmt->fetchColumn();
             <div class="suggestion-chip" onclick="askQuestion('How much do the courses cost?')">
                 How much do courses cost?
             </div>
-            <div class="suggestion-chip" onclick="askQuestion('What are the passing scores?')">
-                Passing score requirements?
+            <div class="suggestion-chip" onclick="askQuestion('Show me all courses')">
+                Show me all courses
+            </div>
+            <div class="suggestion-chip" onclick="askQuestion('What are the cheapest courses?')">
+                Cheapest courses?
             </div>
             <div class="suggestion-chip" onclick="askQuestion('Tell me about Programming courses')">
                 Programming courses?
+            </div>
+            <div class="suggestion-chip" onclick="askQuestion('List courses by category')">
+                Courses by category
             </div>
         </div>
         
@@ -491,7 +570,9 @@ $userAvatar = $stmt->fetchColumn();
                     msgElement.className = 'message error-message';
                     msgElement.innerHTML = '<div class="message-label"><i class="fas fa-exclamation-triangle"></i> Error</div>' + escapeHtml(reply);
                 } else {
-                    msgElement.innerHTML = '<div class="message-label">AI Assistant</div>' + escapeHtml(reply);
+                    // Format the response with better line breaks
+                    const formattedReply = escapeHtml(reply).replace(/\n/g, '<br>');
+                    msgElement.innerHTML = '<div class="message-label">AI Assistant</div>' + formattedReply;
                 }
                 
                 chat.scrollTop = chat.scrollHeight;
@@ -522,9 +603,11 @@ $userAvatar = $stmt->fetchColumn();
             const welcomeMsg = document.createElement('div');
             welcomeMsg.className = 'message bot-message';
             welcomeMsg.innerHTML = '<div class="message-label">AI Assistant</div>' +
-                '<i class="fas fa-hand-wave" style="color: #667eea;"></i> Hello! I\'m your AI course assistant. ' +
-                'I can help you find information about our available courses, their prices, and duration. ' +
-                'What would you like to know?';
+                '<i class="fas fa-hand-wave" style="color: #667eea;"></i> Hello <strong>' + 
+                escapeHtml("<?php echo htmlspecialchars($_SESSION['first_name']); ?>") + 
+                '</strong>! I\'m your AI course assistant. ' +
+                'I can help you find information about our available courses, their prices, categories, and requirements. ' +
+                'What would you like to know about our courses?';
             chat.appendChild(welcomeMsg);
         };
     </script>
