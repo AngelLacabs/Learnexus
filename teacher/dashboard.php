@@ -87,62 +87,114 @@ $dailyMotivationTeacher = $teacherMotivations[$dayOfYear % count($teacherMotivat
         }
 
         body {
-            background: #f8f9fa;
+            background: #f5f6fa;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
         
-        /* Sidebar Styles */
+        /* Top Navbar */
+        .top-navbar {
+            background: linear-gradient(135deg, #7fb3cd 0%, #7d4fab 100%);
+            padding: 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1001;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .navbar-brand {
+            font-size: 22px;
+            font-weight: 700;
+            color: white;
+            text-decoration: none;
+            letter-spacing: 0.5px;
+        }
+
+        .navbar-user {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: white;
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+
+        .navbar-user:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .navbar-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #667eea;
+            font-weight: 700;
+            overflow: hidden;
+        }
+
+        .navbar-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Sidebar */
         .sidebar {
-            width: 260px;
-            height: 100vh;
+            width: 280px;
+            height: calc(100vh - 68px);
             background: white;
             position: fixed;
             left: 0;
-            top: 0;
-            border-right: 1px solid #e0e0e0;
-            display: flex;
-            flex-direction: column;
+            top: 68px;
+            border-right: 1px solid #e5e7eb;
+            overflow-y: auto;
             z-index: 1000;
         }
         
         .sidebar-header {
             padding: 24px 20px;
-            border-bottom: 1px solid #e0e0e0;
+            border-bottom: 1px solid #e5e7eb;
         }
 
-        .brand {
-            font-size: 22px;
+        .sidebar-title {
+            font-size: 18px;
             font-weight: 700;
-            color: #1e88e5;
-            text-decoration: none;
+            color: #374151;
         }
         
         .sidebar-menu {
-            flex: 1;
-            padding: 20px 0;
-            overflow-y: auto;
+            padding: 16px 0;
         }
 
         .menu-item {
-            padding: 12px 20px;
+            padding: 14px 24px;
             display: flex;
             align-items: center;
-            gap: 12px;
-            color: #666;
+            gap: 14px;
+            color: #6b7280;
             text-decoration: none;
             transition: all 0.2s;
-            border-left: 3px solid transparent;
+            font-size: 15px;
         }
 
         .menu-item:hover {
-            background: #f8f9fa;
-            color: #1e88e5;
+            background: #f3f4f6;
+            color: #374151;
         }
 
         .menu-item.active {
-            background: #e3f2fd;
-            color: #1e88e5;
-            border-left-color: #1e88e5;
+            background: linear-gradient(135deg,  #7fb3cd 0%, #7d4fab 100%);
+            color: white;
             font-weight: 600;
         }
 
@@ -152,119 +204,34 @@ $dailyMotivationTeacher = $teacherMotivations[$dayOfYear % count($teacherMotivat
         }
 
         .sidebar-footer {
-            padding: 20px;
-            border-top: 1px solid #e0e0e0;
+            padding: 16px;
+            border-top: 1px solid #e5e7eb;
+            margin-top: auto;
         }
         
         /* Main Content */
         .main-content {
-            margin-left: 260px;
-            min-height: 100vh;
+            margin-left: 280px;
+            margin-top: 68px;
+            padding: 32px;
+            min-height: calc(100vh - 68px);
         }
         
-        /* Top Bar */
-        .top-bar {
-            background: white;
-            padding: 20px 40px;
-            border-bottom: 1px solid #e0e0e0;
-            display: flex;
-            justify-content: flex-end;
-            align-items: center;
-        }
-        
-        .user-section {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-        
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            cursor: pointer;
-            padding: 8px 12px;
-            border-radius: 8px;
-            transition: background 0.2s;
-        }
-
-        .user-info:hover {
-            background: #f5f5f5;
-        }
-        
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 600;
-            overflow: hidden;
-        }
-
-        .user-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        /* Content Area */
-        .content-area {
-            padding: 40px;
-        }
-        
-        /* Welcome Banner */
-        .welcome-banner {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 40px;
-            border-radius: 16px;
+        /* Page Header */
+        .page-header {
             margin-bottom: 32px;
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
-            position: relative;
-            overflow: hidden;
         }
 
-        .welcome-banner::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -10%;
-            width: 300px;
-            height: 300px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
-        }
-
-        .welcome-banner::after {
-            content: '';
-            position: absolute;
-            bottom: -30%;
-            left: -5%;
-            width: 200px;
-            height: 200px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
-        }
-
-        .welcome-content {
-            position: relative;
-            z-index: 1;
-        }
-        
-        .welcome-banner h2 {
-            font-size: 28px;
+        .page-header h1 {
+            font-size: 32px;
             font-weight: 700;
-            margin-bottom: 8px;
+            color: #1f2937;
+            margin-bottom: 4px;
         }
 
-        .welcome-banner p {
-            font-size: 16px;
-            opacity: 0.95;
-            margin: 0;
+        .page-header p {
+            color: #6b7280;
+            font-size: 15px;
         }
         
         /* Stats Container */
@@ -316,7 +283,7 @@ $dailyMotivationTeacher = $teacherMotivations[$dayOfYear % count($teacherMotivat
         
         .stat-card h3 {
             font-size: 14px;
-            color: #666;
+            color: #6b7280;
             margin-bottom: 8px;
             font-weight: 500;
             text-transform: uppercase;
@@ -326,41 +293,18 @@ $dailyMotivationTeacher = $teacherMotivations[$dayOfYear % count($teacherMotivat
         .stat-card .number {
             font-size: 32px;
             font-weight: 700;
-            color: #333;
+            color: #1f2937;
         }
         
         /* Section Header */
         .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
             margin-bottom: 24px;
         }
 
         .section-title {
             font-size: 24px;
             font-weight: 700;
-            color: #333;
-        }
-        
-        .btn-create {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 12px 28px;
-            border: none;
-            border-radius: 10px;
-            font-weight: 600;
-            font-size: 15px;
-            transition: all 0.2s;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .btn-create:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+            color: #1f2937;
         }
         
         /* Course Grid */
@@ -424,7 +368,7 @@ $dailyMotivationTeacher = $teacherMotivations[$dayOfYear % count($teacherMotivat
         .course-title {
             font-size: 18px;
             font-weight: 600;
-            color: #333;
+            color: #1f2937;
             margin-bottom: 16px;
             display: -webkit-box;
             -webkit-line-clamp: 2;
@@ -450,27 +394,27 @@ $dailyMotivationTeacher = $teacherMotivations[$dayOfYear % count($teacherMotivat
         .course-stat .number {
             font-size: 20px;
             font-weight: 700;
-            color: #333;
+            color: #1f2937;
             display: block;
             margin-bottom: 4px;
         }
         
         .course-stat .label {
             font-size: 11px;
-            color: #666;
+            color: #6b7280;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
         
         .btn-manage {
-            background: #1e88e5;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
             padding: 12px 20px;
             border-radius: 8px;
             font-weight: 600;
             width: 100%;
-            transition: background 0.2s;
+            transition: all 0.2s;
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -479,7 +423,8 @@ $dailyMotivationTeacher = $teacherMotivations[$dayOfYear % count($teacherMotivat
         }
         
         .btn-manage:hover {
-            background: #1565c0;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
         }
 
         /* Empty State */
@@ -499,35 +444,56 @@ $dailyMotivationTeacher = $teacherMotivations[$dayOfYear % count($teacherMotivat
 
         .empty-state h3 {
             font-size: 24px;
-            color: #666;
+            color: #6b7280;
             margin-bottom: 12px;
         }
 
         .empty-state p {
-            color: #999;
+            color: #9ca3af;
             margin-bottom: 24px;
         }
     </style>
 </head>
 <body>
+    <!-- Top Navbar -->
+    <div class="top-navbar">
+        <a href="dashboard.php" class="navbar-brand">LEARNEXUS</a>
+        <div class="navbar-user" onclick="window.location.href='settings.php'">
+            <span style="font-weight: 600;">
+                <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>
+            </span>
+            <div class="navbar-avatar">
+                <?php if (!empty($userAvatar) && file_exists($userAvatar)): ?>
+                    <img src="<?php echo htmlspecialchars($userAvatar); ?>" alt="Avatar">
+                <?php else: ?>
+                    <?php echo strtoupper(substr($_SESSION['first_name'], 0, 1)); ?>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+
     <!-- Sidebar -->
     <div class="sidebar">
         <div class="sidebar-header">
-            <a href="dashboard.php" class="brand">LEARNEXUS</a>
+            <div class="sidebar-title">Teacher Panel</div>
         </div>
         
         <div class="sidebar-menu">
             <a href="dashboard.php" class="menu-item active">
-                <i class="bi bi-grid"></i>
+                <i class="bi bi-speedometer2"></i>
                 <span>Dashboard</span>
             </a>
             <a href="courses.php" class="menu-item">
                 <i class="bi bi-book"></i>
-                <span>My Courses</span>
+                <span>Courses</span>
             </a>
-            <a href="create_course.php" class="menu-item">
-                <i class="bi bi-plus-circle"></i>
-                <span>Create Course</span>
+            <a href="quizzes.php" class="menu-item">
+                <i class="bi bi-patch-question"></i>
+                <span>Quizzes</span>
+            </a>
+            <a href="enrollees.php" class="menu-item">
+                <i class="bi bi-people"></i>
+                <span>Enrollees</span>
             </a>
             <a href="settings.php" class="menu-item">
                 <i class="bi bi-gear"></i>
@@ -545,117 +511,86 @@ $dailyMotivationTeacher = $teacherMotivations[$dayOfYear % count($teacherMotivat
 
     <!-- Main Content -->
     <div class="main-content">
-        <!-- Top Bar -->
-        <div class="top-bar">
-            <div class="user-section">
-                <div class="user-info" onclick="window.location.href='settings.php'">
-                    <span style="font-weight: 600; color: #333;">
-                        <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>
-                    </span>
-                    <div class="user-avatar">
-                        <?php if (!empty($userAvatar) && file_exists($userAvatar)): ?>
-                            <img src="<?php echo htmlspecialchars($userAvatar); ?>" alt="Avatar">
-                        <?php else: ?>
-                            <?php echo strtoupper(substr($_SESSION['first_name'], 0, 1)); ?>
-                        <?php endif; ?>
-                    </div>
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1>Dashboard</h1>
+            <p><?php echo htmlspecialchars($dailyMotivationTeacher); ?> 👋</p>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="stats-container">
+            <div class="stat-card blue">
+                <div class="icon">
+                    <i class="bi bi-book-fill"></i>
                 </div>
+                <h3>Total Courses</h3>
+                <div class="number"><?php echo $totalCourses; ?></div>
+            </div>
+            
+            <div class="stat-card green">
+                <div class="icon">
+                    <i class="bi bi-people-fill"></i>
+                </div>
+                <h3>Total Students</h3>
+                <div class="number"><?php echo $totalStudents; ?></div>
+            </div>
+            
+            <div class="stat-card orange">
+                <div class="icon">
+                    <i class="bi bi-currency-dollar"></i>
+                </div>
+                <h3>Total Revenue</h3>
+                <div class="number">₱<?php echo number_format($totalRevenue, 2); ?></div>
             </div>
         </div>
 
-        <!-- Content Area -->
-        <div class="content-area">
-            <!-- Welcome Banner -->
-            <div class="welcome-banner">
-                <div class="welcome-content">
-                    <h2><?php echo htmlspecialchars($dailyMotivationTeacher); ?></h2>
-                    <p>Manage your courses and track student progress</p>
-                </div>
-            </div>
+        <!-- Recent Courses Section -->
+        <div class="section-header">
+            <h2 class="section-title">Recent Courses</h2>
+        </div>
 
-            <!-- Stats Cards -->
-            <div class="stats-container">
-                <div class="stat-card blue">
-                    <div class="icon">
-                        <i class="bi bi-book-fill"></i>
-                    </div>
-                    <h3>Total Courses</h3>
-                    <div class="number"><?php echo $totalCourses; ?></div>
-                </div>
-                
-                <div class="stat-card green">
-                    <div class="icon">
-                        <i class="bi bi-people-fill"></i>
-                    </div>
-                    <h3>Total Students</h3>
-                    <div class="number"><?php echo $totalStudents; ?></div>
-                </div>
-                
-                <div class="stat-card orange">
-                    <div class="icon">
-                        <i class="bi bi-currency-dollar"></i>
-                    </div>
-                    <h3>Total Revenue</h3>
-                    <div class="number">₱<?php echo number_format($totalRevenue, 2); ?></div>
-                </div>
-            </div>
-
-            <!-- Recent Courses Section -->
-            <div class="section-header">
-                <h2 class="section-title">Recent Courses</h2>
-                <button class="btn-create" onclick="window.location.href='create_course.php'">
-                    <i class="bi bi-plus-circle"></i>
-                    Create New Course
-                </button>
-            </div>
-
-            <div class="course-grid">
-                <?php if (count($recentCourses) > 0): ?>
-                    <?php foreach ($recentCourses as $course): ?>
-                        <div class="course-card">
-                            <div class="course-image">
-                                <span class="status-badge <?php echo strtolower($course['status']); ?>">
-                                    <?php echo ucfirst($course['status']); ?>
-                                </span>
-                                <i class="bi bi-book"></i>
-                            </div>
-                            <div class="course-body">
-                                <div class="course-title"><?php echo htmlspecialchars($course['title']); ?></div>
-                                
-                                <div class="course-stats">
-                                    <div class="course-stat">
-                                        <span class="number"><?php echo $course['enrollmentCount']; ?></span>
-                                        <span class="label">Students</span>
-                                    </div>
-                                    <div class="course-stat">
-                                        <span class="number"><?php echo $course['lessonCount']; ?></span>
-                                        <span class="label">Lessons</span>
-                                    </div>
-                                    <div class="course-stat">
-                                        <span class="number"><?php echo $course['quizCount']; ?></span>
-                                        <span class="label">Quizzes</span>
-                                    </div>
-                                </div>
-                                
-                                <button class="btn-manage" onclick="window.location.href='manage_course.php?id=<?php echo $course['courseID']; ?>'">
-                                    <i class="bi bi-gear-fill"></i>
-                                    Manage Course
-                                </button>
-                            </div>
+        <div class="course-grid">
+            <?php if (count($recentCourses) > 0): ?>
+                <?php foreach ($recentCourses as $course): ?>
+                    <div class="course-card">
+                        <div class="course-image">
+                            <span class="status-badge <?php echo strtolower($course['status']); ?>">
+                                <?php echo ucfirst($course['status']); ?>
+                            </span>
+                            <i class="bi bi-book"></i>
                         </div>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <div class="empty-state">
-                        <i class="bi bi-book"></i>
-                        <h3>No Courses Yet</h3>
-                        <p>You haven't created any courses yet. Click "Create New Course" to get started!</p>
-                        <button class="btn-create" onclick="window.location.href='create_course.php'">
-                            <i class="bi bi-plus-circle"></i>
-                            Create Your First Course
-                        </button>
+                        <div class="course-body">
+                            <div class="course-title"><?php echo htmlspecialchars($course['title']); ?></div>
+                            
+                            <div class="course-stats">
+                                <div class="course-stat">
+                                    <span class="number"><?php echo $course['enrollmentCount']; ?></span>
+                                    <span class="label">Students</span>
+                                </div>
+                                <div class="course-stat">
+                                    <span class="number"><?php echo $course['lessonCount']; ?></span>
+                                    <span class="label">Lessons</span>
+                                </div>
+                                <div class="course-stat">
+                                    <span class="number"><?php echo $course['quizCount']; ?></span>
+                                    <span class="label">Quizzes</span>
+                                </div>
+                            </div>
+                            
+                            <button class="btn-manage" onclick="window.location.href='manage_course.php?id=<?php echo $course['courseID']; ?>'">
+                                <i class="bi bi-gear-fill"></i>
+                                Manage Course
+                            </button>
+                        </div>
                     </div>
-                <?php endif; ?>
-            </div>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <div class="empty-state">
+                    <i class="bi bi-book"></i>
+                    <h3>No Courses Yet</h3>
+                    <p>You haven't created any courses yet. Go to "Course" section to get started!</p>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
 

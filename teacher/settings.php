@@ -150,55 +150,421 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Settings - Learnexus</title>
+    <link rel="icon" type="image/png" href="../images/Learnexus.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        body { background: #f8f9fa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-        .top-nav { background: linear-gradient(180deg, #e8f0fe 0%, #f8f9fa 100%); padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; }
-        .brand { font-size: 20px; font-weight: 700; color: #1a73e8; }
-        .nav-menu { display: flex; gap: 30px; }
-        .nav-link { color: #666; text-decoration: none; font-weight: 500; }
-        .nav-link:hover { color: #1a73e8; }
-        .container-main { max-width: 1000px; margin: 40px auto; padding: 0 40px; }
-        .settings-layout { display: grid; grid-template-columns: 250px 1fr; gap: 30px; }
-        .settings-sidebar { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); height: fit-content; }
-        .avatar-section { text-align: center; padding: 20px 0; border-bottom: 1px solid #e0e0e0; margin-bottom: 20px; }
-        .avatar { width: 80px; height: 80px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 32px; font-weight: 600; margin: 0 auto 15px; overflow: hidden; }
-        .avatar img { width: 100%; height: 100%; object-fit: cover; }
-        .sidebar-menu { list-style: none; padding: 0; margin: 0; }
-        .sidebar-menu li { padding: 12px 15px; cursor: pointer; border-radius: 8px; margin-bottom: 5px; display: flex; align-items: center; gap: 10px; transition: background 0.2s; }
-        .sidebar-menu li:hover { background: #f5f5f5; }
-        .sidebar-menu li.active { background: #e3f2fd; color: #1a73e8; }
-        .settings-content { background: white; border-radius: 12px; padding: 30px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        .section-title { font-size: 20px; font-weight: 600; margin-bottom: 5px; }
-        .section-subtitle { color: #666; font-size: 14px; margin-bottom: 20px; }
-        .form-label { font-weight: 500; margin-bottom: 8px; }
-        .form-control { padding: 10px 15px; border: 1px solid #e0e0e0; border-radius: 8px; }
-        .btn-save { background: #1e88e5; color: white; padding: 10px 30px; border: none; border-radius: 8px; font-weight: 500; }
-        .btn-save:hover { background: #1565c0; }
-        .btn-logout { background: #f5f5f5; color: #666; padding: 10px 20px; border: none; border-radius: 8px; width: 100%; margin-top: 20px; }
-        .btn-delete { background: #dc3545; color: white; padding: 10px 30px; border: none; border-radius: 8px; font-weight: 500; margin-top: 30px; }
-        .btn-delete:hover { background: #c82333; }
-        .danger-zone { border-top: 2px solid #fee; padding-top: 30px; margin-top: 40px; }
-        .danger-zone-title { color: #dc3545; font-weight: 600; margin-bottom: 10px; }
-        #avatarInput { display: none; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #f5f6fa;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        /* Top Navbar */
+        .top-navbar {
+            background: linear-gradient(135deg, #7fb3cd 0%, #7d4fab 100%);
+            padding: 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1001;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .navbar-brand {
+            font-size: 22px;
+            font-weight: 700;
+            color: white;
+            text-decoration: none;
+            letter-spacing: 0.5px;
+        }
+
+        .navbar-user {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: white;
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+
+        .navbar-user:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .navbar-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #667eea;
+            font-weight: 700;
+            overflow: hidden;
+        }
+
+        .navbar-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            height: calc(100vh - 68px);
+            background: white;
+            position: fixed;
+            left: 0;
+            top: 68px;
+            border-right: 1px solid #e5e7eb;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+        
+        .sidebar-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #374151;
+        }
+        
+        .sidebar-menu {
+            padding: 16px 0;
+        }
+
+        .menu-item {
+            padding: 14px 24px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            color: #6b7280;
+            text-decoration: none;
+            transition: all 0.2s;
+            font-size: 15px;
+        }
+
+        .menu-item:hover {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .menu-item.active {
+            background: linear-gradient(135deg, #7fb3cd 0%, #7d4fab 100%);
+            color: white;
+            font-weight: 600;
+        }
+
+        .menu-item i {
+            font-size: 20px;
+            width: 24px;
+        }
+
+        .sidebar-footer {
+            padding: 16px;
+            border-top: 1px solid #e5e7eb;
+            margin-top: auto;
+        }
+        
+        /* Main Content */
+        .main-content {
+            margin-left: 280px;
+            margin-top: 68px;
+            padding: 32px;
+            min-height: calc(100vh - 68px);
+        }
+        
+        /* Settings Layout */
+        .settings-layout {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 30px;
+            max-width: 1200px;
+        }
+
+        .settings-sidebar {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            height: fit-content;
+        }
+
+        .avatar-section {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 1px solid #e0e0e0;
+            margin-bottom: 20px;
+        }
+
+        .avatar {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 40px;
+            font-weight: 600;
+            margin: 0 auto 15px;
+            overflow: hidden;
+            border: 4px solid white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .settings-sidebar-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .settings-sidebar-menu li {
+            padding: 14px 16px;
+            cursor: pointer;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.2s;
+            color: #6b7280;
+            font-size: 15px;
+        }
+
+        .settings-sidebar-menu li:hover {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .settings-sidebar-menu li.active {
+            background: linear-gradient(135deg, #7fb3cd 0%, #7d4fab 100%);
+            color: white;
+            font-weight: 600;
+        }
+
+        .settings-content {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .section-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #1f2937;
+        }
+
+        .section-subtitle {
+            color: #6b7280;
+            font-size: 15px;
+            margin-bottom: 30px;
+        }
+
+        .form-label {
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: #374151;
+        }
+
+        .form-control {
+            padding: 12px 16px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            transition: border-color 0.2s;
+        }
+
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn-save {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 32px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .btn-save:hover {
+            background: linear-gradient(135deg, #5a6fd8 0%, #6a4098 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-logout {
+            background: #f8f9fa;
+            color: #374151;
+            padding: 12px 20px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            width: 100%;
+            margin-top: 20px;
+            font-weight: 500;
+            transition: all 0.2s;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-logout:hover {
+            background: #e9ecef;
+            color: #dc3545;
+        }
+
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+            padding: 12px 32px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            margin-top: 30px;
+            transition: all 0.2s;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-delete:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+        }
+
+        .danger-zone {
+            border-top: 2px solid #fee;
+            padding-top: 30px;
+            margin-top: 40px;
+        }
+
+        .danger-zone-title {
+            color: #dc3545;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .input-group-text {
+            background: white;
+            border: 1px solid #e5e7eb;
+            cursor: pointer;
+        }
+
+        #avatarInput {
+            display: none;
+        }
+
+        .btn-change-avatar {
+            background: #f8f9fa;
+            color: #374151;
+            padding: 8px 16px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-top: 10px;
+            transition: all 0.2s;
+        }
+
+        .btn-change-avatar:hover {
+            background: #e9ecef;
+            border-color: #dee2e6;
+        }
     </style>
 </head>
 <body>
-    <div class="top-nav">
-        <a href="dashboard.php" class="brand text-decoration-none">
-            LEARNEXUS
-        </a>
-        <div class="nav-menu">
-            <a href="dashboard.php" class="nav-link">Dashboard</a>
-            <a href="courses.php" class="nav-link">Courses</a>
-            <a href="quizzes.php" class="nav-link">Quizzes</a>
-            <a href="enrollees.php" class="nav-link">Enrollees</a>
+    <!-- Top Navbar -->
+    <div class="top-navbar">
+        <a href="dashboard.php" class="navbar-brand">LEARNEXUS</a>
+        <div class="navbar-user" onclick="window.location.href='settings.php'">
+            <span style="font-weight: 600;">
+                <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>
+            </span>
+            <div class="navbar-avatar">
+                <?php if (!empty($user['avatar']) && file_exists($user['avatar'])): ?>
+                    <img src="<?php echo htmlspecialchars($user['avatar']); ?>" alt="Avatar">
+                <?php else: ?>
+                    <?php echo strtoupper(substr($_SESSION['first_name'], 0, 1)); ?>
+                <?php endif; ?>
+            </div>
         </div>
     </div>
 
-    <div class="container-main">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-title">Teacher Panel</div>
+        </div>
+        
+        <div class="sidebar-menu">
+            <a href="dashboard.php" class="menu-item">
+                <i class="bi bi-speedometer2"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="courses.php" class="menu-item">
+                <i class="bi bi-book"></i>
+                <span>Courses</span>
+            </a>
+            <a href="quizzes.php" class="menu-item">
+                <i class="bi bi-patch-question"></i>
+                <span>Quizzes</span>
+            </a>
+            <a href="enrollees.php" class="menu-item">
+                <i class="bi bi-people"></i>
+                <span>Enrollees</span>
+            </a>
+            <a href="settings.php" class="menu-item active">
+                <i class="bi bi-gear"></i>
+                <span>Settings</span>
+            </a>
+        </div>
+        
+        <div class="sidebar-footer">
+            <a href="../logout.php" class="menu-item">
+                <i class="bi bi-box-arrow-left"></i>
+                <span>Logout</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
         <div class="settings-layout">
             <div class="settings-sidebar">
                 <div class="avatar-section">
@@ -209,18 +575,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
                             <?php echo strtoupper(substr($_SESSION['first_name'], 0, 1)); ?>
                         <?php endif; ?>
                     </div>
-                    <h6 class="mb-0"><?php echo htmlspecialchars($user['firstName'] . ' ' . $user['lastName']); ?></h6>
+                    <h6 class="mb-1"><?php echo htmlspecialchars($user['firstName'] . ' ' . $user['lastName']); ?></h6>
                     <small class="text-muted">Teacher ID: <?php echo htmlspecialchars($user['teacherNumber']); ?></small>
                     
                     <form method="POST" enctype="multipart/form-data" id="avatarForm">
                         <input type="file" name="avatar" id="avatarInput" accept="image/*" onchange="document.getElementById('avatarForm').submit()">
-                        <button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="document.getElementById('avatarInput').click()">
-                            Change Avatar
+                        <button type="button" class="btn-change-avatar" onclick="document.getElementById('avatarInput').click()">
+                            <i class="bi bi-camera"></i> Change Avatar
                         </button>
                     </form>
                 </div>
                 
-                <ul class="sidebar-menu">
+                <ul class="settings-sidebar-menu">
                     <li class="active" data-tab="personal">
                         <i class="bi bi-person"></i> Personal Information
                     </li>
@@ -248,7 +614,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
                                 <input type="text" name="firstName" class="form-control" value="<?php echo htmlspecialchars($user['firstName']); ?>" required>
                             </div>
                             <div class="col-md-4 mb-3">
-                                <label class="form-label">M.I.</label>
+                                <label class="form-label">Middle Initial</label>
                                 <input type="text" name="middleInitial" class="form-control" maxlength="5" value="<?php echo htmlspecialchars($user['middleInitial']); ?>">
                             </div>
                             <div class="col-md-4 mb-3">
@@ -266,7 +632,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
                         </div>
                         
                         <div class="mb-3">
-                            <label class="form-label">Phone</label>
+                            <label class="form-label">Phone Number</label>
                             <input type="text" name="phone" class="form-control" maxlength="11" value="<?php echo htmlspecialchars($user['phone']); ?>">
                             <small class="text-muted">
                                 <i class="bi bi-telephone"></i> SMS notifications
@@ -302,7 +668,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
                                     <i class="bi bi-eye"></i>
                                 </button>
                             </div>
-                            <small class="text-muted">Min. 6 characters</small>
+                            <small class="text-muted">Minimum 6 characters</small>
                         </div>
                         
                         <div class="mb-3">
@@ -405,9 +771,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
             }
         }
 
-        document.querySelectorAll('.sidebar-menu li').forEach(item => {
+        document.querySelectorAll('.settings-sidebar-menu li').forEach(item => {
             item.addEventListener('click', function() {
-                document.querySelectorAll('.sidebar-menu li').forEach(li => li.classList.remove('active'));
+                document.querySelectorAll('.settings-sidebar-menu li').forEach(li => li.classList.remove('active'));
                 this.classList.add('active');
                 
                 const tab = this.dataset.tab;
@@ -433,5 +799,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
         });
         <?php endif; ?>
     </script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

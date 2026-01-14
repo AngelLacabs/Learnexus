@@ -50,114 +50,548 @@ $page_title = "My Courses - Learnexus";
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            background-color: #f8f9fa;
+            background: #f5f6fa;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
-        .top-nav {
-            background: linear-gradient(180deg, #e8f0fe 0%, #f8f9fa 100%);
-            padding: 15px 40px;
+        
+        /* Top Navbar */
+        .top-navbar {
+            background: linear-gradient(135deg, #7fb3cd 0%, #7d4fab 100%);
+            padding: 16px 32px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1001;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
-        .brand { font-size: 20px; font-weight: 700; color: #1a73e8; }
-        .nav-menu { display: flex; gap: 30px; align-items: center; }
-        .nav-link { color: #666; text-decoration: none; font-weight: 500; transition: color 0.2s; }
-        .nav-link:hover, .nav-link.active { color: #1a73e8; }
-        .user-section { display: flex; align-items: center; gap: 15px; }
-        .user-avatar { width: 40px; height: 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; }
-        .user-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
-        .container-main { max-width: 1200px; margin: 40px auto; padding: 0 40px; }
-        .page-header { margin-bottom: 30px; }
-        .page-header h1 { font-size: 32px; font-weight: 700; margin-bottom: 5px; }
-        .page-header p { color: #666; margin: 0; }
-        .stats-row { display: flex; gap: 20px; margin-bottom: 30px; }
-        .stat-card { flex: 1; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        .stat-card .icon { width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; font-size: 20px; }
-        .stat-card.blue .icon { background: #e3f2fd; color: #1e88e5; }
-        .stat-card.green .icon { background: #e8f5e9; color: #43a047; }
-        .stat-card.orange .icon { background: #fff3e0; color: #fb8c00; }
-        .stat-card h3 { font-size: 13px; color: #666; margin: 0 0 5px 0; }
-        .stat-card .number { font-size: 28px; font-weight: 700; color: #333; }
-        .tabs { display: flex; gap: 20px; border-bottom: 2px solid #e0e0e0; margin-bottom: 30px; }
-        .tab { padding: 10px 20px; color: #666; font-weight: 500; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s; }
-        .tab.active { color: #1a73e8; border-bottom-color: #1a73e8; }
-        .course-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-        .course-card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); transition: transform 0.2s, box-shadow 0.2s; position: relative; }
-        .course-card:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
-        .course-image { width: 100%; height: 180px; background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); display: flex; align-items: center; justify-content: center; color: #999; font-size: 14px; position: relative; }
-        .status-badge { position: absolute; top: 12px; left: 12px; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
-        .status-badge.completed { background: #e8f5e9; color: #43a047; }
-        .status-badge.ongoing { background: #e3f2fd; color: #1e88e5; }
-        .status-badge.approved { background: #fff3e0; color: #fb8c00; }
-        .course-body { padding: 20px; }
-        .course-title { font-size: 16px; font-weight: 600; color: #333; margin-bottom: 5px; }
-        .course-meta { font-size: 13px; color: #666; margin-bottom: 15px; }
-        .progress-section { margin-bottom: 15px; }
-        .progress-label { font-size: 12px; color: #666; margin-bottom: 5px; display: flex; justify-content: space-between; }
-        .progress { height: 8px; border-radius: 10px; background: #f0f0f0; }
-        .progress-bar { border-radius: 10px; }
-        .progress-bar.finished { background: linear-gradient(90deg, #43a047 0%, #66bb6a 100%); }
-        .progress-bar.progress { background: linear-gradient(90deg, #1e88e5 0%, #42a5f5 100%); }
-        .course-actions { display: flex; gap: 10px; }
-        .btn-action { flex: 1; padding: 10px; border-radius: 8px; font-weight: 500; border: none; cursor: pointer; transition: all 0.2s; }
-        .btn-published { background: #e0e0e0; color: #666; }
-        .btn-continue { background: #1e88e5; color: white; }
-        .btn-continue:hover { background: #1565c0; }
-        .btn-ready { background: #ffc107; color: #333; }
-        .add-course-btn { position: fixed; bottom: 40px; right: 40px; width: 60px; height: 60px; border-radius: 50%; background: #1e88e5; color: white; border: none; font-size: 28px; box-shadow: 0 4px 12px rgba(30, 136, 229, 0.4); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
-        .add-course-btn:hover { background: #1565c0; transform: scale(1.05); }
+
+        .navbar-brand {
+            font-size: 22px;
+            font-weight: 700;
+            color: white;
+            text-decoration: none;
+            letter-spacing: 0.5px;
+        }
+
+        .navbar-user {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: white;
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+
+        .navbar-user:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .navbar-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #667eea;
+            font-weight: 700;
+            overflow: hidden;
+        }
+
+        .navbar-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            height: calc(100vh - 68px);
+            background: white;
+            position: fixed;
+            left: 0;
+            top: 68px;
+            border-right: 1px solid #e5e7eb;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+        
+        .sidebar-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #374151;
+        }
+        
+        .sidebar-menu {
+            padding: 16px 0;
+        }
+
+        .menu-item {
+            padding: 14px 24px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            color: #6b7280;
+            text-decoration: none;
+            transition: all 0.2s;
+            font-size: 15px;
+        }
+
+        .menu-item:hover {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .menu-item.active {
+            background: linear-gradient(135deg,  #7fb3cd 0%, #7d4fab 100%);
+            color: white;
+            font-weight: 600;
+        }
+
+        .menu-item i {
+            font-size: 20px;
+            width: 24px;
+        }
+
+        .sidebar-footer {
+            padding: 16px;
+            border-top: 1px solid #e5e7eb;
+            margin-top: auto;
+        }
+        
+        /* Main Content */
+        .main-content {
+            margin-left: 280px;
+            margin-top: 68px;
+            padding: 32px;
+            min-height: calc(100vh - 68px);
+        }
+        
+        /* Page Header */
+        .page-header {
+            margin-bottom: 32px;
+        }
+
+        .page-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+
+        .page-header p {
+            color: #6b7280;
+            font-size: 15px;
+        }
+        
+        /* Stats Container */
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 28px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        }
+        
+        .stat-card .icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+            font-size: 28px;
+        }
+        
+        .stat-card.blue .icon {
+            background: #e3f2fd;
+            color: #1e88e5;
+        }
+        
+        .stat-card.green .icon {
+            background: #e8f5e9;
+            color: #43a047;
+        }
+        
+        .stat-card.orange .icon {
+            background: #fff3e0;
+            color: #fb8c00;
+        }
+        
+        .stat-card h3 {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 8px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .stat-card .number {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1f2937;
+        }
+        
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 20px;
+            border-bottom: 2px solid #e0e0e0;
+            margin-bottom: 30px;
+            background: white;
+            padding: 0 20px;
+            border-radius: 12px 12px 0 0;
+        }
+
+        .tab {
+            padding: 16px 20px;
+            color: #666;
+            font-weight: 500;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            color: #1a73e8;
+            border-bottom-color: #1a73e8;
+        }
+
+        .tab:hover:not(.active) {
+            color: #1a73e8;
+        }
+
+        .course-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 24px;
+        }
+
+        .course-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+        }
+
+        .course-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 28px rgba(0,0,0,0.15);
+        }
+
+        .course-image {
+            width: 100%;
+            height: 180px;
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-size: 14px;
+            position: relative;
+        }
+
+        .status-badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: capitalize;
+            backdrop-filter: blur(10px);
+        }
+
+        .status-badge.completed {
+            background: rgba(67, 160, 71, 0.9);
+            color: white;
+        }
+
+        .status-badge.ongoing {
+            background: rgba(251, 140, 0, 0.9);
+            color: white;
+        }
+
+        .status-badge.approved {
+            background: rgba(30, 136, 229, 0.9);
+            color: white;
+        }
+
+        .course-body {
+            padding: 24px;
+        }
+
+        .course-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 16px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            min-height: 48px;
+        }
+
+        .course-meta {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .progress-section {
+            margin-bottom: 20px;
+        }
+
+        .progress-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .progress {
+            height: 8px;
+            border-radius: 10px;
+            background: #f0f0f0;
+        }
+
+        .progress-bar {
+            border-radius: 10px;
+        }
+
+        .progress-bar.finished {
+            background: linear-gradient(90deg, #43a047 0%, #66bb6a 100%);
+        }
+
+        .progress-bar.progress {
+            background: linear-gradient(90deg, #1e88e5 0%, #42a5f5 100%);
+        }
+
+        .course-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-action {
+            flex: 1;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+
+        .btn-published {
+            background: #f8f9fa;
+            color: #666;
+        }
+
+        .btn-published:hover {
+            background: #e9ecef;
+            transform: translateY(-2px);
+        }
+
+        .btn-continue {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-continue:hover {
+            background: linear-gradient(135deg, #5a6fd8 0%, #6a4098 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-ready {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .btn-ready:hover {
+            background: #e0a800;
+            transform: translateY(-2px);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 80px 40px;
+            background: white;
+            border-radius: 12px;
+            grid-column: 1 / -1;
+        }
+
+        .empty-state i {
+            font-size: 64px;
+            color: #ddd;
+            margin-bottom: 20px;
+        }
+
+        .empty-state h3 {
+            font-size: 24px;
+            color: #6b7280;
+            margin-bottom: 12px;
+        }
+
+        .empty-state p {
+            color: #9ca3af;
+            margin: 0;
+        }
+
+        .add-course-btn {
+            position: fixed;
+            bottom: 40px;
+            right: 40px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            font-size: 28px;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            z-index: 998;
+        }
+
+        .add-course-btn:hover {
+            background: linear-gradient(135deg, #5a6fd8 0%, #6a4098 100%);
+            transform: scale(1.05) translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.5);
+        }
     </style>
 </head>
 <body>
-    <!-- Top Navigation -->
-    <div class="top-nav">
-        <a href="dashboard.php" class="brand text-decoration-none">LEARNEXUS</a>
-        <div class="nav-menu">
-            <a href="dashboard.php" class="nav-link">Dashboard</a>
-            <a href="courses.php" class="nav-link active">Courses</a>
-            <a href="quizzes.php" class="nav-link">Quizzes</a>
-            <a href="enrollees.php" class="nav-link">Enrollees</a>
-        </div>
-        <div class="user-section">
-            <a href="settings.php" style="font-weight: 600; color: #333; text-decoration: none;">
+    <!-- Top Navbar -->
+    <div class="top-navbar">
+        <a href="dashboard.php" class="navbar-brand">LEARNEXUS</a>
+        <div class="navbar-user" onclick="window.location.href='settings.php'">
+            <span style="font-weight: 600;">
                 <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>
+            </span>
+            <div class="navbar-avatar">
+                <?php if (!empty($user['avatar']) && file_exists($user['avatar'])): ?>
+                    <img src="<?php echo htmlspecialchars($user['avatar']); ?>" alt="Avatar">
+                <?php else: ?>
+                    <?php echo strtoupper(substr($_SESSION['first_name'], 0, 1)); ?>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-title">Teacher Panel</div>
+        </div>
+        
+        <div class="sidebar-menu">
+            <a href="dashboard.php" class="menu-item">
+                <i class="bi bi-speedometer2"></i>
+                <span>Dashboard</span>
             </a>
-            <a href="settings.php" style="display: inline-block; text-decoration: none;">
-                <div class="user-avatar">
-                    <?php if (!empty($user['avatar']) && file_exists($user['avatar'])): ?>
-                        <img src="<?php echo htmlspecialchars($user['avatar']); ?>" alt="Avatar">
-                    <?php else: ?>
-                        <?php echo strtoupper(substr($_SESSION['first_name'], 0, 1)); ?>
-                    <?php endif; ?>
-                </div>
+            <a href="courses.php" class="menu-item active">
+                <i class="bi bi-book"></i>
+                <span>Courses</span>
+            </a>
+            <a href="quizzes.php" class="menu-item">
+                <i class="bi bi-patch-question"></i>
+                <span>Quizzes</span>
+            </a>
+            <a href="enrollees.php" class="menu-item">
+                <i class="bi bi-people"></i>
+                <span>Enrollees</span>
+            </a>
+            <a href="settings.php" class="menu-item">
+                <i class="bi bi-gear"></i>
+                <span>Settings</span>
+            </a>
+        </div>
+        
+        <div class="sidebar-footer">
+            <a href="../logout.php" class="menu-item">
+                <i class="bi bi-box-arrow-left"></i>
+                <span>Logout</span>
             </a>
         </div>
     </div>
 
     <!-- Main Content -->
-    <div class="container-main">
+    <div class="main-content">
+        <!-- Page Header -->
         <div class="page-header">
             <h1>My Courses</h1>
             <p>Manage and spread your knowledge</p>
         </div>
 
-        <!-- Stats -->
-        <div class="stats-row">
+        <!-- Stats Cards -->
+        <div class="stats-container">
             <div class="stat-card blue">
-                <div class="icon"><i class="bi bi-clock-history"></i></div>
+                <div class="icon">
+                    <i class="bi bi-clock-history"></i>
+                </div>
                 <h3>Courses in Progress</h3>
                 <div class="number"><?php echo count($inProgress); ?></div>
             </div>
+            
             <div class="stat-card green">
-                <div class="icon"><i class="bi bi-check-circle"></i></div>
+                <div class="icon">
+                    <i class="bi bi-check-circle"></i>
+                </div>
                 <h3>Completed Courses</h3>
                 <div class="number"><?php echo count($completed); ?></div>
             </div>
+            
             <div class="stat-card orange">
-                <div class="icon"><i class="bi bi-bookmark-check"></i></div>
+                <div class="icon">
+                    <i class="bi bi-bookmark-check"></i>
+                </div>
                 <h3>Pending Approval</h3>
                 <div class="number"><?php echo count($approved); ?></div>
             </div>
@@ -173,44 +607,54 @@ $page_title = "My Courses - Learnexus";
 
         <!-- Course Grid -->
         <div class="course-grid" id="courseGrid">
-            <?php foreach ($courses as $course): ?>
-                <?php 
-                    $completion = calculateCompletion($course['moduleCount']);
-                    $statusClass = $course['status'] == 'published' ? 'completed' : ($course['status'] == 'archived' ? 'approved' : 'ongoing');
-                    $statusText = $course['status'] == 'published' ? 'Completed' : ($course['status'] == 'archived' ? 'Approved' : 'Ongoing');
-                ?>
-                <div class="course-card" data-status="<?php echo $statusClass; ?>">
-                    <div class="course-image">
-                        <span class="status-badge <?php echo $statusClass; ?>">• <?php echo $statusText; ?></span>
-                    </div>
-                    <div class="course-body">
-                        <div class="course-title"><?php echo htmlspecialchars($course['title']); ?></div>
-                        <div class="course-meta">Own by you</div>
-                        <div class="progress-section">
-                            <div class="progress-label">
-                                <span><?php echo $course['status'] == 'published' ? 'Finished' : 'Progress'; ?></span>
-                                <span><?php echo $completion; ?>%</span>
+            <?php if (count($courses) > 0): ?>
+                <?php foreach ($courses as $course): ?>
+                    <?php 
+                        $completion = calculateCompletion($course['moduleCount']);
+                        $statusClass = $course['status'] == 'published' ? 'completed' : ($course['status'] == 'archived' ? 'approved' : 'ongoing');
+                        $statusText = $course['status'] == 'published' ? 'Published' : ($course['status'] == 'archived' ? 'Approved' : 'Draft');
+                    ?>
+                    <div class="course-card" data-status="<?php echo $statusClass; ?>">
+                        <div class="course-image">
+                            <span class="status-badge <?php echo $statusClass; ?>"><?php echo $statusText; ?></span>
+                            <i class="bi bi-book" style="font-size: 48px;"></i>
+                        </div>
+                        <div class="course-body">
+                            <div class="course-title"><?php echo htmlspecialchars($course['title']); ?></div>
+                            <div class="course-meta">Own by you</div>
+                            
+                            <div class="progress-section">
+                                <div class="progress-label">
+                                    <span><?php echo $course['status'] == 'published' ? 'Finished' : 'Progress'; ?></span>
+                                    <span><?php echo $completion; ?>%</span>
+                                </div>
+                                <div class="progress">
+                                    <div class="progress-bar <?php echo $course['status'] == 'published' ? 'finished' : 'progress'; ?>" 
+                                         style="width: <?php echo $completion; ?>%"></div>
+                                </div>
                             </div>
-                            <div class="progress">
-                                <div class="progress-bar <?php echo $course['status'] == 'published' ? 'finished' : 'progress'; ?>" 
-                                     style="width: <?php echo $completion; ?>%"></div>
+                            
+                            <div class="course-actions">
+                                <?php if ($course['status'] === 'published'): ?>
+                                    <button class="btn-action btn-published" onclick="toggleCourseStatus(<?php echo $course['courseID']; ?>, 'unpublish')">
+                                        Unpublish
+                                    </button>
+                                <?php else: ?>
+                                    <button class="btn-action btn-continue" onclick="toggleCourseStatus(<?php echo $course['courseID']; ?>, 'publish')">
+                                        Publish Course
+                                    </button>
+                                <?php endif; ?>
                             </div>
                         </div>
-                        <div class="course-actions">
-    <?php if ($course['status'] === 'published'): ?>
-        <button class="btn-action btn-published" onclick="toggleCourseStatus(<?php echo $course['courseID']; ?>, 'unpublish')">
-            Unpublish
-        </button>
-    <?php else: ?>
-        <button class="btn-action btn-continue" onclick="toggleCourseStatus(<?php echo $course['courseID']; ?>, 'publish')">
-            Publish Course
-        </button>
-    <?php endif; ?>
-</div>
-
                     </div>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <div class="empty-state">
+                    <i class="bi bi-book"></i>
+                    <h3>No Courses Yet</h3>
+                    <p>You haven't created any courses yet. Click the + button to get started!</p>
                 </div>
-            <?php endforeach; ?>
+            <?php endif; ?>
         </div>
     </div>
 
@@ -313,5 +757,6 @@ function showCreateCourseModal() {
 }
 </script>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
