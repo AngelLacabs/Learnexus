@@ -317,34 +317,28 @@ $dailyMotivationStudent = $studentMotivations[date('z') % count($studentMotivati
             <div class="row mb-4">
                 <div class="col-12">
                     <div class="card border-0 rounded-4 shadow-sm">
-                        <div class="card-body p-3">
-                            <div class="d-flex align-items-center justify-content-between gap-3">
-                                <!-- Search Box -->
-                                <div class="position-relative" style="flex: 1; max-width: 500px;">
-                                    <i class="bi bi-search search-icon"></i>
-                                    <input type="text" id="courseSearch" class="form-control search-input rounded-pill" 
-                                           placeholder="Search your courses..." autocomplete="off">
-                                    <button class="clear-search" id="clearSearch">
-                                        <i class="bi bi-x-circle-fill"></i>
-                                    </button>
-                                </div>
-                                
-                                <!-- User Info -->
-                                <div class="d-flex align-items-center gap-3" 
-                                     onclick="window.location.href='settings.php'" role="button" 
-                                     style="flex-shrink: 0;">
-                                    <span class="fw-semibold d-none d-sm-inline text-nowrap">
-                                        <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>
-                                    </span>
-                                    <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold" 
-                                         style="width: 45px; height: 45px; min-width: 45px; background: linear-gradient(135deg, #667eea, #764ba2);">
-                                        <?php if (!empty($userAvatar) && file_exists($userAvatar)): ?>
-                                            <img src="<?php echo htmlspecialchars($userAvatar); ?>" alt="Avatar" 
-                                                 class="w-100 h-100 rounded-circle object-fit-cover">
-                                        <?php else: ?>
-                                            <?php echo strtoupper(substr($_SESSION['first_name'], 0, 1)); ?>
-                                        <?php endif; ?>
-                                    </div>
+                        <div class="card-body p-3 d-flex justify-content-between align-items-center gap-3">
+                            <div class="position-relative" style="flex: 1; max-width: 500px;">
+                                <i class="bi bi-search search-icon position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                                <input type="text" id="courseSearch" class="form-control search-input rounded-pill ps-5" 
+                                       placeholder="Search your courses..." autocomplete="off">
+                                <button class="clear-search" id="clearSearch">
+                                    <i class="bi bi-x-circle-fill"></i>
+                                </button>
+                            </div>
+                            
+                            <div class="d-flex align-items-center gap-3" onclick="window.location.href='settings.php'" role="button" style="flex-shrink: 0;">
+                                <span class="fw-semibold d-none d-sm-inline text-nowrap">
+                                    <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>
+                                </span>
+                                <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold" 
+                                     style="width: 45px; height: 45px; min-width: 45px; background: linear-gradient(135deg, #667eea, #764ba2);">
+                                    <?php if (!empty($userAvatar) && file_exists($userAvatar)): ?>
+                                        <img src="<?php echo htmlspecialchars($userAvatar); ?>" alt="Avatar" 
+                                             class="w-100 h-100 rounded-circle object-fit-cover">
+                                    <?php else: ?>
+                                        <?php echo strtoupper(substr($_SESSION['first_name'], 0, 1)); ?>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         </div>
