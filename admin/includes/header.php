@@ -17,10 +17,12 @@
     
     <!-- Custom Admin CSS -->
     <link rel="stylesheet" href="assets/css/admin.css">
+    <link rel="stylesheet" href="../../assets/css/admin.css">
+    
 </head>
 <body>
     <!-- Top Navigation Bar -->
-    <nav class="navbar navbar-expand-lg navbar-dark fixed-top navbar-custom">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
         <div class="container-fluid">
             <button class="navbar-toggler me-2" type="button" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
