@@ -20,33 +20,37 @@
 </head>
 <body>
     <!-- Top Navigation Bar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top navbar-custom">
         <div class="container-fluid">
-            <a class="navbar-brand fw-bold" href="dashboard.php">
-                <i class="bi bi-shield-check"></i> LEARNEXUS ADMIN
-            </a>
-            
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <button class="navbar-toggler me-2" type="button" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
+
+            <a class="navbar-brand fw-bold" href="dashboard.php">
+                LEARNEXUS ADMIN
+            </a>
             
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto align-items-center">
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
-                            <div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2">
-                                <?php echo strtoupper(substr($_SESSION['first_name'], 0, 1)); ?>
-                            </div>
-                            <span><?php echo htmlspecialchars($_SESSION['first_name']); ?></span>
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="profile.php"><i class="bi bi-person"></i> Profile</a></li>
-                            <li><a class="dropdown-item" href="settings.php"><i class="bi bi-gear"></i> Settings</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item text-danger" href="logout.php"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
-                        </ul>
-                    </li>
-                </ul>
+                <!-- left empty or add collapsible nav items here -->
+            </div>
+
+            <!-- Always-visible profile on the right -->
+            <div class="navbar-profile">
+                <div class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2">
+                            <?php echo strtoupper(substr($_SESSION['first_name'], 0, 1)); ?>
+                        </div>
+                        <span class="d-none d-md-inline"><?php echo htmlspecialchars($_SESSION['first_name']); ?></span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <!-- <li><a class="dropdown-item" href="profile.php"><i class="bi bi-person"></i> Profile</a></li> -->
+                        <li><a class="dropdown-item" href="user_view.php?id=<?php echo urlencode($_SESSION['user_id']); ?>"><i class="bi bi-person-badge"></i> Admin Account</a></li>
+                        <!-- <li><a class="dropdown-item" href="settings.php"><i class="bi bi-gear"></i> Settings</a></li> -->
+                        <!-- <li><hr class="dropdown-divider"></li> -->
+                        <li><a class="dropdown-item text-danger" href="logout.php"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+                    </ul>
+                </div>
             </div>
         </div>
     </nav>

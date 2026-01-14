@@ -132,8 +132,8 @@ include 'includes/sidebar.php';
                     <h1 class="h3 mb-0">User Profile</h1>
                     <nav aria-label="breadcrumb">
                         <ol class="breadcrumb mb-0">
-                            <li class="breadcrumb-item"><a href="dashboard.php">Dashboard</a></li>
-                            <li class="breadcrumb-item"><a href="users.php">Users</a></li>
+                            <!-- <li class="breadcrumb-item"><a href="dashboard.php">Dashboard</a></li>
+                            <li class="breadcrumb-item"><a href="users.php">Users</a></li> -->
                             <li class="breadcrumb-item active" aria-current="page"><?php echo htmlspecialchars($user['firstName'] . ' ' . $user['lastName']); ?></li>
                         </ol>
                     </nav>
@@ -147,20 +147,22 @@ include 'includes/sidebar.php';
                     <span class="visually-hidden">Toggle Dropdown</span>
                 </button>
                 <ul class="dropdown-menu">
-                    <?php if ($user['status'] === 'suspended'): ?>
-                        <li>
-                            <a class="dropdown-item" href="user_actions.php?action=activate&id=<?php echo $userID; ?>">
-                                <i class="bi bi-check-circle me-2"></i>Activate Account
-                            </a>
-                        </li>
-                    <?php else: ?>
-                        <li>
-                            <a class="dropdown-item" href="user_actions.php?action=suspend&id=<?php echo $userID; ?>">
-                                <i class="bi bi-pause-circle me-2"></i>Suspend Account
-                            </a>
-                        </li>
+                    <?php if ($user['role'] !== 'admin'): ?>
+                        <?php if ($user['status'] === 'suspended'): ?>
+                            <li>
+                                <a class="dropdown-item" href="user_actions.php?action=activate&id=<?php echo $userID; ?>">
+                                    <i class="bi bi-check-circle me-2"></i>Activate Account
+                                </a>
+                            </li>
+                        <?php else: ?>
+                            <li>
+                                <a class="dropdown-item" href="user_actions.php?action=suspend&id=<?php echo $userID; ?>">
+                                    <i class="bi bi-pause-circle me-2"></i>Suspend Account
+                                </a>
+                            </li>
+                        <?php endif; ?>
+                        <li><hr class="dropdown-divider"></li>
                     <?php endif; ?>
-                    <li><hr class="dropdown-divider"></li>
                     <li>
                         <a class="dropdown-item text-danger" 
                            href="user_actions.php?action=delete&id=<?php echo $userID; ?>"
@@ -404,60 +406,48 @@ include 'includes/sidebar.php';
                         <h5 class="mb-0">Quick Actions</h5>
                     </div>
                     <div class="card-body">
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <a href="user_edit.php?id=<?php echo $userID; ?>" class="btn btn-outline-primary w-100">
-                                    <i class="bi bi-pencil me-2"></i>Edit Profile
-                                </a>
-                            </div>
+                        <div class="quick-actions">
+                            <a href="user_edit.php?id=<?php echo $userID; ?>" class="btn btn-outline-primary">
+                                <i class="bi bi-pencil me-2"></i>Edit Profile
+                            </a>
                             
                             <?php if ($user['role'] === 'student'): ?>
-                                <div class="col-md-4">
-                                    <a href="enrollments.php?user=<?php echo $userID; ?>" class="btn btn-outline-success w-100">
-                                        <i class="bi bi-journal-check me-2"></i>View Enrollments
-                                    </a>
-                                </div>
+                                <a href="enrollments.php?user=<?php echo $userID; ?>" class="btn btn-outline-success">
+                                    <i class="bi bi-journal-check me-2"></i>View Enrollments
+                                </a>
                             <?php elseif ($user['role'] === 'instructor'): ?>
-                                <div class="col-md-4">
-                                    <a href="courses.php?teacher=<?php echo $userID; ?>" class="btn btn-outline-success w-100">
-                                        <i class="bi bi-book me-2"></i>View Courses
-                                    </a>
-                                </div>
+                                <a href="courses.php?teacher=<?php echo $userID; ?>" class="btn btn-outline-success">
+                                    <i class="bi bi-book me-2"></i>View Courses
+                                </a>
                             <?php endif; ?>
                             
-                            <div class="col-md-4">
+                            <?php if ($user['role'] !== 'admin'): ?>
                                 <?php if ($user['status'] === 'suspended'): ?>
-                                    <a href="user_actions.php?action=activate&id=<?php echo $userID; ?>" class="btn btn-outline-success w-100">
+                                    <a href="user_actions.php?action=activate&id=<?php echo $userID; ?>" class="btn btn-outline-success">
                                         <i class="bi bi-check-circle me-2"></i>Activate Account
                                     </a>
                                 <?php else: ?>
-                                    <a href="user_actions.php?action=suspend&id=<?php echo $userID; ?>" class="btn btn-outline-warning w-100">
+                                    <a href="user_actions.php?action=suspend&id=<?php echo $userID; ?>" class="btn btn-outline-warning">
                                         <i class="bi bi-pause-circle me-2"></i>Suspend Account
                                     </a>
                                 <?php endif; ?>
-                            </div>
+                            <?php endif; ?>
                             
-                            <div class="col-md-4">
-                                <?php if (!$user['emailVerified']): ?>
-                                    <a href="user_actions.php?action=verify_email&id=<?php echo $userID; ?>" class="btn btn-outline-info w-100">
-                                        <i class="bi bi-envelope-check me-2"></i>Verify Email
-                                    </a>
-                                <?php endif; ?>
-                            </div>
-                            
-                            <div class="col-md-4">
-                                <?php if (!$user['phoneVerified'] && !empty($user['phone'])): ?>
-                                    <a href="user_actions.php?action=verify_phone&id=<?php echo $userID; ?>" class="btn btn-outline-info w-100">
-                                        <i class="bi bi-phone-check me-2"></i>Verify Phone
-                                    </a>
-                                <?php endif; ?>
-                            </div>
-                            
-                            <div class="col-md-4">
-                                <a href="user_actions.php?action=reset_password&id=<?php echo $userID; ?>" class="btn btn-outline-secondary w-100" data-bs-toggle="modal" data-bs-target="#resetPasswordModal">
-                                    <i class="bi bi-key me-2"></i>Reset Password
+                            <?php if (!$user['emailVerified']): ?>
+                                <a href="user_actions.php?action=verify_email&id=<?php echo $userID; ?>" class="btn btn-outline-info">
+                                    <i class="bi bi-envelope-check me-2"></i>Verify Email
                                 </a>
-                            </div>
+                            <?php endif; ?>
+                            
+                            <?php if (!$user['phoneVerified'] && !empty($user['phone'])): ?>
+                                <a href="user_actions.php?action=verify_phone&id=<?php echo $userID; ?>" class="btn btn-outline-info">
+                                    <i class="bi bi-phone-check me-2"></i>Verify Phone
+                                </a>
+                            <?php endif; ?>
+                            
+                            <a href="user_actions.php?action=reset_password&id=<?php echo $userID; ?>" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#resetPasswordModal">
+                                <i class="bi bi-key me-2"></i>Reset Password
+                            </a>
                         </div>
                     </div>
                 </div>

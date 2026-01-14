@@ -1,6 +1,6 @@
 <div class="sidebar">
     <div class="sidebar-header">
-        <h5 class="mb-0">Admin Menu</h5>
+        <h5 class="mb-0">Admin Panel</h5>
     </div>
     
     <ul class="sidebar-menu">
@@ -61,7 +61,7 @@
         </li>
 
         <!-- Divider -->
-        <li class="menu-divider"></li>
+        <!-- <li class="menu-divider"></li> -->
 
         <!-- SMS Feedback -->
         <li class="menu-item">
@@ -72,11 +72,11 @@
         </li>
 
         <!-- Announcements -->
-        <li class="menu-item">
+        <!-- <li class="menu-item">
             <a href="announcements.php" class="menu-link <?php echo basename($_SERVER['PHP_SELF']) == 'announcements.php' ? 'active' : ''; ?>">
                 <i class="bi bi-megaphone"></i>
                 <span>Announcements</span>
             </a>
-        </li>
+        </li> -->
     </ul>
 </div>
