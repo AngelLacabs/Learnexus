@@ -18,7 +18,7 @@ $user = $stmt->fetch();
 $stmt = $conn->prepare("
     SELECT c.*, 
            (SELECT COUNT(*) FROM enrollments WHERE courseID = c.courseID) as studentCount,
-           (SELECT COUNT(*) FROM modules WHERE courseID = c.courseID) as moduleCount
+           (SELECT COUNT(*) FROM lessons WHERE courseID = c.courseID) as moduleCount
     FROM courses c
     WHERE c.teacherID = ?
     ORDER BY c.createdAt DESC
