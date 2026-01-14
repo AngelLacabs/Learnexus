@@ -322,7 +322,6 @@ unset($_SESSION['new_voucher_code']);
                                             <strong><?= date('M d, Y', strtotime($voucher['expiryDate'])) ?></strong>
                                         </div>
                                     </div>
-\
                                     <?php if ($voucher['voucherStatus'] === 'redeemed'): ?>
                                         <div class="alert alert-secondary small mb-0">
                                             <i class="bi bi-check-circle-fill"></i>
