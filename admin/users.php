@@ -50,6 +50,12 @@ if ($verified === '1') {
     $whereClauses[] = "(emailVerified = 0 OR phoneVerified = 0)";
 }
 
+// Exclude the currently logged-in admin account from the users list
+if (isset($_SESSION['user_id'])) {
+    $whereClauses[] = "userID != ?";
+    $params[] = $_SESSION['user_id'];
+}
+
 $whereSQL = !empty($whereClauses) ? 'WHERE ' . implode(' AND ', $whereClauses) : '';
 
 // Get total count for pagination
@@ -78,16 +84,16 @@ if (!empty($params)) {
 
 $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Get statistics
+// Get statistics (exclude admin accounts from user counts)
 $statsStmt = $conn->query("
-    SELECT 
-        COUNT(*) as total,
-        SUM(role = 'student') as students,
-        SUM(role = 'instructor') as instructors,
-        SUM(role = 'admin') as admins,
-        SUM(status = 'active') as active,
-        SUM(status = 'suspended') as suspended,
-        SUM(emailVerified = 1 AND phoneVerified = 1) as verified
+    SELECT
+        COUNT(CASE WHEN role != 'admin' THEN 1 END) AS total,
+        COUNT(CASE WHEN role = 'student' THEN 1 END) AS students,
+        COUNT(CASE WHEN role = 'instructor' THEN 1 END) AS instructors,
+        COUNT(CASE WHEN role = 'admin' THEN 1 END) AS admins,
+        COUNT(CASE WHEN status = 'active' AND role != 'admin' THEN 1 END) AS active,
+        COUNT(CASE WHEN status = 'suspended' AND role != 'admin' THEN 1 END) AS suspended,
+        COUNT(CASE WHEN emailVerified = 1 AND phoneVerified = 1 AND role != 'admin' THEN 1 END) AS verified
     FROM users
 ");
 $stats = $statsStmt->fetch(PDO::FETCH_ASSOC);
@@ -348,20 +354,22 @@ include 'includes/sidebar.php';
                                                    title="Edit">
                                                     <i class="bi bi-pencil"></i>
                                                 </a>
-                                                <?php if ($user['status'] === 'suspended'): ?>
-                                                    <a href="user_actions.php?action=activate&id=<?php echo $user['userID']; ?>" 
-                                                       class="btn btn-outline-success" 
-                                                       data-bs-toggle="tooltip" 
-                                                       title="Activate">
-                                                        <i class="bi bi-check-circle"></i>
-                                                    </a>
-                                                <?php else: ?>
-                                                    <a href="user_actions.php?action=suspend&id=<?php echo $user['userID']; ?>" 
-                                                       class="btn btn-outline-warning" 
-                                                       data-bs-toggle="tooltip" 
-                                                       title="Suspend">
-                                                        <i class="bi bi-pause-circle"></i>
-                                                    </a>
+                                                <?php if ($user['role'] !== 'admin'): ?>
+                                                    <?php if ($user['status'] === 'suspended'): ?>
+                                                        <a href="user_actions.php?action=activate&id=<?php echo $user['userID']; ?>" 
+                                                           class="btn btn-outline-success" 
+                                                           data-bs-toggle="tooltip" 
+                                                           title="Activate">
+                                                            <i class="bi bi-check-circle"></i>
+                                                        </a>
+                                                    <?php else: ?>
+                                                        <a href="user_actions.php?action=suspend&id=<?php echo $user['userID']; ?>" 
+                                                           class="btn btn-outline-warning" 
+                                                           data-bs-toggle="tooltip" 
+                                                           title="Suspend">
+                                                            <i class="bi bi-pause-circle"></i>
+                                                        </a>
+                                                    <?php endif; ?>
                                                 <?php endif; ?>
                                                 <a href="user_actions.php?action=delete&id=<?php echo $user['userID']; ?>" 
                                                    class="btn btn-outline-danger" 

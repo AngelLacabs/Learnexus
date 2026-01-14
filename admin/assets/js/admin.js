@@ -6,8 +6,61 @@ document.addEventListener('DOMContentLoaded', function() {
     const sidebar = document.querySelector('.sidebar');
     
     if (sidebarToggle && sidebar) {
-        sidebarToggle.addEventListener('click', function() {
-            sidebar.classList.toggle('show');
+        const collapseEl = document.getElementById('navbarNav');
+
+        function getScrollbarWidth() {
+            return window.innerWidth - document.documentElement.clientWidth;
+        }
+
+        function lockBodyScroll() {
+            const sb = getScrollbarWidth();
+            if (sb > 0) document.body.style.paddingRight = sb + 'px';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function unlockBodyScroll() {
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        }
+
+        sidebarToggle.addEventListener('click', function(e) {
+            e.preventDefault();
+
+            const isOpen = collapseEl.classList.contains('show');
+
+            if (isOpen) {
+                collapseEl.classList.remove('show');
+                sidebar.classList.remove('show');
+                sidebarToggle.setAttribute('aria-expanded', 'false');
+                unlockBodyScroll();
+            } else {
+                collapseEl.classList.add('show');
+                sidebar.classList.add('show');
+                sidebarToggle.setAttribute('aria-expanded', 'true');
+                lockBodyScroll();
+            }
+        });
+
+        // Close overlay and sidebar when clicking a nav link (optional UX)
+        document.querySelectorAll('#navbarNav .nav-link').forEach(link => {
+            link.addEventListener('click', function() {
+                if (collapseEl.classList.contains('show')) {
+                    collapseEl.classList.remove('show');
+                    sidebar.classList.remove('show');
+                    sidebarToggle.setAttribute('aria-expanded', 'false');
+                    unlockBodyScroll();
+                }
+            });
+        });
+
+        // Ensure we cleanup if window resizes above mobile
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 767.98 && collapseEl.classList.contains('show')) {
+                collapseEl.classList.remove('show');
+                sidebar.classList.remove('show');
+                sidebarToggle.setAttribute('aria-expanded', 'false');
+                unlockBodyScroll();
+            }
         });
     }
 
@@ -60,6 +113,21 @@ document.addEventListener('DOMContentLoaded', function() {
     const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Make .stat-pill.hover-stat trigger parent card hover (so Draft pill moves like cards)
+    const statPills = document.querySelectorAll('.stat-pill.hover-stat');
+    statPills.forEach(pill => {
+        const card = pill.closest('.card');
+        if (!card) return;
+
+        function addHover() { card.classList.add('hover-stat'); }
+        function removeHover() { card.classList.remove('hover-stat'); }
+
+        pill.addEventListener('mouseenter', addHover);
+        pill.addEventListener('mouseleave', removeHover);
+        pill.addEventListener('focus', addHover);
+        pill.addEventListener('blur', removeHover);
     });
 
     // Number formatting

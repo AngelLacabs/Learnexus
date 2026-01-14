@@ -124,10 +124,10 @@ include 'includes/sidebar.php';
                     <h1 class="h3 mb-0">Edit User</h1>
                     <nav aria-label="breadcrumb">
                         <ol class="breadcrumb mb-0">
-                            <li class="breadcrumb-item"><a href="dashboard.php">Dashboard</a></li>
-                            <li class="breadcrumb-item"><a href="users.php">Users</a></li>
+                            <!-- <li class="breadcrumb-item"><a href="dashboard.php">Dashboard</a></li>
+                            <li class="breadcrumb-item"><a href="users.php">Users</a></li> -->
                             <li class="breadcrumb-item"><a href="user_view.php?id=<?php echo $userID; ?>"><?php echo htmlspecialchars($user['firstName'] . ' ' . $user['lastName']); ?></a></li>
-                            <li class="breadcrumb-item active" aria-current="page">Edit</li>
+                            <li class="breadcrumb-item active" aria-current="page">Information</li>
                         </ol>
                     </nav>
                 </div>

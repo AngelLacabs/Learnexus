@@ -19,7 +19,8 @@ try {
     $totalStudents = $userStats['student'] ?? 0;
     $totalTeachers = $userStats['instructor'] ?? 0;
     $totalAdmins = $userStats['admin'] ?? 0;
-    $totalUsers = $totalStudents + $totalTeachers + $totalAdmins;
+    // Exclude admin accounts from the Total Users count
+    $totalUsers = $totalStudents + $totalTeachers;
 
     // Total courses by status
     $stmt = $conn->query("SELECT status, COUNT(*) as count FROM courses GROUP BY status");
@@ -93,9 +94,9 @@ include 'includes/sidebar.php';
                 <h1 class="h3 mb-0">Dashboard</h1>
                 <p class="text-muted mb-0">Welcome back, <?php echo htmlspecialchars($_SESSION['first_name']); ?>! 👋</p>
             </div>
-            <div>
+            <!-- <div>
                 <span class="badge bg-success">System Online</span>
-            </div>
+            </div> -->
         </div>
 
         <!-- Statistics Cards -->
@@ -128,9 +129,11 @@ include 'includes/sidebar.php';
                             <div>
                                 <h6 class="text-muted mb-2">Total Courses</h6>
                                 <h2 class="mb-0"><?php echo number_format($totalCourses); ?></h2>
-                                <small class="text-info">
-                                    <i class="bi bi-check-circle"></i> Published: <?php echo $publishedCourses; ?>
-                                </small>
+                                <div class="d-flex gap-2 justify-content-start align-items-center mt-2">
+                                    <small class="text-info">
+                                        <i class="bi bi-check-circle"></i> Published: <?php echo $publishedCourses; ?>
+                                    </small>
+                                </div>
                             </div>
                             <div class="stat-icon bg-success">
                                 <i class="bi bi-book-fill"></i>
@@ -184,7 +187,7 @@ include 'includes/sidebar.php';
         <!-- Secondary Stats -->
         <div class="row g-4 mb-4">
             <div class="col-xl-3 col-md-6">
-                <div class="card border-0 shadow-sm">
+                <div class="card border-0 shadow-sm hover-stat">
                     <div class="card-body text-center">
                         <h6 class="text-muted">Teachers</h6>
                         <h3 class="text-primary"><?php echo number_format($totalTeachers); ?></h3>
@@ -192,7 +195,7 @@ include 'includes/sidebar.php';
                 </div>
             </div>
             <div class="col-xl-3 col-md-6">
-                <div class="card border-0 shadow-sm">
+                <div class="card border-0 shadow-sm hover-stat">
                     <div class="card-body text-center">
                         <h6 class="text-muted">Certificates</h6>
                         <h3 class="text-success"><?php echo number_format($totalCertificates); ?></h3>
@@ -200,7 +203,7 @@ include 'includes/sidebar.php';
                 </div>
             </div>
             <div class="col-xl-3 col-md-6">
-                <div class="card border-0 shadow-sm">
+                <div class="card border-0 shadow-sm hover-stat">
                     <div class="card-body text-center">
                         <h6 class="text-muted">Vouchers</h6>
                         <h3 class="text-warning"><?php echo number_format($totalVouchers); ?></h3>
@@ -208,7 +211,7 @@ include 'includes/sidebar.php';
                 </div>
             </div>
             <div class="col-xl-3 col-md-6">
-                <div class="card border-0 shadow-sm">
+                <div class="card border-0 shadow-sm hover-stat">
                     <div class="card-body text-center">
                         <h6 class="text-muted">Draft Courses</h6>
                         <h3 class="text-secondary"><?php echo number_format($draftCourses); ?></h3>
@@ -220,97 +223,103 @@ include 'includes/sidebar.php';
         <!-- Recent Activity -->
         <div class="row g-4">
             <!-- Recent Users -->
-            <div class="col-xl-4">
-                <div class="card border-0 shadow-sm">
+            <div class="col-md-4 col-12">
+                <div class="card border-0 shadow-sm h-100">
                     <div class="card-header bg-white border-0 py-3">
                         <h5 class="mb-0">Recent Users</h5>
                     </div>
-                    <div class="card-body">
-                        <div class="list-group list-group-flush">
-                            <?php if (empty($recentUsers)): ?>
-                                <p class="text-muted">No recent users</p>
-                            <?php else: ?>
-                                <?php foreach ($recentUsers as $user): ?>
-                                    <div class="list-group-item px-0">
-                                        <div class="d-flex align-items-center">
-                                            <div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3">
-                                                <?php echo strtoupper(substr($user['firstName'], 0, 1)); ?>
-                                            </div>
-                                            <div class="flex-grow-1">
-                                                <h6 class="mb-0"><?php echo htmlspecialchars($user['firstName'] . ' ' . $user['lastName']); ?></h6>
-                                                <small class="text-muted">
-                                                    <span class="badge bg-<?php echo $user['role'] === 'student' ? 'primary' : 'success'; ?>">
-                                                        <?php echo ucfirst($user['role']); ?>
-                                                    </span>
-                                                    <?php echo date('M d, Y', strtotime($user['createdAt'])); ?>
-                                                </small>
+                    <div class="card-body d-flex flex-column">
+                        <div class="flex-grow-1 overflow-auto">
+                            <div class="list-group list-group-flush">
+                                <?php if (empty($recentUsers)): ?>
+                                    <p class="text-muted">No recent users</p>
+                                <?php else: ?>
+                                    <?php foreach ($recentUsers as $user): ?>
+                                        <div class="list-group-item px-0">
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3">
+                                                    <?php echo strtoupper(substr($user['firstName'], 0, 1)); ?>
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <h6 class="mb-0"><?php echo htmlspecialchars($user['firstName'] . ' ' . $user['lastName']); ?></h6>
+                                                    <small class="text-muted">
+                                                        <span class="badge bg-<?php echo $user['role'] === 'student' ? 'primary' : 'success'; ?>">
+                                                            <?php echo ucfirst($user['role']); ?>
+                                                        </span>
+                                                        <?php echo date('M d, Y', strtotime($user['createdAt'])); ?>
+                                                    </small>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </div>
                         </div>
-                        <a href="users.php" class="btn btn-sm btn-outline-primary w-100 mt-3">View All Users</a>
+                        <a href="users.php" class="btn btn-sm btn-outline-primary w-100 mt-3 mt-auto">View All Users</a>
                     </div>
                 </div>
             </div>
 
             <!-- Recent Courses -->
-            <div class="col-xl-4">
-                <div class="card border-0 shadow-sm">
+            <div class="col-md-4 col-12">
+                <div class="card border-0 shadow-sm h-100">
                     <div class="card-header bg-white border-0 py-3">
                         <h5 class="mb-0">Recent Courses</h5>
                     </div>
-                    <div class="card-body">
-                        <div class="list-group list-group-flush">
-                            <?php if (empty($recentCourses)): ?>
-                                <p class="text-muted">No recent courses</p>
-                            <?php else: ?>
-                                <?php foreach ($recentCourses as $course): ?>
-                                    <div class="list-group-item px-0">
-                                        <h6 class="mb-1"><?php echo htmlspecialchars($course['title']); ?></h6>
-                                        <small class="text-muted">
-                                            By <?php echo htmlspecialchars($course['firstName'] . ' ' . $course['lastName']); ?>
-                                            <span class="badge bg-<?php 
-                                                echo $course['status'] === 'published' ? 'success' : 
-                                                    ($course['status'] === 'draft' ? 'warning' : 'secondary'); 
-                                            ?> ms-2">
-                                                <?php echo ucfirst($course['status']); ?>
-                                            </span>
-                                        </small>
-                                    </div>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
+                    <div class="card-body d-flex flex-column">
+                        <div class="flex-grow-1 overflow-auto">
+                            <div class="list-group list-group-flush">
+                                <?php if (empty($recentCourses)): ?>
+                                    <p class="text-muted">No recent courses</p>
+                                <?php else: ?>
+                                    <?php foreach ($recentCourses as $course): ?>
+                                        <div class="list-group-item px-0">
+                                            <h6 class="mb-1"><?php echo htmlspecialchars($course['title']); ?></h6>
+                                            <small class="text-muted">
+                                                By <?php echo htmlspecialchars($course['firstName'] . ' ' . $course['lastName']); ?>
+                                                <span class="badge bg-<?php 
+                                                    echo $course['status'] === 'published' ? 'success' : 
+                                                        ($course['status'] === 'draft' ? 'warning' : 'secondary'); 
+                                                ?> ms-2">
+                                                    <?php echo ucfirst($course['status']); ?>
+                                                </span>
+                                            </small>
+                                        </div>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </div>
                         </div>
-                        <a href="courses.php" class="btn btn-sm btn-outline-success w-100 mt-3">View All Courses</a>
+                        <a href="courses.php" class="btn btn-sm btn-outline-success w-100 mt-3 mt-auto">View All Courses</a>
                     </div>
                 </div>
             </div>
 
             <!-- Recent Enrollments -->
-            <div class="col-xl-4">
-                <div class="card border-0 shadow-sm">
+            <div class="col-md-4 col-12">
+                <div class="card border-0 shadow-sm h-100">
                     <div class="card-header bg-white border-0 py-3">
                         <h5 class="mb-0">Recent Enrollments</h5>
                     </div>
-                    <div class="card-body">
-                        <div class="list-group list-group-flush">
-                            <?php if (empty($recentEnrollments)): ?>
-                                <p class="text-muted">No recent enrollments</p>
-                            <?php else: ?>
-                                <?php foreach ($recentEnrollments as $enrollment): ?>
-                                    <div class="list-group-item px-0">
-                                        <h6 class="mb-1"><?php echo htmlspecialchars($enrollment['firstName'] . ' ' . $enrollment['lastName']); ?></h6>
-                                        <small class="text-muted">
-                                            <?php echo htmlspecialchars($enrollment['title']); ?>
-                                            <br>
-                                            <?php echo date('M d, Y', strtotime($enrollment['enrolledAt'])); ?>
-                                        </small>
-                                    </div>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
+                    <div class="card-body d-flex flex-column">
+                        <div class="flex-grow-1 overflow-auto">
+                            <div class="list-group list-group-flush">
+                                <?php if (empty($recentEnrollments)): ?>
+                                    <p class="text-muted">No recent enrollments</p>
+                                <?php else: ?>
+                                    <?php foreach ($recentEnrollments as $enrollment): ?>
+                                        <div class="list-group-item px-0">
+                                            <h6 class="mb-1"><?php echo htmlspecialchars($enrollment['firstName'] . ' ' . $enrollment['lastName']); ?></h6>
+                                            <small class="text-muted">
+                                                <?php echo htmlspecialchars($enrollment['title']); ?>
+                                                <br>
+                                                <?php echo date('M d, Y', strtotime($enrollment['enrolledAt'])); ?>
+                                            </small>
+                                        </div>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </div>
                         </div>
-                        <a href="enrollments.php" class="btn btn-sm btn-outline-warning w-100 mt-3">View All Enrollments</a>
+                        <a href="enrollments.php" class="btn btn-sm btn-outline-warning w-100 mt-3 mt-auto">View All Enrollments</a>
                     </div>
                 </div>
             </div>
