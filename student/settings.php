@@ -161,7 +161,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
             min-height: 100vh;
         }
 
-        /* Sidebar */
         .sidebar {
             background: linear-gradient(180deg, #e8f0fe 0%, #f0f4ff 50%, #f8f9fa 100%);
             box-shadow: 4px 0 20px rgba(0,0,0,0.08);
@@ -176,7 +175,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
             background-clip: text;
         }
 
-        /* Navigation */
         .nav-link {
             border-radius: 12px;
             transition: all 0.2s ease;
@@ -210,7 +208,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
             display: none;
         }
 
-        /* Hamburger */
         .hamburger-btn {
             width: 50px;
             height: 50px;
@@ -242,7 +239,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
             transform: translateY(-8px) rotate(-45deg);
         }
 
-        /* Main Content Margin */
         @media (min-width: 992px) {
             .main-content {
                 margin-left: var(--sidebar-width);
@@ -412,7 +408,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
     </style>
 </head>
 <body>
-    <!-- Hamburger Button (Mobile) -->
     <div class="position-fixed top-0 start-0 p-3 d-lg-none" style="z-index: 1100;">
         <button class="hamburger-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" id="hamburgerBtn">
             <div class="hamburger-icon d-flex flex-column align-items-center justify-content-center">
@@ -423,7 +418,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
         </button>
     </div>
 
-    <!-- Sidebar -->
     <aside class="sidebar offcanvas-lg offcanvas-start position-fixed top-0 start-0 h-100" style="width: var(--sidebar-width);" id="sidebar">
         <div class="offcanvas-header d-lg-none border-bottom">
             <h5 class="offcanvas-title sidebar-brand">LEARNEXUS</h5>
@@ -464,21 +458,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
         </div>
     </aside>
 
-    <!-- Main Content -->
     <main class="main-content p-3 p-lg-4">
-        <div class="container-fluid">
-            <!-- Page Header -->
+        <div class="container-fluid" style="max-width: 1200px;">
             <div class="row mb-4">
                 <div class="col-12">
-                        <div>
-                            <h1 class="h3 fw-bold mb-0">Settings</h1>
-                            <p class="text-muted mb-0 small">Manage your account settings and preferences</p>
+                    <div class="card border-0 rounded-4 shadow-sm">
+                        <div class="card-body p-3 d-flex justify-content-between align-items-center">
+                            <div>
+                                <h4 class="mb-0 fw-bold">Settings</h4>
+                            </div>
+                            
+                            <div class="d-flex align-items-center gap-3" onclick="window.location.href='settings.php'" role="button" style="flex-shrink: 0;">
+                                <span class="fw-semibold d-none d-sm-inline text-nowrap">
+                                    <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>
+                                </span>
+                                <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold" 
+                                     style="width: 45px; height: 45px; min-width: 45px; background: linear-gradient(135deg, #667eea, #764ba2);">
+                                    <?php if (!empty($user['avatar']) && file_exists($user['avatar'])): ?>
+                                        <img src="<?php echo htmlspecialchars($user['avatar']); ?>" alt="Avatar" 
+                                             class="w-100 h-100 rounded-circle object-fit-cover">
+                                    <?php else: ?>
+                                        <?php echo strtoupper(substr($_SESSION['first_name'], 0, 1)); ?>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Profile Header Card -->
             <div class="row mb-4">
                 <div class="col-12">
                     <div class="card border-0 rounded-4 shadow-sm settings-header text-white">
@@ -507,11 +515,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
                 </div>
             </div>
 
-            <!-- Settings Content -->
             <div class="row">
                 <div class="col-12">
                     <div class="card border-0 rounded-4 shadow-sm">
-                        <!-- Tabs -->
                         <div class="settings-tabs d-flex">
                             <div class="settings-tab active" data-tab="personal">
                                 <i class="bi bi-person me-2"></i>Personal Information
@@ -522,7 +528,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
                         </div>
 
                         <div class="card-body p-4 p-lg-5">
-                            <!-- Personal Information Tab -->
                             <div class="tab-content-section active" id="personal-tab">
                                 <div class="info-card">
                                     <div class="d-flex align-items-start gap-3">
@@ -647,8 +652,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
                                         <i class="bi bi-shield-check me-2"></i>Update Password
                                     </button>
                                 </form>
-                                
-                                <!-- Danger Zone -->
+
                                 <div class="danger-zone">
                                     <h5 class="fw-bold text-danger mb-3">
                                         <i class="bi bi-exclamation-triangle-fill me-2"></i>Danger Zone
@@ -670,7 +674,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Hamburger animation
         const hamburgerBtn = document.getElementById('hamburgerBtn');
         const sidebar = document.getElementById('sidebar');
 
@@ -679,7 +682,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
             sidebar.addEventListener('hide.bs.offcanvas', () => hamburgerBtn.classList.remove('active'));
         }
 
-        // Tab switching
         document.querySelectorAll('.settings-tab').forEach(tab => {
             tab.addEventListener('click', function() {
                 document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
@@ -693,7 +695,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
             });
         });
 
-        // Password toggle
         function togglePassword(button) {
             const input = button.closest('.input-group').querySelector('input');
             const icon = button.querySelector('i');
@@ -709,7 +710,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
             }
         }
 
-        // Delete account confirmation
         function confirmDeleteAccount() {
             Swal.fire({
                 title: 'Delete Account?',
@@ -779,7 +779,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
             });
         }
 
-        // Toggle password visibility in delete confirmation
         function toggleDeletePassword() {
             const input = document.getElementById('deletePasswordInput');
             const icon = document.getElementById('deletePasswordIcon');
@@ -795,7 +794,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
             }
         }
 
-        // Show success/error messages
         <?php if (isset($success)): ?>
             Swal.fire({
                 icon: 'success',
