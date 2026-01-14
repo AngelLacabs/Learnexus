@@ -33,10 +33,10 @@ $stmt = $conn->prepare("
     LEFT JOIN quizzes q ON q.courseID = c.courseID
     LEFT JOIN (
         SELECT qr1.*
-        FROM quiz_results qr1
+        FROM quizresults qr1
         INNER JOIN (
             SELECT quizID, userID, MAX(takenAt) as maxTakenAt
-            FROM quiz_results
+            FROM quizresults
             GROUP BY quizID, userID
         ) qr2 ON qr1.quizID = qr2.quizID 
               AND qr1.userID = qr2.userID 

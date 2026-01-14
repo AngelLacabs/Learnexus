@@ -13,7 +13,7 @@ $userID = $_SESSION['user_id'];
 // CHECK IF STUDENT FAILED THE QUIZ - BLOCK ACCESS
 $stmt = $conn->prepare("
     SELECT qr.passed, qr.status 
-    FROM quiz_results qr
+    FROM quizresults qr
     JOIN quizzes q ON qr.quizID = q.quizID
     WHERE q.courseID = ? AND qr.userID = ?
     ORDER BY qr.takenAt DESC

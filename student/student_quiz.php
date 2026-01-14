@@ -33,7 +33,7 @@ if (!$enrollment) {
 $enrollmentID = $enrollment['enrollmentID'];
 
 // 3️⃣ Check if student already submitted this quiz
-$stmt = $conn->prepare("SELECT score, passed FROM quiz_results WHERE enrollmentID = ? AND quizID = ?");
+$stmt = $conn->prepare("SELECT score, passed FROM quizresults WHERE enrollmentID = ? AND quizID = ?");
 $stmt->execute([$enrollmentID, $quizID]);
 $existingResult = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -65,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$existingResult) {
 
     // Save result
     $stmt = $conn->prepare("
-        INSERT INTO quiz_results (enrollmentID, userID, quizID, score, passed, takenAt)
+        INSERT INTO quizresults (enrollmentID, userID, quizID, score, passed, takenAt)
         VALUES (?, ?, ?, ?, ?, NOW())
         ON DUPLICATE KEY UPDATE
             score = VALUES(score),

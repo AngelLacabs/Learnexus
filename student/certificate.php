@@ -81,7 +81,7 @@ $quizScore = 0;
 if ($quizID) {
     $stmt = $conn->prepare("
         SELECT status, percentage 
-        FROM quiz_results 
+        FROM quizresults 
         WHERE userID = ? AND quizID = ?
         ORDER BY takenAt DESC
         LIMIT 1

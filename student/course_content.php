@@ -62,9 +62,9 @@ if ($enrollment['status'] === 'completed' && !empty($enrollment['completedAt']))
     $stmt = $conn->prepare("
         SELECT q.*,
                (SELECT COUNT(*) FROM quiz_questions WHERE quizID = q.quizID) as questionCount,
-               (SELECT MAX(takenAt) FROM quiz_results WHERE quizID = q.quizID AND userID = ?) as lastAttempt,
-               (SELECT passed FROM quiz_results WHERE quizID = q.quizID AND userID = ? ORDER BY takenAt DESC LIMIT 1) as hasPassed,
-               (SELECT score FROM quiz_results WHERE quizID = q.quizID AND userID = ? ORDER BY takenAt DESC LIMIT 1) as lastScore
+               (SELECT MAX(takenAt) FROM quizresults WHERE quizID = q.quizID AND userID = ?) as lastAttempt,
+               (SELECT passed FROM quizresults WHERE quizID = q.quizID AND userID = ? ORDER BY takenAt DESC LIMIT 1) as hasPassed,
+               (SELECT score FROM quizresults WHERE quizID = q.quizID AND userID = ? ORDER BY takenAt DESC LIMIT 1) as lastScore
         FROM quizzes q
         WHERE q.courseID = ?
           AND q.createdAt <= ?
@@ -76,9 +76,9 @@ if ($enrollment['status'] === 'completed' && !empty($enrollment['completedAt']))
     $stmt = $conn->prepare("
         SELECT q.*,
                (SELECT COUNT(*) FROM quiz_questions WHERE quizID = q.quizID) as questionCount,
-               (SELECT MAX(takenAt) FROM quiz_results WHERE quizID = q.quizID AND userID = ?) as lastAttempt,
-               (SELECT passed FROM quiz_results WHERE quizID = q.quizID AND userID = ? ORDER BY takenAt DESC LIMIT 1) as hasPassed,
-               (SELECT score FROM quiz_results WHERE quizID = q.quizID AND userID = ? ORDER BY takenAt DESC LIMIT 1) as lastScore
+               (SELECT MAX(takenAt) FROM quizresults WHERE quizID = q.quizID AND userID = ?) as lastAttempt,
+               (SELECT passed FROM quizresults WHERE quizID = q.quizID AND userID = ? ORDER BY takenAt DESC LIMIT 1) as hasPassed,
+               (SELECT score FROM quizresults WHERE quizID = q.quizID AND userID = ? ORDER BY takenAt DESC LIMIT 1) as lastScore
         FROM quizzes q
         WHERE q.courseID = ?
         ORDER BY q.quizID ASC

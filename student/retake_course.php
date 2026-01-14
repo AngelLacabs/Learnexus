@@ -31,7 +31,7 @@ if (!$course) {
 // Get latest quiz result
 $stmt = $conn->prepare("
     SELECT qr.*, q.title as quizTitle
-    FROM quiz_results qr
+    FROM quizresults qr
     JOIN quizzes q ON qr.quizID = q.quizID
     WHERE q.courseID = ? AND qr.userID = ?
     ORDER BY qr.takenAt DESC

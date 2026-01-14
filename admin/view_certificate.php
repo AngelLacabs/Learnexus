@@ -43,7 +43,7 @@ $query = "SELECT c.*,
           JOIN users u ON c.userID = u.userID
           JOIN users inst ON cr.teacherID = inst.userID
           JOIN enrollments e ON c.enrollmentID = e.enrollmentID
-          LEFT JOIN quiz_results qr ON e.enrollmentID = qr.enrollmentID AND qr.status = 'passed'
+          LEFT JOIN quizresults qr ON e.enrollmentID = qr.enrollmentID AND qr.status = 'passed'
           WHERE c.certificateID = ?";
 
 if ($_SESSION['role'] === 'instructor') {

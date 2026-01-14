@@ -71,7 +71,7 @@ try {
     
     // 5. Delete previous quiz results (so they can retake the quiz)
     $stmt = $conn->prepare("
-        DELETE FROM quiz_results 
+        DELETE FROM quizresults 
         WHERE userID = ? 
         AND quizID IN (
             SELECT quizID FROM quizzes WHERE courseID = ?

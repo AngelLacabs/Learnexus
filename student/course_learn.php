@@ -18,7 +18,7 @@ $courseID = $_GET['id'] ?? 0;
 ===================== */
 $stmt = $conn->prepare("
     SELECT qr.passed, qr.status, qr.takenAt
-    FROM quiz_results qr
+    FROM quizresults qr
     JOIN quizzes q ON qr.quizID = q.quizID
     WHERE q.courseID = ? AND qr.userID = ?
     ORDER BY qr.takenAt DESC
@@ -118,7 +118,7 @@ $quizTaken = false;
 if ($quizID) {
     $stmt = $conn->prepare("
         SELECT status 
-        FROM quiz_results 
+        FROM quizresults 
         WHERE userID = ? AND quizID = ?
         ORDER BY takenAt DESC
         LIMIT 1

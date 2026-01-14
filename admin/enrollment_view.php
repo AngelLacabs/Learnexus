@@ -63,7 +63,7 @@ try {
     // Get quiz results for this enrollment
     $stmt = $conn->prepare("
         SELECT qr.*, q.title as quizTitle, q.passingScore
-        FROM quiz_results qr 
+        FROM quizresults qr 
         JOIN quizzes q ON qr.quizID = q.quizID
         WHERE qr.enrollmentID = ?
         ORDER BY qr.submittedAt DESC

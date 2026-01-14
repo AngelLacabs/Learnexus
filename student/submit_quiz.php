@@ -56,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // 3️⃣ Save result
     $stmt = $conn->prepare("
-        INSERT INTO quiz_results (enrollmentID, userID, quizID, score, passed, takenAt)
+        INSERT INTO quizresults (enrollmentID, userID, quizID, score, passed, takenAt)
         VALUES (?, ?, ?, ?, ?, NOW())
         ON DUPLICATE KEY UPDATE
             score = VALUES(score),

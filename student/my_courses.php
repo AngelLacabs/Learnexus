@@ -30,7 +30,7 @@ $stmt = $conn->prepare("
     JOIN courses c ON e.courseID = c.courseID
     JOIN users u ON c.teacherID = u.userID
     LEFT JOIN payments p ON e.paymentID = p.paymentID
-    LEFT JOIN quiz_results qr ON e.enrollmentID = qr.enrollmentID
+    LEFT JOIN quizresults qr ON e.enrollmentID = qr.enrollmentID
     WHERE e.userID = ? AND e.status IN ('active', 'completed')
     ORDER BY 
         CASE WHEN e.progressPercentage >= 100 THEN 1 ELSE 0 END ASC,

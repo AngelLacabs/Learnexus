@@ -56,7 +56,7 @@ try {
              JOIN lessons l ON lc.lessonID = l.lessonID 
              WHERE l.courseID = ? AND lc.userID = ?) as completedLessons,
             (SELECT COUNT(*) FROM quizzes WHERE courseID = ?) as totalQuizzes,
-            (SELECT COUNT(DISTINCT qr.quizID) FROM quiz_results qr
+            (SELECT COUNT(DISTINCT qr.quizID) FROM quizresults qr
              JOIN quizzes q ON qr.quizID = q.quizID
              WHERE q.courseID = ? AND qr.userID = ? AND qr.passed = 1) as passedQuizzes
     ");

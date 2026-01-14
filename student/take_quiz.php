@@ -70,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_quiz'])) {
     
     // Save result
     $stmt = $conn->prepare("
-        INSERT INTO quiz_results (enrollmentID, userID, quizID, score, totalPoints, percentage, status, submittedAt)
+        INSERT INTO quizresults (enrollmentID, userID, quizID, score, totalPoints, percentage, status, submittedAt)
         VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
     ");
     $stmt->execute([$enrollment['enrollmentID'], $userID, $quizID, $earnedPoints, $totalPoints, $percentage, $status]);

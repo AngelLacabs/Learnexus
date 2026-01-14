@@ -122,7 +122,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_course'])) {
         // 4. Delete quiz results
         if (!empty($quizIDs)) {
             $placeholders = implode(',', array_fill(0, count($quizIDs), '?'));
-            $stmt = $conn->prepare("DELETE FROM quiz_results WHERE quizID IN ($placeholders)");
+            $stmt = $conn->prepare("DELETE FROM quizresults WHERE quizID IN ($placeholders)");
             $stmt->execute($quizIDs);
             
             // 5. Delete quiz questions
@@ -1202,7 +1202,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['upload_lesson']) && i
                                         <a href="edit_quiz.php?id=<?php echo $quiz['quizID']; ?>" class="btn-action btn-outline-primary">
                                             <i class="bi bi-pencil"></i> Edit
                                         </a>
-                                        <a href="quiz_results.php?id=<?php echo $quiz['quizID']; ?>" class="btn-action btn-outline-info">
+                                        <a href="quizresults.php?id=<?php echo $quiz['quizID']; ?>" class="btn-action btn-outline-info">
                                             <i class="bi bi-graph-up"></i> Results
                                         </a>
                                     </div>

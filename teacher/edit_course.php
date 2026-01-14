@@ -45,7 +45,7 @@ if (isset($_POST['delete_course'])) {
     $stmt->execute([$courseID]);
     $quizID = $stmt->fetchColumn();
     if ($quizID) {
-        $stmt = $conn->prepare("DELETE FROM quiz_results WHERE quizID = ?");
+        $stmt = $conn->prepare("DELETE FROM quizresults WHERE quizID = ?");
         $stmt->execute([$quizID]);
 
         $stmt = $conn->prepare("DELETE FROM quizzes WHERE quizID = ?");
@@ -136,7 +136,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_quiz'])) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_quiz'])) {
     $quizIDToDelete = intval($_POST['delete_quiz_id']);
 
-    $stmt = $conn->prepare("DELETE FROM quiz_results WHERE quizID = ?");
+    $stmt = $conn->prepare("DELETE FROM quizresults WHERE quizID = ?");
     $stmt->execute([$quizIDToDelete]);
 
     $stmt = $conn->prepare("DELETE FROM quizzes WHERE quizID = ? AND courseID = ?");

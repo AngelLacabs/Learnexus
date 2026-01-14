@@ -56,7 +56,7 @@ try {
 
         // Delete quiz results for this enrollment
         $stmt = $conn->prepare("
-            DELETE qr FROM quiz_results qr
+            DELETE qr FROM quizresults qr
             JOIN quizzes q ON qr.quizID = q.quizID
             WHERE q.courseID = ? AND qr.userID = ?
         ");

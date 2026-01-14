@@ -37,7 +37,7 @@ $enrolledCourses = $stmt->fetchAll();
 // Get quiz results
 $stmt = $conn->prepare("
     SELECT qr.*, q.title as quizTitle, c.title as courseTitle
-    FROM quiz_results qr
+    FROM quizresults qr
     JOIN quizzes q ON qr.quizID = q.quizID
     JOIN courses c ON q.courseID = c.courseID
     WHERE qr.userID = ? AND c.teacherID = ?

@@ -45,7 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         // 4. Delete quiz results
         $stmt = $conn->prepare("
-            DELETE qr FROM quiz_results qr
+            DELETE qr FROM quizresults qr
             JOIN quizzes q ON qr.quizID = q.quizID
             WHERE qr.userID = ? AND q.courseID = ?
         ");

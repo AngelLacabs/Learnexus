@@ -13,7 +13,7 @@ $courseID = $_GET['id'] ?? 0;
 // CHECK IF STUDENT ALREADY FAILED - Allow retake if they've paid
 $stmt = $conn->prepare("
     SELECT qr.passed, qr.status, qr.takenAt
-    FROM quiz_results qr
+    FROM quizresults qr
     JOIN quizzes q ON qr.quizID = q.quizID
     WHERE q.courseID = ? AND qr.userID = ?
     ORDER BY qr.takenAt DESC
@@ -76,7 +76,7 @@ if (empty($questions)) {
 
 // Check if student already took the quiz (and hasn't paid for retake)
 $stmt = $conn->prepare("
-    SELECT * FROM quiz_results 
+    SELECT * FROM quizresults 
     WHERE quizID = ? AND userID = ?
     ORDER BY takenAt DESC
     LIMIT 1
@@ -187,7 +187,7 @@ if (!$submitted && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Save result with status
     $stmt = $conn->prepare("
-        INSERT INTO quiz_results (enrollmentID, userID, quizID, score, percentage, passed, status, takenAt)
+        INSERT INTO quizresults (enrollmentID, userID, quizID, score, percentage, passed, status, takenAt)
         VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
     ");
     $stmt->execute([$enrollmentID, $userID, $quizID, $score, $percentage, $passed, $quizStatus]);
@@ -218,7 +218,7 @@ if (!$submitted && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Check latest result for this quiz
     if ($quiz) {
-        $stmt = $conn->prepare("SELECT passed FROM quiz_results WHERE quizID = ? AND userID = ? ORDER BY takenAt DESC LIMIT 1");
+        $stmt = $conn->prepare("SELECT passed FROM quizresults WHERE quizID = ? AND userID = ? ORDER BY takenAt DESC LIMIT 1");
         $stmt->execute([$quizID, $userID]);
         $r = $stmt->fetch(PDO::FETCH_ASSOC);
         if ($r && $r['passed']) $passedQuizzes = 1;
