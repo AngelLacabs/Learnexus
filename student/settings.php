@@ -212,7 +212,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
             <a href="dashboard.php" class="nav-link">Dashboard</a>
             <a href="course_catalog.php" class="nav-link">Course Catalog</a>
             <a href="my_courses.php" class="nav-link">My Courses</a>
-            <a href="ai_tutor.php" class="nav-link">AI Tutor</a>
+            <a href="ai_chatbot.php" class="nav-link">AI Tutor</a>
         </div>
     </div>
 

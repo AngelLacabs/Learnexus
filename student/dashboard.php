@@ -596,7 +596,7 @@ $dailyMotivationStudent = $studentMotivations[$dayOfYear % count($studentMotivat
             <a class="nav-link" href="settings.php">
                 <i class="bi bi-gear"></i> Settings
             </a>
-            <a class="nav-link" href="ai_tutor.php">
+            <a class="nav-link" href="ai_chatbot.php">
                 <i class="bi bi-chat-dots"></i> AI Tutor
             </a>
         </nav>
