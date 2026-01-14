@@ -1,0 +1,43 @@
+COURSE INFORMATION FOR LMS LEARNEXUS:
+
+1. Data Administration
+   - Price: ₱100.00
+   - Category: Programming
+   - Passing Score: 70%
+   - Status: Published (Available)
+   - Instructor: Andrew Coral
+   - Enrollments: 4 completed students
+   - Description: Database management and administration course
+
+2. Web Development
+   - Price: ₱10.00
+   - Category: Programming
+   - Passing Score: 70%
+   - Status: Published (Available)
+   - Instructor: Andrew Coral
+   - Description: Introduction to web development technologies
+
+3. RIPH
+   - Price: ₱10.00
+   - Category: Programming
+   - Passing Score: 70%
+   - Status: Published (Available)
+   - Instructor: Andrew Coral
+   - Description: Course materials available upon enrollment
+
+4. SAD (Systems Analysis and Design)
+   - Price: ₱50.00
+   - Category: Design
+   - Passing Score: 70%
+   - Status: Draft (Under Development)
+   - Instructor: Andrew Coral
+   - Description: Information systems analysis and design course
+
+ADDITIONAL INFORMATION:
+- All courses created by Instructor Andrew Coral (Teacher ID: 3)
+- Data Administration is the most active course with 4 certificates issued
+- Students receive 12% discount vouchers from SoleSource upon course completion
+- Lesson completion tracking is implemented for all courses
+- Quiz passing score is set to 70% for all courses
+- Course status determines availability: only 'published' courses are enrollable
+- Certificate generation is automatic upon meeting all requirements

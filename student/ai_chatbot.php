@@ -9,159 +9,75 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
 }
 
 $userID = $_SESSION['user_id'];
+$student_name = $_SESSION['first_name'] . ' ' . $_SESSION['last_name'];
+
+// Get user avatar
+$stmt = $conn->prepare("SELECT avatar FROM users WHERE userID = ?");
+$stmt->execute([$userID]);
+$userAvatar = $stmt->fetchColumn();
 
 // ============================================
 // BACKEND: Handle POST requests to Ollama
 // ============================================
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['prompt'])) {
-    // Fetch course data from database - using actual columns from your database
-    $stmt = $conn->prepare("
-        SELECT courseID, title, description, price, category, status, passingScore, createdAt
-        FROM courses 
-        WHERE status = 'published'
-        ORDER BY title
-    ");
-    $stmt->execute();
-    $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    // Load course knowledge base from text file
+    $file_path = __DIR__ . '/course_data.txt';
     
-    if (!$result || count($result) === 0) {
-        echo "No courses available at the moment.";
+    // Check if file exists
+    if (!file_exists($file_path)) {
+        echo "ERROR: course_data.txt file not found. Please create it with course information.";
         exit;
     }
     
-    // Build categories list
-    $categories = [];
-    foreach ($result as $course) {
-        if (!in_array($course['category'], $categories)) {
-            $categories[] = $course['category'];
-        }
-    }
+    $data = file_get_contents($file_path);
     
-    // Build enhanced knowledge base from database
-    $knowledge_base = "AVAILABLE COURSES INFORMATION:\n\n";
-    $knowledge_base .= "CATEGORIES AVAILABLE: " . implode(', ', $categories) . "\n\n";
-    
-    foreach ($result as $course) {
-        $knowledge_base .= "=== COURSE: " . $course['title'] . " ===\n";
-        $knowledge_base .= "Category: " . $course['category'] . "\n";
-        $knowledge_base .= "Description: " . ($course['description'] ?: "A comprehensive course in " . $course['category']) . "\n";
-        $knowledge_base .= "Price: ₱" . number_format($course['price'], 2) . "\n";
-        $knowledge_base .= "Passing Score: " . $course['passingScore'] . "%\n";
-        $knowledge_base .= "Status: " . ucfirst($course['status']) . "\n\n";
+    if (empty($data)) {
+        echo "ERROR: course_data.txt is empty. Please add course information.";
+        exit;
     }
     
     // Get user question
-    $user_question = trim($_POST['prompt']);
+    $user_question = $_POST['prompt'];
     
-    if (empty($user_question)) {
-        echo "Please enter a question.";
-        exit;
-    }
-    
-    // Check if question is about courses using comprehensive logic
-    $course_keywords = [
-        'course', 'courses', 'class', 'classes', 'subject', 'subjects',
-        'price', 'cost', 'fee', 'fees', 'how much',
-        'available', 'offer', 'offered', 'provide',
-        'duration', 'how long', 'time', 'length',
-        'category', 'categories', 'type', 'types',
-        'description', 'detail', 'info', 'information',
-        'passing', 'score', 'requirement', 'required',
-        'programming', 'design', 'business', // Add your actual categories from database
-        'what', 'which', 'tell me about', 'explain', 'show'
-    ];
+    // Check if the question is about courses (simpler check)
+    $course_keywords = ['course', 'price', 'cost', 'available', 'cheap', 'expensive', 'category', 'data administration', 'riph', 'web development', 'sad', 'programming', 'design', 'history'];
     
     $is_course_related = false;
-    $user_question_lower = strtolower($user_question);
+    $question_lower = strtolower($user_question);
     
     foreach ($course_keywords as $keyword) {
-        if (strpos($user_question_lower, $keyword) !== false) {
+        if (strpos($question_lower, $keyword) !== false) {
             $is_course_related = true;
             break;
         }
     }
     
-    // Also check for broader patterns
-    $course_patterns = [
-        '/what.*course/i',
-        '/which.*course/i',
-        '/tell.*about.*course/i',
-        '/do you have.*course/i',
-        '/course.*available/i',
-        '/how.*cost/i',
-        '/how.*price/i',
-        '/what.*price/i',
-        '/course.*fee/i',
-        '/show.*course/i',
-        '/list.*course/i',
-        '/recommend.*course/i',
-        '/best.*course/i',
-        '/cheap.*course/i',
-        '/free.*course/i'
-    ];
-    
     if (!$is_course_related) {
-        foreach ($course_patterns as $pattern) {
-            if (preg_match($pattern, $user_question)) {
-                $is_course_related = true;
-                break;
-            }
-        }
-    }
-    
-    // If still not course-related, provide a more helpful message
-    if (!$is_course_related) {
-        echo "I'm your course assistant! I can help you with information about our available courses, including:\n\n";
-        echo "• Course titles and descriptions\n";
-        echo "• Pricing information\n";
+        echo "I can only answer questions about courses. Please ask about:\n\n";
+        echo "• Available courses\n";
+        echo "• Course prices\n";
         echo "• Course categories\n";
-        echo "• Passing score requirements\n";
-        echo "• Available subjects\n\n";
-        echo "Try asking something like:\n";
-        echo "- 'What courses are available?'\n";
-        echo "- 'How much does the Web Development course cost?'\n";
-        echo "- 'Tell me about Programming courses'\n";
-        echo "- 'Show me all courses'\n";
-        echo "- 'What are the cheapest courses?'\n";
+        echo "• Specific courses (Data Administration, RIPH, Web Development, SAD)";
         exit;
     }
     
-    // Build enhanced prompt for Ollama
-    $prompt = <<<EOT
-You are a helpful and friendly course assistant for an online learning platform called LMS Learnexus.
-Use ONLY the course information provided below to answer questions.
-
-IMPORTANT GUIDELINES:
-1. Be concise, friendly, and helpful
-2. Format prices with PHP peso sign (₱)
-3. If listing multiple courses, use bullet points or clear formatting
-4. If the user asks about something not in the course data, politely say: "I don't have specific information about that in our course database. I can only help with questions about our available courses, their prices, categories, and requirements."
-5. When comparing prices or listing courses, organize the information clearly
-6. Always mention the course category when relevant
-
---- COURSE DATA ---
-$knowledge_base
---- END COURSE DATA ---
-
-Question: $user_question
-
-Answer (be helpful, use only the provided data, and format clearly):
-EOT;
+    // FIRST: Try to answer directly from the text data without Ollama
+    $direct_answer = getDirectAnswerFromText($user_question, $data);
+    if ($direct_answer !== false) {
+        echo $direct_answer;
+        exit;
+    }
+    
+    // If direct answer not found, use Ollama
+    // Build SIMPLER prompt for Ollama
+    $prompt = "Here is the course information:\n\n{$data}\n\nQuestion: {$user_question}\n\nPlease answer based on the information above:";
     
     // Prepare request to Ollama API
     $payload = json_encode([
         'model' => 'gemma3:270m',
         'prompt' => $prompt,
-        'stream' => false,
-        'options' => [
-            'temperature' => 0.3,
-            'num_predict' => 200
-        ]
+        'stream' => false
     ]);
-    
-    // Debug logging (optional)
-    // error_log("User question: " . $user_question);
-    // error_log("Knowledge base: " . substr($knowledge_base, 0, 500));
     
     // Send request to Ollama
     $ch = curl_init('http://127.0.0.1:11434/api/generate');
@@ -169,14 +85,16 @@ EOT;
     curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
     curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 60);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 30);
     
     $response = curl_exec($ch);
     
     if (curl_errno($ch)) {
         $error = curl_error($ch);
         curl_close($ch);
-        echo "ERROR: Could not connect to Ollama. Make sure Ollama is running. Error: " . $error;
+        
+        // Fallback manual responses if Ollama not available
+        echo generateFallbackResponse($user_question, $data);
         exit;
     }
     
@@ -184,34 +102,240 @@ EOT;
     curl_close($ch);
     
     if ($http_code !== 200) {
-        echo "ERROR: Ollama returned error code " . $http_code;
+        // Fallback response
+        echo generateFallbackResponse($user_question, $data);
         exit;
     }
     
     $result = json_decode($response, true);
+    $reply = $result['response'] ?? 'No response from AI';
     
-    if (json_last_error() !== JSON_ERROR_NONE) {
-        echo "ERROR: Could not parse Ollama response.";
-        exit;
-    }
+    // Clean up the response
+    $reply = trim($reply);
+    $reply = htmlspecialchars($reply);
     
-    $reply = $result['response'] ?? '';
-    
-    if (empty($reply)) {
-        echo "ERROR: Ollama returned empty response.";
-        exit;
-    }
-    
-    echo htmlspecialchars($reply);
+    echo $reply;
     exit;
 }
 
-$student_name = $_SESSION['first_name'] . ' ' . $_SESSION['last_name'];
+// Function to get direct answer from text without Ollama
+function getDirectAnswerFromText($question, $data) {
+    $question_lower = strtolower($question);
+    $data_lower = strtolower($data);
+    
+    // Extract course information from text
+    $courses = [];
+    $lines = explode("\n", $data);
+    
+    $current_course = null;
+    foreach ($lines as $line) {
+        $line = trim($line);
+        
+        // Check if line starts a new course
+        if (preg_match('/^\d+\.\s+(.+)/', $line, $matches)) {
+            $current_course = $matches[1];
+            $courses[$current_course] = ['name' => $matches[1]];
+        } 
+        // Check for course details
+        elseif ($current_course && preg_match('/^\s*-\s*(Price|Category|Passing Score|Status|Description):\s*(.+)/i', $line, $matches)) {
+            $key = strtolower(str_replace(' ', '_', trim($matches[1])));
+            $courses[$current_course][$key] = trim($matches[2]);
+        }
+    }
+    
+    // Check for specific questions
+    if (strpos($question_lower, 'available') !== false || strpos($question_lower, 'what courses') !== false) {
+        $response = "📚 **AVAILABLE COURSES**\n\n";
+        $count = 1;
+        foreach ($courses as $course) {
+            $response .= "{$count}. **{$course['name']}**\n";
+            if (isset($course['price'])) {
+                $response .= "   • Price: {$course['price']}\n";
+            }
+            if (isset($course['category'])) {
+                $response .= "   • Category: {$course['category']}\n";
+            }
+            if (isset($course['status'])) {
+                $response .= "   • Status: {$course['status']}\n";
+            }
+            $response .= "\n";
+            $count++;
+        }
+        $response .= "**Total:** " . count($courses) . " courses available.";
+        return $response;
+    }
+    
+    if (strpos($question_lower, 'price') !== false || strpos($question_lower, 'cost') !== false || strpos($question_lower, 'how much') !== false) {
+        $response = "💰 **COURSE PRICES**\n\n";
+        foreach ($courses as $course) {
+            if (isset($course['price'])) {
+                $response .= "• {$course['name']}: {$course['price']}\n";
+            }
+        }
+        
+        // Calculate cheapest and most expensive
+        $prices = [];
+        foreach ($courses as $course) {
+            if (isset($course['price'])) {
+                // Extract numeric value from price
+                if (preg_match('/₱([\d,.]+)/', $course['price'], $matches)) {
+                    $price_value = (float) str_replace(',', '', $matches[1]);
+                    $prices[$course['name']] = $price_value;
+                }
+            }
+        }
+        
+        if (!empty($prices)) {
+            $response .= "\n**Price Summary:**\n";
+            $min_price = min($prices);
+            $max_price = max($prices);
+            
+            $cheapest = array_keys($prices, $min_price);
+            $expensive = array_keys($prices, $max_price);
+            
+            $response .= "• Cheapest: " . implode(', ', $cheapest) . " (₱" . number_format($min_price, 2) . ")\n";
+            $response .= "• Most Expensive: " . implode(', ', $expensive) . " (₱" . number_format($max_price, 2) . ")";
+        }
+        
+        return $response;
+    }
+    
+    if (strpos($question_lower, 'cheap') !== false) {
+        $prices = [];
+        foreach ($courses as $course) {
+            if (isset($course['price'])) {
+                if (preg_match('/₱([\d,.]+)/', $course['price'], $matches)) {
+                    $price_value = (float) str_replace(',', '', $matches[1]);
+                    $prices[$course['name']] = $price_value;
+                }
+            }
+        }
+        
+        if (!empty($prices)) {
+            $min_price = min($prices);
+            $cheapest_courses = array_keys($prices, $min_price);
+            
+            $response = "💸 **CHEAPEST COURSES**\n\n";
+            foreach ($cheapest_courses as $course_name) {
+                $response .= "• **{$course_name}** - ₱" . number_format($min_price, 2) . "\n";
+                if (isset($courses[$course_name]['category'])) {
+                    $response .= "  Category: {$courses[$course_name]['category']}\n";
+                }
+                if (isset($courses[$course_name]['description'])) {
+                    $response .= "  Description: {$courses[$course_name]['description']}\n";
+                }
+                $response .= "\n";
+            }
+            return $response;
+        }
+    }
+    
+    if (strpos($question_lower, 'expensive') !== false || strpos($question_lower, 'most expensive') !== false) {
+        $prices = [];
+        foreach ($courses as $course) {
+            if (isset($course['price'])) {
+                if (preg_match('/₱([\d,.]+)/', $course['price'], $matches)) {
+                    $price_value = (float) str_replace(',', '', $matches[1]);
+                    $prices[$course['name']] = $price_value;
+                }
+            }
+        }
+        
+        if (!empty($prices)) {
+            $max_price = max($prices);
+            $expensive_courses = array_keys($prices, $max_price);
+            
+            $response = "💎 **MOST EXPENSIVE COURSES**\n\n";
+            foreach ($expensive_courses as $course_name) {
+                $response .= "• **{$course_name}** - ₱" . number_format($max_price, 2) . "\n";
+                if (isset($courses[$course_name]['category'])) {
+                    $response .= "  Category: {$courses[$course_name]['category']}\n";
+                }
+                if (isset($courses[$course_name]['description'])) {
+                    $response .= "  Description: {$courses[$course_name]['description']}\n";
+                }
+                $response .= "\n";
+            }
+            return $response;
+        }
+    }
+    
+    // Check for specific course questions
+    foreach ($courses as $course_name => $course_info) {
+        $course_name_lower = strtolower($course_name);
+        if (strpos($question_lower, $course_name_lower) !== false) {
+            $response = "📖 **" . strtoupper($course_name) . "**\n\n";
+            foreach ($course_info as $key => $value) {
+                if ($key !== 'name') {
+                    $formatted_key = ucwords(str_replace('_', ' ', $key));
+                    $response .= "• **{$formatted_key}:** {$value}\n";
+                }
+            }
+            return $response;
+        }
+    }
+    
+    // Check for category questions
+    if (strpos($question_lower, 'category') !== false || strpos($question_lower, 'programming') !== false || 
+        strpos($question_lower, 'design') !== false || strpos($question_lower, 'history') !== false) {
+        
+        // Extract all categories
+        $categories = [];
+        foreach ($courses as $course) {
+            if (isset($course['category'])) {
+                $category = $course['category'];
+                if (!isset($categories[$category])) {
+                    $categories[$category] = [];
+                }
+                $categories[$category][] = $course['name'];
+            }
+        }
+        
+        $response = "🏷️ **COURSES BY CATEGORY**\n\n";
+        foreach ($categories as $category => $course_list) {
+            $response .= "**{$category}** (" . count($course_list) . " courses):\n";
+            foreach ($course_list as $course_name) {
+                $response .= "• {$course_name}";
+                if (isset($courses[$course_name]['price'])) {
+                    $response .= " - {$courses[$course_name]['price']}";
+                }
+                $response .= "\n";
+            }
+            $response .= "\n";
+        }
+        return $response;
+    }
+    
+    return false; // No direct answer found
+}
 
-// Get user avatar
-$stmt = $conn->prepare("SELECT avatar FROM users WHERE userID = ?");
-$stmt->execute([$userID]);
-$userAvatar = $stmt->fetchColumn();
+// Fallback response generator
+function generateFallbackResponse($question, $data) {
+    $question_lower = strtolower($question);
+    
+    // Try direct answer first
+    $direct_answer = getDirectAnswerFromText($question, $data);
+    if ($direct_answer !== false) {
+        return $direct_answer . "\n\n*(Note: Ollama is currently unavailable)*";
+    }
+    
+    // Generic fallback
+    if (strpos($question_lower, 'available') !== false || strpos($question_lower, 'course') !== false) {
+        return "Based on course_data.txt, available courses are:\n\n" .
+               "1. Data Administration\n" .
+               "2. RIPH (Readings in Philippine History)\n" .
+               "3. Web Development\n" .
+               "4. SAD (Systems Analysis and Design)\n\n" .
+               "Check course_data.txt for details.";
+    }
+    
+    return "I can help with course information from course_data.txt. Try asking:\n\n" .
+           "• What courses are available?\n" .
+           "• How much do courses cost?\n" .
+           "• Tell me about [course name]\n" .
+           "• What are the cheapest/most expensive courses?\n\n" .
+           "(Ollama is currently unavailable)";
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -267,9 +391,9 @@ $userAvatar = $stmt->fetchColumn();
             background: white;
             border-radius: 20px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            max-width: 900px;
+            max-width: 1000px;
             margin: 0 auto;
-            height: 600px;
+            height: 90vh; /* Updated height for chat container */
             display: flex;
             flex-direction: column;
             overflow: hidden;
@@ -278,13 +402,13 @@ $userAvatar = $stmt->fetchColumn();
         .header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 25px;
+            padding: 20px;
             text-align: center;
         }
         
         .header h1 {
-            font-size: 26px;
-            margin-bottom: 8px;
+            font-size: 24px;
+            margin-bottom: 5px;
         }
         
         .header p {
@@ -294,19 +418,22 @@ $userAvatar = $stmt->fetchColumn();
         
         #chat {
             flex: 1;
-            padding: 20px;
+            padding: 25px;
             overflow-y: auto;
             background: #f8f9fa;
+            min-height: 400px; /* Add this to ensure minimum height */
         }
         
         .message {
-            margin-bottom: 15px;
-            padding: 14px 18px;
-            border-radius: 15px;
-            max-width: 75%;
+            margin-bottom: 20px;
+            padding: 18px 22px;
+            border-radius: 18px;
+            max-width: 85%;
             word-wrap: break-word;
             animation: fadeIn 0.3s ease-in;
             line-height: 1.5;
+            white-space: pre-wrap;
+            font-size: 15px;
         }
         
         @keyframes fadeIn {
@@ -327,6 +454,7 @@ $userAvatar = $stmt->fetchColumn();
             color: #333;
             border: 1px solid #e0e0e0;
             border-bottom-left-radius: 5px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
         
         .error-message {
@@ -337,8 +465,8 @@ $userAvatar = $stmt->fetchColumn();
         
         .message-label {
             font-weight: bold;
-            font-size: 11px;
-            margin-bottom: 6px;
+            font-size: 12px;
+            margin-bottom: 8px;
             opacity: 0.8;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -354,10 +482,10 @@ $userAvatar = $stmt->fetchColumn();
         
         #input {
             flex: 1;
-            padding: 14px 20px;
+            padding: 16px 22px;
             border: 2px solid #e0e0e0;
             border-radius: 25px;
-            font-size: 14px;
+            font-size: 15px;
             outline: none;
             transition: border-color 0.3s;
         }
@@ -367,13 +495,13 @@ $userAvatar = $stmt->fetchColumn();
         }
         
         button {
-            padding: 14px 35px;
+            padding: 16px 40px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
             border-radius: 25px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 15px;
             font-weight: bold;
             transition: transform 0.2s, box-shadow 0.2s;
         }
@@ -394,9 +522,9 @@ $userAvatar = $stmt->fetchColumn();
         
         .loading {
             display: inline-block;
-            width: 8px;
-            height: 8px;
-            margin: 0 2px;
+            width: 10px;
+            height: 10px;
+            margin: 0 3px;
             border-radius: 50%;
             background: #667eea;
             animation: pulse 1.5s ease-in-out infinite;
@@ -415,8 +543,8 @@ $userAvatar = $stmt->fetchColumn();
             border-left: 4px solid #667eea;
             border-radius: 10px;
             padding: 15px;
-            margin: 15px 20px;
-            font-size: 13px;
+            margin: 10px 25px;
+            font-size: 14px;
             color: #333;
         }
         
@@ -426,25 +554,100 @@ $userAvatar = $stmt->fetchColumn();
         
         .suggestions {
             display: flex;
-            gap: 8px;
+            gap: 10px;
             flex-wrap: wrap;
-            padding: 0 20px 15px;
+            padding: 15px 25px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
         }
         
         .suggestion-chip {
             background: #f0f0f0;
-            padding: 8px 15px;
+            padding: 10px 18px;
             border-radius: 20px;
-            font-size: 12px;
+            font-size: 13px;
             cursor: pointer;
             transition: all 0.3s;
             border: 1px solid #e0e0e0;
+            white-space: nowrap;
+            font-weight: 500;
         }
         
         .suggestion-chip:hover {
             background: #667eea;
             color: white;
             border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 3px 10px rgba(102, 126, 234, 0.2);
+        }
+        
+        .data-info {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 8px;
+            padding: 10px 20px;
+            margin: 15px 25px;
+            font-size: 13px;
+            color: #155724;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .data-info i {
+            color: #28a745;
+        }
+        
+        .user-info {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin-right: 20px;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+            font-size: 16px;
+        }
+        
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        /* Larger chat container */
+        .message-content {
+            font-size: 15px;
+            line-height: 1.6;
+        }
+        
+        /* Scrollbar styling */
+        #chat::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        #chat::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        #chat::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+        
+        #chat::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
         }
     </style>
 </head>
@@ -452,11 +655,11 @@ $userAvatar = $stmt->fetchColumn();
     <div class="navbar">
         <h2><i class="fas fa-robot"></i> AI Course Assistant</h2>
         <div>
-            <div class="user-info" style="display: inline-flex; align-items: center; gap: 10px; margin-right: 20px;">
+            <div class="user-info">
                 <span style="color: #666; font-weight: 500;"><?php echo htmlspecialchars($student_name); ?></span>
-                <div style="width: 35px; height: 35px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-weight: 600;">
+                <div class="user-avatar">
                     <?php if (!empty($userAvatar) && file_exists($userAvatar)): ?>
-                        <img src="<?php echo htmlspecialchars($userAvatar); ?>" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover;">
+                        <img src="<?php echo htmlspecialchars($userAvatar); ?>" alt="Avatar">
                     <?php else: ?>
                         <?php echo strtoupper(substr($_SESSION['first_name'], 0, 1)); ?>
                     <?php endif; ?>
@@ -466,39 +669,37 @@ $userAvatar = $stmt->fetchColumn();
         </div>
     </div>
 
-    <div class="container">
+    <div class="container" style="height: 90vh;">
         <div class="header">
             <h1><i class="fas fa-brain"></i> AI Course Assistant</h1>
-            <p>Powered by Ollama Gemma 3 - Ask me about our courses!</p>
+            <p>Powered by Text-Based Knowledge & Ollama</p>
+        </div>
+        
+        <div class="data-info">
+            <i class="fas fa-database"></i>
+            <span>Knowledge source: <strong>course_data.txt</strong> - All answers are based on this file</span>
         </div>
         
         <div class="info-box">
-            <strong><i class="fas fa-info-circle"></i> What I can help with:</strong><br>
-            • Available courses and categories<br>
-            • Course prices and fees<br>
-            • Course descriptions and requirements<br>
-            • Passing score requirements<br>
-            • Comparing course options
+            <strong><i class="fas fa-info-circle"></i> I can answer these questions accurately:</strong><br>
+            • What courses are available?<br>
+            • Course prices and cost comparisons<br>
+            • Cheapest and most expensive courses<br>
+            • Specific course details (Data Administration, RIPH, etc.)
         </div>
         
         <div class="suggestions">
             <div class="suggestion-chip" onclick="askQuestion('What courses are available?')">
                 What courses are available?
             </div>
-            <div class="suggestion-chip" onclick="askQuestion('How much do the courses cost?')">
-                How much do courses cost?
-            </div>
-            <div class="suggestion-chip" onclick="askQuestion('Show me all courses')">
-                Show me all courses
+            <div class="suggestion-chip" onclick="askQuestion('How much do courses cost?')">
+                Course prices
             </div>
             <div class="suggestion-chip" onclick="askQuestion('What are the cheapest courses?')">
-                Cheapest courses?
+                Cheapest courses
             </div>
-            <div class="suggestion-chip" onclick="askQuestion('Tell me about Programming courses')">
-                Programming courses?
-            </div>
-            <div class="suggestion-chip" onclick="askQuestion('List courses by category')">
-                Courses by category
+            <div class="suggestion-chip" onclick="askQuestion('What are the most expensive courses?')">
+                Most expensive
             </div>
         </div>
         
@@ -508,7 +709,7 @@ $userAvatar = $stmt->fetchColumn();
             <input 
                 id="input" 
                 type="text" 
-                placeholder="Ask about our courses..." 
+                placeholder="Ask about courses (pricing, availability, categories)..." 
                 onkeypress="if(event.key==='Enter') sendMessage()"
             >
             <button id="sendBtn" onclick="sendMessage()">
@@ -537,6 +738,7 @@ $userAvatar = $stmt->fetchColumn();
             
             isProcessing = true;
             sendBtn.disabled = true;
+            sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
             
             // Display user message
             const userMsg = document.createElement('div');
@@ -552,7 +754,7 @@ $userAvatar = $stmt->fetchColumn();
             const loadingMsg = document.createElement('div');
             loadingMsg.id = reply_id;
             loadingMsg.className = 'message bot-message';
-            loadingMsg.innerHTML = '<div class="message-label">AI Assistant</div><span class="loading"></span><span class="loading"></span><span class="loading"></span> Thinking...';
+            loadingMsg.innerHTML = '<div class="message-label">AI Assistant</div><span class="loading"></span><span class="loading"></span><span class="loading"></span> Processing...';
             chat.appendChild(loadingMsg);
             chat.scrollTop = chat.scrollHeight;
             
@@ -566,28 +768,28 @@ $userAvatar = $stmt->fetchColumn();
             .then(reply => {
                 const msgElement = document.getElementById(reply_id);
                 
-                if (reply.includes('ERROR:')) {
+                if (reply.includes('ERROR:') || reply.includes('⚠️')) {
                     msgElement.className = 'message error-message';
-                    msgElement.innerHTML = '<div class="message-label"><i class="fas fa-exclamation-triangle"></i> Error</div>' + escapeHtml(reply);
+                    msgElement.innerHTML = '<div class="message-label"><i class="fas fa-exclamation-triangle"></i> Error</div>' + formatText(reply);
                 } else {
-                    // Format the response with better line breaks
-                    const formattedReply = escapeHtml(reply).replace(/\n/g, '<br>');
-                    msgElement.innerHTML = '<div class="message-label">AI Assistant</div>' + formattedReply;
+                    msgElement.innerHTML = '<div class="message-label">AI Assistant</div>' + formatText(reply);
                 }
                 
                 chat.scrollTop = chat.scrollHeight;
                 isProcessing = false;
                 sendBtn.disabled = false;
+                sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Send';
                 input.focus();
             })
             .catch(error => {
                 const msgElement = document.getElementById(reply_id);
                 msgElement.className = 'message error-message';
                 msgElement.innerHTML = 
-                    '<div class="message-label"><i class="fas fa-exclamation-triangle"></i> Network Error</div>Could not connect to server: ' + error.message;
+                    '<div class="message-label"><i class="fas fa-exclamation-triangle"></i> Network Error</div>Could not connect to server.';
                 chat.scrollTop = chat.scrollHeight;
                 isProcessing = false;
                 sendBtn.disabled = false;
+                sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Send';
             });
         }
         
@@ -595,6 +797,19 @@ $userAvatar = $stmt->fetchColumn();
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
+        }
+        
+        function formatText(text) {
+            // Convert markdown-like formatting to HTML
+            text = escapeHtml(text);
+            
+            // Bold text with **
+            text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            
+            // Line breaks
+            text = text.replace(/\n/g, '<br>');
+            
+            return text;
         }
         
         // Welcome message
@@ -605,10 +820,16 @@ $userAvatar = $stmt->fetchColumn();
             welcomeMsg.innerHTML = '<div class="message-label">AI Assistant</div>' +
                 '<i class="fas fa-hand-wave" style="color: #667eea;"></i> Hello <strong>' + 
                 escapeHtml("<?php echo htmlspecialchars($_SESSION['first_name']); ?>") + 
-                '</strong>! I\'m your AI course assistant. ' +
-                'I can help you find information about our available courses, their prices, categories, and requirements. ' +
-                'What would you like to know about our courses?';
+                '</strong>!<br><br>' +
+                'I\'m your AI Course Assistant. I answer questions based on the information in <strong>course_data.txt</strong>.<br><br>' +
+                '<strong>You can ask me about:</strong><br>' +
+                '• Available courses<br>' +
+                '• Course prices<br>' +
+                '• Cheapest and most expensive courses<br>' +
+                '• Courses by category<br>' +
+                '• Specific course details';
             chat.appendChild(welcomeMsg);
+            chat.scrollTop = chat.scrollHeight;
         };
     </script>
 </body>
