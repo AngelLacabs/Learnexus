@@ -67,7 +67,6 @@ $page_title = "Checkout - Learnexus";
             min-height: 100vh;
         }
 
-        /* Sidebar */
         .sidebar {
             background: linear-gradient(180deg, #e8f0fe 0%, #f0f4ff 50%, #f8f9fa 100%);
             box-shadow: 4px 0 20px rgba(0, 0, 0, 0.08);
@@ -82,7 +81,6 @@ $page_title = "Checkout - Learnexus";
             background-clip: text;
         }
 
-        /* Navigation */
         .nav-link {
             border-radius: 12px;
             transition: all 0.2s ease;
@@ -116,7 +114,6 @@ $page_title = "Checkout - Learnexus";
             display: none;
         }
 
-        /* Hamburger */
         .hamburger-btn {
             width: 50px;
             height: 50px;
@@ -148,7 +145,6 @@ $page_title = "Checkout - Learnexus";
             transform: translateY(-8px) rotate(-45deg);
         }
 
-        /* Main Content Margin */
         @media (min-width: 992px) {
             .main-content {
                 margin-left: var(--sidebar-width);
@@ -332,7 +328,6 @@ $page_title = "Checkout - Learnexus";
 </head>
 
 <body>
-    <!-- Hamburger Button -->
     <div class="position-fixed top-0 start-0 p-3 d-lg-none" style="z-index: 1100;">
         <button class="hamburger-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar"
             id="hamburgerBtn">
@@ -344,7 +339,6 @@ $page_title = "Checkout - Learnexus";
         </button>
     </div>
 
-    <!-- Sidebar -->
     <aside class="sidebar offcanvas-lg offcanvas-start position-fixed top-0 start-0 h-100"
         style="width: var(--sidebar-width);" id="sidebar" tabindex="-1">
         <div class="offcanvas-header d-lg-none border-bottom">
@@ -391,30 +385,30 @@ $page_title = "Checkout - Learnexus";
         </div>
     </aside>
 
-    <!-- Main Content -->
     <main class="main-content p-3 p-lg-4">
-        <div class="container-fluid">
-            <!-- Header -->
+        <div class="container-fluid" style="max-width: 1200px;">
+
             <div class="row mb-4">
                 <div class="col-12">
                     <div class="card border-0 rounded-4 shadow-sm">
-                        <div class="card-body p-3 d-flex justify-content-between align-items-center gap-3">
-                            <div class="d-flex align-items-center gap-3">
-                                <button class="btn btn-outline-secondary rounded-pill px-3"
-                                    onclick="window.history.back()">
-                                    <i class="bi bi-arrow-left me-2"></i>Back
-                                </button>
-                                <h4 class="mb-0 fw-bold">Secure Checkout</h4>
-                            </div>
-                            <div class="d-flex align-items-center gap-3" onclick="window.location.href='settings.php'"
-                                role="button">
-                                <span
-                                    class="fw-semibold d-none d-sm-inline"><?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?></span>
-                                <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold"
-                                    style="width: 45px; height: 45px; background: var(--gradient-primary);">
+                        <div class="card-body p-3 d-flex justify-content-between align-items-center">
+                            <nav aria-label="breadcrumb">
+                                <ol class="breadcrumb mb-0">
+                                    <li class="breadcrumb-item"><a href="course_catalog.php" class="text-decoration-none">Catalog</a></li>
+                                    <li class="breadcrumb-item"><a href="course_details.php?id=<?php echo $courseID; ?>" class="text-decoration-none"><?php echo htmlspecialchars($course['title']); ?></a></li>
+                                    <li class="breadcrumb-item active">Checkout</li>
+                                </ol>
+                            </nav>
+                            
+                            <div class="d-flex align-items-center gap-3" onclick="window.location.href='settings.php'" role="button" style="flex-shrink: 0;">
+                                <span class="fw-semibold d-none d-sm-inline text-nowrap">
+                                    <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>
+                                </span>
+                                <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold" 
+                                     style="width: 45px; height: 45px; min-width: 45px; background: linear-gradient(135deg, #667eea, #764ba2);">
                                     <?php if (!empty($userAvatar) && file_exists($userAvatar)): ?>
-                                        <img src="<?php echo htmlspecialchars($userAvatar); ?>" alt="Avatar"
-                                            class="w-100 h-100 rounded-circle object-fit-cover">
+                                        <img src="<?php echo htmlspecialchars($userAvatar); ?>" alt="Avatar" 
+                                             class="w-100 h-100 rounded-circle object-fit-cover">
                                     <?php else: ?>
                                         <?php echo strtoupper(substr($_SESSION['first_name'], 0, 1)); ?>
                                     <?php endif; ?>
@@ -425,10 +419,8 @@ $page_title = "Checkout - Learnexus";
                 </div>
             </div>
 
-            <!-- Checkout Content -->
             <div class="fade-in">
                 <div class="row g-4">
-                    <!-- Order Summary -->
                     <div class="col-lg-4 col-12">
                         <div class="order-summary">
                             <h5 class="fw-bold mb-4">
@@ -455,7 +447,6 @@ $page_title = "Checkout - Learnexus";
                         </div>
                     </div>
 
-                    <!-- Payment Form -->
                     <div class="col-lg-8 col-12">
                         <div class="payment-form">
                             <h4 class="fw-bold mb-4">
@@ -502,14 +493,14 @@ $page_title = "Checkout - Learnexus";
                                     encrypted and protected.
                                 </div>
                                 <div id="error-message" class="alert alert-danger" style="display: none;"></div>
-                                <!-- Loading Spinner -->
+
                                 <div class="loading-spinner">
                                     <div class="spinner-border text-primary" role="status">
                                         <span class="visually-hidden">Processing...</span>
                                     </div>
                                     <p class="mt-3 fw-semibold">Processing your payment...</p>
                                 </div>
-                                <!-- PayPal Button Container -->
+
                                 <div id="paypal-button-container"></div>
                                 <div class="security-badge">
                                     <i class="bi bi-shield-check me-2"></i>
@@ -523,7 +514,7 @@ $page_title = "Checkout - Learnexus";
         </div>
     </main>
 
-    <!-- PayPal SDK -->
+
     <script
         src="https://www.paypal.com/sdk/js?client-id=AY6u4H6soXFMgZnUAuF6THuqPVIDeVmJ8X-bOXz-ZIwLAdeiJKyluuEtEmpKdS-I2zTD3aviw4EQHuPz&currency=USD"></script>
 
