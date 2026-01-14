@@ -8,8 +8,11 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
 }
 
 $userID = $_SESSION['user_id'];
+$stmt = $conn->prepare("SELECT avatar FROM users WHERE userID = ?");
+$stmt->execute([$userID]);
+$userAvatar = $stmt->fetchColumn();
 
-// Get all enrolled courses (including completed ones)
+// Get all enrolled courses
 $stmt = $conn->prepare("
     SELECT 
         c.*,
@@ -21,7 +24,6 @@ $stmt = $conn->prepare("
         CONCAT(u.firstName, ' ', u.lastName) as instructorName,
         u.avatar as instructorAvatar,
         p.amount as paidAmount,
-        p.transactionReference,
         CASE WHEN e.status = 'completed' THEN 1 ELSE 0 END as isCompleted,
         qr.status AS quizStatus
     FROM enrollments e
@@ -34,7 +36,6 @@ $stmt = $conn->prepare("
         CASE WHEN e.progressPercentage >= 100 THEN 1 ELSE 0 END ASC,
         e.enrolledAt DESC
 ");
-
 $stmt->execute([$userID]);
 $enrolledCourses = $stmt->fetchAll();
 
@@ -43,10 +44,10 @@ $activeCourses = [];
 $completedCourses = [];
 foreach ($enrolledCourses as $course) {
     if ($course['enrollmentStatus'] === 'completed') {
-    $completedCourses[] = $course;
-} else {
-    $activeCourses[] = $course;
-}
+        $completedCourses[] = $course;
+    } else {
+        $activeCourses[] = $course;
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -60,629 +61,434 @@ foreach ($enrolledCourses as $course) {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        body {
-            background-color: #f8f9fa;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        :root {
+            --sidebar-width: 260px;
+            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-accent: linear-gradient(135deg, #1a73e8 0%, #4285f4 100%);
         }
-        
-        .top-nav {
-            background: linear-gradient(180deg, #e8f0fe 0%, #f8f9fa 100%);
-            padding: 15px 40px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        }
-        
-        .brand {
-            font-size: 20px;
-            font-weight: 700;
-            color: #1a73e8;
-            text-decoration: none;
-        }
-        
-        .nav-menu {
-            display: flex;
-            gap: 30px;
-        }
-        
-        .nav-link {
-            color: #666;
-            text-decoration: none;
-            font-weight: 500;
-        }
-        
-        .nav-link.active {
-            color: #1a73e8;
-        }
-        
-        .user-section {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        
-        .container-main {
-            max-width: 1200px;
-            margin: 40px auto;
-            padding: 0 40px;
-        }
-        
-        .page-header {
-            margin-bottom: 30px;
-        }
-        
-        .page-header h1 {
-            font-size: 32px;
-            font-weight: 700;
-            margin-bottom: 10px;
-        }
-        
-        .section-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin: 40px 0 20px 0;
-            padding-bottom: 12px;
-            border-bottom: 2px solid #e0e0e0;
-        }
-        
-        .section-header h2 {
-            font-size: 24px;
-            font-weight: 600;
-            margin: 0;
-            color: #333;
-        }
-        
-        .section-header .badge {
-            background: #1e88e5;
-            color: white;
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 14px;
-        }
-        
-        .section-header.completed h2 {
-            color: #43a047;
-        }
-        
-        .section-header.completed .badge {
-            background: #43a047;
-        }
-        
-        .course-card {
-            background: white;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            margin-bottom: 20px;
-            transition: transform 0.2s, box-shadow 0.2s;
-            position: relative;
-        }
-        
-        .course-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-        
-        .course-card.completed {
-            border: 2px solid #e8f5e9;
-        }
-        
-        .course-card-body {
-            padding: 24px;
-        }
-        
-        .course-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: start;
-            margin-bottom: 15px;
-        }
-        
-        .course-title {
-            font-size: 20px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 8px;
-        }
-        
-        .course-meta {
-            display: flex;
-            gap: 20px;
-            color: #666;
-            font-size: 14px;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
-        }
-        
-        .instructor-info {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .instructor-avatar {
-            width: 24px;
-            height: 24px;
-            background: #e0e0e0;
-            border-radius: 50%;
-            overflow: hidden;
-        }
-        
-        .instructor-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        
-        .progress-section {
-            margin: 20px 0;
-        }
-        
-        .progress {
-            height: 8px;
-            border-radius: 4px;
-            background-color: #e9ecef;
-        }
-        
-        .progress-bar {
-            background: linear-gradient(90deg, #1e88e5 0%, #42a5f5 100%);
-            border-radius: 4px;
-        }
-        
-        .progress-bar.completed {
-            background: linear-gradient(90deg, #43a047 0%, #66bb6a 100%);
-        }
-        
-        .progress-text {
-            font-size: 13px;
-            color: #666;
-            margin-top: 5px;
-        }
-        
-        .progress-text.completed {
-            color: #43a047;
-            font-weight: 600;
-        }
-        
-        .badge {
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-        
-        .badge-primary {
-            background: #e3f2fd;
-            color: #1976d2;
-        }
-        
-        .badge-success {
-            background: #e8f5e9;
-            color: #388e3c;
-        }
-        
-        .course-actions {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            margin-top: 15px;
-        }
-        
-        .btn-continue {
-            background: #1e88e5;
-            color: white;
-            border: none;
-            padding: 10px 24px;
-            border-radius: 8px;
-            font-weight: 500;
-            text-decoration: none;
-            display: inline-block;
-            transition: background 0.2s;
-        }
-        
-        .btn-continue:hover {
-            background: #1976d2;
-            color: white;
-        }
-        
-        .btn-review {
-            background: #43a047;
-            color: white;
-            border: none;
-            padding: 10px 24px;
-            border-radius: 8px;
-            font-weight: 500;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            transition: background 0.2s;
-        }
-        
-        .btn-review:hover {
-            background: #388e3c;
-            color: white;
-        }
-        
-        .btn-delete {
-            background: transparent;
-            color: #dc3545;
-            border: 1px solid #dc3545;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-        
-        .btn-delete:hover {
-            background: #dc3545;
-            color: white;
-        }
-        
-        .btn-dropdown {
-            background: transparent;
-            border: 1px solid #e0e0e0;
-            color: #666;
-            padding: 8px 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .btn-dropdown:hover {
-            background: #f8f9fa;
-            border-color: #ccc;
-        }
-        
-        .dropdown-menu {
-            min-width: 150px;
-        }
-        
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            background: white;
-            border-radius: 12px;
-        }
-        
-        .empty-state i {
-            font-size: 64px;
-            color: #ddd;
-            margin-bottom: 20px;
-        }
-        
-        .empty-state h3 {
-            font-size: 24px;
-            color: #666;
-            margin-bottom: 10px;
-        }
-        
-        .empty-state p {
-            color: #999;
-            margin-bottom: 20px;
-        }
-        
-        .completion-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 6px 12px;
-            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
-            color: #2e7d32;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 600;
-        }
-        .badge-primary {
-    background: #ffebee;
-    color: #c62828;
-}
 
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background: linear-gradient(180deg, #e8f0fe 0%, #f0f4ff 50%, #f8f9fa 100%);
+            width: var(--sidebar-width);
+            box-shadow: 4px 0 20px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-brand {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: var(--gradient-accent);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 1px;
+        }
+
+        .nav-link {
+            border-radius: 12px;
+            transition: all 0.2s ease;
+            position: relative;
+            color: #444;
+        }
+
+        .nav-link::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 0;
+            background: #1a73e8;
+            border-radius: 0 4px 4px 0;
+            transition: height 0.25s ease;
+        }
+
+        .nav-link:hover {
+            background: rgba(102, 126, 234, 0.1);
+            color: #1a73e8;
+            transform: translateX(4px);
+        }
+
+        .nav-link:hover::before {
+            height: 60%;
+        }
+
+        .nav-link.active {
+            background: var(--gradient-primary);
+            color: white !important;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .nav-link.active::before {
+            display: none;
+        }
+
+        /* Hamburger */
+        .hamburger-btn {
+            width: 50px;
+            height: 50px;
+            background: white;
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+            transition: all 0.3s ease;
+        }
+
+        .hamburger-icon span {
+            display: block;
+            width: 24px;
+            height: 3px;
+            background: #1a73e8;
+            border-radius: 3px;
+            transition: all 0.3s ease;
+            margin: 5px 0;
+        }
+
+        .hamburger-btn.active .hamburger-icon span:nth-child(1) {
+            transform: translateY(8px) rotate(45deg);
+        }
+
+        .hamburger-btn.active .hamburger-icon span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger-btn.active .hamburger-icon span:nth-child(3) {
+            transform: translateY(-8px) rotate(-45deg);
+        }
+
+        @media (min-width: 993px) {
+            .main-content {
+                margin-left: var(--sidebar-width);
+            }
+        }
+
+        @media (max-width: 992px) {
+            .sidebar {
+                transform: translateX(-100%);
+                z-index: 1050;
+            }
+            .sidebar.show {
+                transform: translateX(0);
+            }
+        }
+
+        /* Card Hover */
+        .card-hover {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12) !important;
+        }
+
+        /* Progress Bar Gradient */
+        .progress-gradient {
+            background: var(--gradient-primary) !important;
+        }
+
+        .progress-success {
+            background: linear-gradient(90deg, #43a047 0%, #66bb6a 100%) !important;
+        }
     </style>
 </head>
 <body>
-    <!-- Top Navigation -->
-    <div class="top-nav">
-        <a href="dashboard.php" class="brand">LEARNEXUS</a>
-        
-        <div class="nav-menu">
-            <a href="dashboard.php" class="nav-link">Dashboard</a>
-            <a href="course_catalog.php" class="nav-link">Course Catalog</a>
-            <a href="my_courses.php" class="nav-link active">My Courses</a>
-        </div>
-        
-        <div class="user-section">
-            <a href="settings.php" style="text-decoration: none;">
-                <span style="font-weight: 600; color: #333; cursor: pointer;">
-                    <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>
-                </span>
-            </a>
-        </div>
+    <!-- Hamburger Button -->
+    <div class="position-fixed top-0 start-0 p-3 d-lg-none" style="z-index: 1100;">
+        <button class="hamburger-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" id="hamburgerBtn">
+            <div class="hamburger-icon d-flex flex-column align-items-center justify-content-center">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </button>
     </div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar offcanvas-lg offcanvas-start position-fixed top-0 start-0 h-100" id="sidebar" tabindex="-1">
+        <div class="offcanvas-header d-lg-none border-bottom">
+            <h5 class="offcanvas-title sidebar-brand">LEARNEXUS</h5>
+        </div>
+
+        <div class="offcanvas-body p-0 d-flex flex-column h-100">
+            <div class="sidebar-brand px-4 py-4 mb-4 d-none d-lg-block">LEARNEXUS</div>
+            
+            <nav class="flex-grow-1 px-3">
+                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2" href="dashboard.php">
+                    <i class="bi bi-grid fs-5"></i><span>Dashboard</span>
+                </a>
+                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2" href="course_catalog.php">
+                    <i class="bi bi-book fs-5"></i><span>Course Catalog</span>
+                </a>
+                <a class="nav-link active d-flex align-items-center gap-3 px-3 py-3 mb-2" href="my_courses.php">
+                    <i class="bi bi-journal-bookmark fs-5"></i><span>My Courses</span>
+                </a>
+                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2" href="certificates.php">
+                    <i class="bi bi-award fs-5"></i><span>Certificates</span>
+                </a>
+                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2" href="vouchers.php">
+                    <i class="bi bi-ticket-perforated fs-5"></i><span>Vouchers</span>
+                </a>
+                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2" href="settings.php">
+                    <i class="bi bi-gear fs-5"></i><span>Settings</span>
+                </a>
+                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2" href="ai_tutor.php">
+                    <i class="bi bi-robot fs-5"></i><span>AI Tutor</span>
+                </a>
+            </nav>
+            
+            <div class="p-3 mt-auto">
+                <button class="btn btn-outline-danger w-100 rounded-pill py-2 fw-semibold" onclick="window.location.href='../logout.php'">
+                    <i class="bi bi-box-arrow-left me-2"></i>Logout
+                </button>
+            </div>
+        </div>
+    </aside>
 
     <!-- Main Content -->
-    <div class="container-main">
-        <div class="page-header">
-            <h1>My Courses</h1>
-            <p class="text-muted">Continue learning where you left off</p>
-        </div>
-
-        <?php if (count($enrolledCourses) > 0): ?>
-            
-            <!-- Active Courses Section -->
-            <?php if (count($activeCourses) > 0): ?>
-                <div class="section-header">
-                    <h2>In Progress</h2>
-                    <span class="badge"><?php echo count($activeCourses); ?></span>
-                </div>
-                
-                <?php foreach ($activeCourses as $course): ?>
-                    <div class="course-card" id="course-<?php echo $course['enrollmentID']; ?>">
-                        <div class="course-card-body">
-                            <div class="course-header">
-                                <div style="flex: 1;">
-                                    <div class="course-title"><?php echo htmlspecialchars($course['title']); ?></div>
-                                    <div class="course-meta">
-                                        <div class="instructor-info">
-                                            <div class="instructor-avatar">
-                                                <?php if (!empty($course['instructorAvatar']) && file_exists($course['instructorAvatar'])): ?>
-                                                    <img src="<?php echo htmlspecialchars($course['instructorAvatar']); ?>" alt="Instructor">
-                                                <?php endif; ?>
-                                            </div>
-                                            <span><?php echo htmlspecialchars($course['instructorName']); ?></span>
-                                        </div>
-                                        <span><i class="bi bi-calendar3"></i> Enrolled: <?php echo date('M d, Y', strtotime($course['enrolledAt'])); ?></span>
-                                        <?php if ($course['paidAmount'] > 0): ?>
-                                            <span><i class="bi bi-receipt"></i> ₱<?php echo number_format($course['paidAmount'], 2); ?></span>
-                                        <?php else: ?>
-                                            <span class="badge badge-success">FREE</span>
-                                        <?php endif; ?>
-                                    </div>
-                                </div>
-                                <div class="dropdown">
-                                    <button class="btn-dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                        <i class="bi bi-three-dots-vertical"></i>
-                                    </button>
-                                    <ul class="dropdown-menu dropdown-menu-end">
-                                        <li>
-                                            <a class="dropdown-item" href="course_content.php?id=<?php echo $course['courseID']; ?>">
-                                                <i class="bi bi-play-circle"></i> Continue Learning
-                                            </a>
-                                        </li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li>
-                                            <a class="dropdown-item text-danger" href="#" onclick="confirmDelete(<?php echo $course['enrollmentID']; ?>, '<?php echo htmlspecialchars(addslashes($course['title'])); ?>'); return false;">
-                                                <i class="bi bi-trash"></i> Unenroll from Course
-                                            </a>
-                                        </li>
-                                    </ul>
-                                </div>
+    <main class="main-content p-3 p-lg-4">
+        <div class="container-fluid">
+            <!-- Header -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card border-0 rounded-4 shadow-sm">
+                        <div class="card-body p-3 d-flex justify-content-between align-items-center gap-3">
+                            <div class="input-group" style="max-width: 500px;">
+                                <span class="input-group-text bg-transparent border-0">
+                                    <i class="bi bi-search text-muted"></i>
+                                </span>
+                                <input type="text" id="courseSearch" class="form-control border-0" placeholder="Search your courses...">
                             </div>
                             
-                            <?php if (!empty($course['description'])): ?>
-                                <p class="text-muted mb-3"><?php echo htmlspecialchars(substr($course['description'], 0, 150)); ?><?php echo strlen($course['description']) > 150 ? '...' : ''; ?></p>
-                            <?php endif; ?>
-                            
-                            <div class="progress-section">
-                                <div class="progress">
-                                    <div class="progress-bar" role="progressbar" 
-                                         style="width: <?php echo $course['progressPercentage']; ?>%" 
-                                         aria-valuenow="<?php echo $course['progressPercentage']; ?>" 
-                                         aria-valuemin="0" 
-                                         aria-valuemax="100">
-                                    </div>
+                            <div class="d-flex align-items-center gap-3" onclick="window.location.href='settings.php'" role="button">
+                                <span class="fw-semibold d-none d-sm-inline"><?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?></span>
+                                <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold" 
+                                     style="width: 45px; height: 45px; background: var(--gradient-primary);">
+                                    <?php if (!empty($userAvatar) && file_exists($userAvatar)): ?>
+                                        <img src="<?php echo htmlspecialchars($userAvatar); ?>" alt="Avatar" class="w-100 h-100 rounded-circle object-fit-cover">
+                                    <?php else: ?>
+                                        <?php echo strtoupper(substr($_SESSION['first_name'], 0, 1)); ?>
+                                    <?php endif; ?>
                                 </div>
-                                <div class="progress-text">
-                                    <?php echo number_format($course['progressPercentage'], 0); ?>% Complete
-                                </div>
-                            </div>
-                            
-                            <div class="course-actions">
-                                <a href="course_learn.php?id=<?php echo $course['courseID']; ?>" class="btn-continue">
-                                    <?php echo $course['progressPercentage'] > 0 ? 'Continue Learning' : 'Start Course'; ?> →
-                                </a>
-                                <button class="btn-delete" onclick="confirmDelete(<?php echo $course['enrollmentID']; ?>, '<?php echo htmlspecialchars(addslashes($course['title'])); ?>')">
-                                    <i class="bi bi-trash"></i> Unenroll
-                                </button>
                             </div>
                         </div>
                     </div>
-                <?php endforeach; ?>
-            <?php endif; ?>
-
-            <!-- Completed Courses Section -->
-            <?php if (count($completedCourses) > 0): ?>
-                <div class="section-header completed">
-                    <h2><i class="bi bi-trophy-fill"></i> Completed Courses</h2>
-                    <span class="badge"><?php echo count($completedCourses); ?></span>
                 </div>
-                
-                <?php foreach ($completedCourses as $course): ?>
-                    <div class="course-card completed" id="course-<?php echo $course['enrollmentID']; ?>">
-                        <div class="course-card-body">
-                            <div class="course-header">
-                                <div style="flex: 1;">
-                                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
-                                        <div class="course-title" style="margin-bottom: 0;"><?php echo htmlspecialchars($course['title']); ?></div>
-                                        <span class="completion-badge">
-                                            <i class="bi bi-check-circle-fill"></i> Completed
-                                        </span>
-                                    </div>
-                                    <div class="course-meta">
-                                        <div class="instructor-info">
-                                            <div class="instructor-avatar">
-                                                <?php if (!empty($course['instructorAvatar']) && file_exists($course['instructorAvatar'])): ?>
-                                                    <img src="<?php echo htmlspecialchars($course['instructorAvatar']); ?>" alt="Instructor">
-                                                <?php endif; ?>
-                                            </div>
-                                            <span><?php echo htmlspecialchars($course['instructorName']); ?></span>
-                                        </div>
-                                        <span><i class="bi bi-calendar3"></i> Enrolled: <?php echo date('M d, Y', strtotime($course['enrolledAt'])); ?></span>
-                                        <?php if ($course['completedAt']): ?>
-                                            <span><i class="bi bi-trophy"></i> Completed: <?php echo date('M d, Y', strtotime($course['completedAt'])); ?></span>
-                                        <?php endif; ?>
-                                    </div>
-                                </div>
-                                <div class="dropdown">
-                                    <button class="btn-dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                        <i class="bi bi-three-dots-vertical"></i>
-                                    </button>
-                                    <ul class="dropdown-menu dropdown-menu-end">
-                                        <li>
-                                            <a class="dropdown-item" href="course_content.php?id=<?php echo $course['courseID']; ?>">
-                                                <i class="bi bi-eye"></i> Review Course
-                                            </a>
-                                        </li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li>
-                                            <a class="dropdown-item text-danger" href="#" onclick="confirmDelete(<?php echo $course['enrollmentID']; ?>, '<?php echo htmlspecialchars(addslashes($course['title'])); ?>'); return false;">
-                                                <i class="bi bi-trash"></i> Remove from List
-                                            </a>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                            
-                            <?php if (!empty($course['description'])): ?>
-                                <p class="text-muted mb-3"><?php echo htmlspecialchars(substr($course['description'], 0, 150)); ?><?php echo strlen($course['description']) > 150 ? '...' : ''; ?></p>
-                            <?php endif; ?>
-                            
-                            <div class="progress-section">
-                                <div class="progress">
-                                    <div class="progress-bar completed" role="progressbar" 
-                                         style="width: 100%" 
-                                         aria-valuenow="100" 
-                                         aria-valuemin="0" 
-                                         aria-valuemax="100">
-                                    </div>
-                                </div>
-                                <div class="progress-text completed">
-                                    <i class="bi bi-check-circle-fill"></i> 100% Complete
-                                </div>
-                            </div>
-                            
-                            <div class="course-actions">
-    <?php if ($course['quizStatus'] === 'failed'): ?>
-        <span class="badge badge-primary">Failed</span>
-        <a href="retake_course.php?id=<?php echo $course['courseID']; ?>" class="btn-continue">
-            Retake Course → 
-        </a>
-    <?php else: ?>
-        <span class="badge badge-success">Passed</span>
-        <a href="course_content.php?id=<?php echo $course['courseID']; ?>" class="btn-review">
-            <i class="bi bi-eye"></i> Review Course
-        </a>
-    <?php endif; ?>
-    <button class="btn-delete" onclick="confirmDelete(<?php echo $course['enrollmentID']; ?>, '<?php echo htmlspecialchars(addslashes($course['title'])); ?>')">
-        <i class="bi bi-trash"></i> Remove
-    </button>
-</div>
-
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-            <?php endif; ?>
-            
-        <?php else: ?>
-            <div class="empty-state">
-                <i class="bi bi-journal-x"></i>
-                <h3>No Courses Yet</h3>
-                <p>You haven't enrolled in any courses. Start learning today!</p>
-                <a href="course_catalog.php" class="btn-continue">Browse Course Catalog</a>
             </div>
-        <?php endif; ?>
-    </div>
+
+            <!-- Page Title -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h1 class="h3 fw-bold">My Courses</h1>
+                    <p class="text-muted">Continue learning where you left off</p>
+                </div>
+            </div>
+
+            <?php if (count($enrolledCourses) > 0): ?>
+                
+                <!-- Active Courses -->
+                <?php if (count($activeCourses) > 0): ?>
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <div class="d-flex align-items-center gap-3 border-bottom pb-2">
+                                <h2 class="h5 fw-bold mb-0">In Progress</h2>
+                                <span class="badge bg-primary rounded-pill"><?php echo count($activeCourses); ?></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row g-4 mb-5">
+                        <?php foreach ($activeCourses as $course): ?>
+                            <div class="col-12 col-lg-6" data-course-id="<?php echo $course['enrollmentID']; ?>">
+                                <div class="card border-0 rounded-4 shadow-sm card-hover h-100">
+                                    <div class="card-body p-4">
+                                        <div class="d-flex justify-content-between align-items-start mb-3">
+                                            <div class="flex-grow-1">
+                                                <h5 class="fw-bold mb-2"><?php echo htmlspecialchars($course['title']); ?></h5>
+                                                <div class="d-flex flex-wrap gap-3 text-muted small">
+                                                    <span><i class="bi bi-person"></i> <?php echo htmlspecialchars($course['instructorName']); ?></span>
+                                                    <span><i class="bi bi-calendar3"></i> <?php echo date('M d, Y', strtotime($course['enrolledAt'])); ?></span>
+                                                    <?php if ($course['paidAmount'] > 0): ?>
+                                                        <span><i class="bi bi-receipt"></i> ₱<?php echo number_format($course['paidAmount'], 2); ?></span>
+                                                    <?php else: ?>
+                                                        <span class="badge bg-success">FREE</span>
+                                                    <?php endif; ?>
+                                                </div>
+                                            </div>
+                                            <div class="dropdown">
+                                                <button class="btn btn-sm btn-light rounded-circle" type="button" data-bs-toggle="dropdown">
+                                                    <i class="bi bi-three-dots-vertical"></i>
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-end">
+                                                    <li><a class="dropdown-item" href="course_content.php?id=<?php echo $course['courseID']; ?>">
+                                                        <i class="bi bi-play-circle"></i> Continue Learning
+                                                    </a></li>
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li><a class="dropdown-item text-danger" href="#" onclick="confirmDelete(<?php echo $course['enrollmentID']; ?>, '<?php echo htmlspecialchars(addslashes($course['title'])); ?>'); return false;">
+                                                        <i class="bi bi-trash"></i> Unenroll
+                                                    </a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="progress mb-2" style="height: 8px;">
+                                            <div class="progress-bar progress-gradient" style="width: <?php echo $course['progressPercentage']; ?>%"></div>
+                                        </div>
+                                        <p class="text-muted small mb-3"><?php echo round($course['progressPercentage']); ?>% Complete</p>
+                                        
+                                        <button class="btn btn-primary w-100 rounded-pill fw-semibold" 
+                                                onclick="window.location.href='course_learn.php?id=<?php echo $course['courseID']; ?>'">
+                                            <i class="bi bi-play-circle me-2"></i><?php echo $course['progressPercentage'] > 0 ? 'Continue' : 'Start Course'; ?>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+
+                <!-- Completed Courses -->
+                <?php if (count($completedCourses) > 0): ?>
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <div class="d-flex align-items-center gap-3 border-bottom pb-2">
+                                <h2 class="h5 fw-bold mb-0 text-success"><i class="bi bi-trophy-fill"></i> Completed</h2>
+                                <span class="badge bg-success rounded-pill"><?php echo count($completedCourses); ?></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row g-4 mb-5">
+                        <?php foreach ($completedCourses as $course): ?>
+                            <div class="col-12 col-lg-6" data-course-id="<?php echo $course['enrollmentID']; ?>">
+                                <div class="card border-0 rounded-4 shadow-sm card-hover h-100 border-success">
+                                    <div class="card-body p-4">
+                                        <div class="d-flex justify-content-between align-items-start mb-3">
+                                            <div class="flex-grow-1">
+                                                <div class="d-flex align-items-center gap-2 mb-2">
+                                                    <h5 class="fw-bold mb-0"><?php echo htmlspecialchars($course['title']); ?></h5>
+                                                    <span class="badge bg-success"><i class="bi bi-check-circle-fill"></i> Completed</span>
+                                                </div>
+                                                <div class="d-flex flex-wrap gap-3 text-muted small">
+                                                    <span><i class="bi bi-person"></i> <?php echo htmlspecialchars($course['instructorName']); ?></span>
+                                                    <?php if ($course['completedAt']): ?>
+                                                        <span><i class="bi bi-trophy"></i> <?php echo date('M d, Y', strtotime($course['completedAt'])); ?></span>
+                                                    <?php endif; ?>
+                                                </div>
+                                            </div>
+                                            <div class="dropdown">
+                                                <button class="btn btn-sm btn-light rounded-circle" type="button" data-bs-toggle="dropdown">
+                                                    <i class="bi bi-three-dots-vertical"></i>
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-end">
+                                                    <li><a class="dropdown-item" href="course_content.php?id=<?php echo $course['courseID']; ?>">
+                                                        <i class="bi bi-eye"></i> Review Course
+                                                    </a></li>
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li><a class="dropdown-item text-danger" href="#" onclick="confirmDelete(<?php echo $course['enrollmentID']; ?>, '<?php echo htmlspecialchars(addslashes($course['title'])); ?>'); return false;">
+                                                        <i class="bi bi-trash"></i> Remove
+                                                    </a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="progress mb-2" style="height: 8px;">
+                                            <div class="progress-bar progress-success" style="width: 100%"></div>
+                                        </div>
+                                        <p class="text-success small fw-semibold mb-3"><i class="bi bi-check-circle-fill"></i> 100% Complete</p>
+                                        
+                                        <?php if ($course['quizStatus'] === 'failed'): ?>
+                                            <button class="btn btn-warning w-100 rounded-pill fw-semibold" 
+                                                    onclick="window.location.href='retake_course.php?id=<?php echo $course['courseID']; ?>'">
+                                                <i class="bi bi-arrow-repeat me-2"></i>Retake Course
+                                            </button>
+                                        <?php else: ?>
+                                            <button class="btn btn-outline-success w-100 rounded-pill fw-semibold" 
+                                                    onclick="window.location.href='course_content.php?id=<?php echo $course['courseID']; ?>'">
+                                                <i class="bi bi-eye me-2"></i>Review Course
+                                            </button>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+                
+            <?php else: ?>
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card border-0 rounded-4 shadow-sm">
+                            <div class="card-body text-center py-5">
+                                <i class="bi bi-journal-x display-1 text-muted mb-3"></i>
+                                <h3 class="h5 fw-bold mb-3">No Courses Yet</h3>
+                                <p class="text-muted mb-4">You haven't enrolled in any courses. Start learning today!</p>
+                                <a href="course_catalog.php" class="btn btn-primary rounded-pill px-4 fw-semibold">
+                                    <i class="bi bi-search me-2"></i>Browse Courses
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            <?php endif; ?>
+        </div>
+    </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // Hamburger
+        const hamburgerBtn = document.getElementById('hamburgerBtn');
+        const sidebar = document.getElementById('sidebar');
+
+        if (hamburgerBtn && sidebar) {
+            sidebar.addEventListener('show.bs.offcanvas', () => hamburgerBtn.classList.add('active'));
+            sidebar.addEventListener('hide.bs.offcanvas', () => hamburgerBtn.classList.remove('active'));
+        }
+
+        // Search
+        document.getElementById('courseSearch').addEventListener('input', function() {
+            const term = this.value.toLowerCase();
+            document.querySelectorAll('[data-course-id]').forEach(card => {
+                const text = card.textContent.toLowerCase();
+                card.style.display = text.includes(term) ? '' : 'none';
+            });
+        });
+
+        // Delete confirmation
         function confirmDelete(enrollmentID, courseTitle) {
             Swal.fire({
                 title: 'Unenroll from Course?',
-                html: `Are you sure you want to unenroll from <strong>${courseTitle}</strong>?<br><br><span style="color: #666; font-size: 14px;">Your progress will be lost and you'll need to re-enroll to access this course again.</span>`,
+                html: `Are you sure you want to unenroll from <strong>${courseTitle}</strong>?`,
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#dc3545',
                 cancelButtonColor: '#6c757d',
                 confirmButtonText: 'Yes, Unenroll',
-                cancelButtonText: 'Cancel',
-                reverseButtons: true
+                cancelButtonText: 'Cancel'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    deleteCourse(enrollmentID);
-                }
-            });
-        }
-
-        function deleteCourse(enrollmentID) {
-            // Show loading
-            Swal.fire({
-                title: 'Processing...',
-                text: 'Removing course enrollment',
-                allowOutsideClick: false,
-                allowEscapeKey: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
-            });
-
-            // Send delete request
-            fetch('unenroll_course.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: `enrollment_id=${enrollmentID}`
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Unenrolled Successfully',
-                        text: 'You have been removed from this course.',
-                        confirmButtonColor: '#1e88e5',
-                        timer: 2000
-                    }).then(() => {
-                        // Remove card from DOM with animation
-                        const card = document.getElementById(`course-${enrollmentID}`);
-                        if (card) {
-                            card.style.transition = 'all 0.3s';
-                            card.style.opacity = '0';
-                            card.style.transform = 'translateX(-20px)';
-                            setTimeout(() => {
-                                card.remove();
-                                
-                                // Check if no courses left
-                                const remainingCourses = document.querySelectorAll('.course-card');
-                                if (remainingCourses.length === 0) {
-                                    location.reload();
-                                }
-                            }, 300);
+                    fetch('unenroll_course.php', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                        body: `enrollment_id=${enrollmentID}`
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire('Unenrolled!', 'Course removed successfully', 'success')
+                            .then(() => location.reload());
+                        } else {
+                            Swal.fire('Error', data.message || 'Failed to unenroll', 'error');
                         }
                     });
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: data.message || 'Failed to unenroll from course',
-                        confirmButtonColor: '#1e88e5'
-                    });
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'An error occurred. Please try again.',
-                    confirmButtonColor: '#1e88e5'
-                });
             });
         }
     </script>
