@@ -83,31 +83,98 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_course'])) {
     $course = $stmt->fetch(PDO::FETCH_ASSOC);
 }
 
+// Replace the lesson upload section in manage_course.php with this:
+
 // Handle lesson upload
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['upload_lesson']) && isset($_FILES['lesson_file'])) {
     $lessonTitle = trim($_POST['lesson_title']);
     $file = $_FILES['lesson_file'];
     
+    // Detailed error tracking
+    $uploadErrors = [];
+    
+    // Create upload directory if it doesn't exist
     $uploadDir = '../uploads/lessons/';
     if (!file_exists($uploadDir)) {
-        mkdir($uploadDir, 0777, true);
+        if (!mkdir($uploadDir, 0777, true)) {
+            $error = "Failed to create upload directory!";
+            $uploadErrors[] = "Directory creation failed";
+        }
     }
     
+    // Check if directory is writable
+    if (!is_writable($uploadDir)) {
+        $error = "Upload directory is not writable!";
+        $uploadErrors[] = "Directory not writable";
+    }
+    
+    // Validate file upload
+    if ($file['error'] !== UPLOAD_ERR_OK) {
+        $errorMessages = [
+            UPLOAD_ERR_INI_SIZE => 'File exceeds upload_max_filesize directive',
+            UPLOAD_ERR_FORM_SIZE => 'File exceeds MAX_FILE_SIZE directive',
+            UPLOAD_ERR_PARTIAL => 'File was only partially uploaded',
+            UPLOAD_ERR_NO_FILE => 'No file was uploaded',
+            UPLOAD_ERR_NO_TMP_DIR => 'Missing temporary folder',
+            UPLOAD_ERR_CANT_WRITE => 'Failed to write file to disk',
+            UPLOAD_ERR_EXTENSION => 'A PHP extension stopped the file upload'
+        ];
+        $error = $errorMessages[$file['error']] ?? "Unknown upload error: " . $file['error'];
+        $uploadErrors[] = $error;
+    }
+    
+    // Validate file extension
     $fileExt = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-    if ($fileExt === 'pdf') {
-        $newFileName = uniqid() . '_' . basename($file['name']);
+    $allowedExts = ['pdf'];
+    
+    if (!in_array($fileExt, $allowedExts)) {
+        $error = "Only PDF files are allowed! You uploaded: .$fileExt";
+        $uploadErrors[] = $error;
+    }
+    
+    // Validate file size (10MB limit)
+    if ($file['size'] > 10485760) {
+        $error = "File size must be less than 10MB! Your file: " . round($file['size']/1048576, 2) . "MB";
+        $uploadErrors[] = $error;
+    }
+    
+    // If no errors, proceed with upload
+    if (empty($uploadErrors)) {
+        // Generate unique filename
+        $newFileName = uniqid() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', basename($file['name']));
         $uploadPath = $uploadDir . $newFileName;
+        $dbPath = 'uploads/lessons/' . $newFileName;
         
+        // Attempt to move uploaded file
         if (move_uploaded_file($file['tmp_name'], $uploadPath)) {
-            $stmt = $conn->prepare("INSERT INTO lessons (courseID, title, filename, uploadedAt) VALUES (?, ?, ?, NOW())");
-            $stmt->execute([$courseID, $lessonTitle, $uploadPath]);
-            $success = "Lesson uploaded successfully!";
             
-            // Refresh lessons
-            $stmt = $conn->prepare("SELECT * FROM lessons WHERE courseID = ? ORDER BY uploadedAt DESC");
-            $stmt->execute([$courseID]);
-            $lessons = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            // Verify file exists
+            if (file_exists($uploadPath)) {
+                
+                // Insert into database
+                $stmt = $conn->prepare("INSERT INTO lessons (courseID, title, filename, uploadedAt) VALUES (?, ?, ?, NOW())");
+                
+                if ($stmt->execute([$courseID, $lessonTitle, $dbPath])) {
+                    $success = "Lesson uploaded successfully! File: $newFileName";
+                    
+                    // Refresh lessons
+                    $stmt = $conn->prepare("SELECT * FROM lessons WHERE courseID = ? ORDER BY uploadedAt DESC");
+                    $stmt->execute([$courseID]);
+                    $lessons = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                } else {
+                    // Database insert failed - delete uploaded file
+                    unlink($uploadPath);
+                    $error = "Database error: Failed to save lesson record";
+                }
+            } else {
+                $error = "File uploaded but cannot be found on disk!";
+            }
+        } else {
+            $error = "Failed to move uploaded file! Check directory permissions.";
         }
+    } else {
+        // Show first error
+        $error = $uploadErrors[0];
     }
 }
 ?>
@@ -377,9 +444,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['upload_lesson']) && i
                                     <small class="text-muted ms-2">Uploaded: <?php echo date('M d, Y', strtotime($lesson['uploadedAt'])); ?></small>
                                 </div>
                                 <div>
-                                    <a href="../<?php echo $lesson['filename']; ?>" target="_blank" class="btn btn-sm btn-outline-primary btn-action">
-                                        <i class="bi bi-eye"></i> View
-                                    </a>
+                                   <!-- Change this line in the lessons tab -->
+<a href="../<?php echo $lesson['filename']; ?>" target="_blank" class="btn btn-sm btn-outline-primary btn-action">
+    <i class="bi bi-eye"></i> View
+</a>
                                     <button class="btn btn-sm btn-outline-danger btn-action" onclick="deleteLesson(<?php echo $lesson['lessonID']; ?>)">
                                         <i class="bi bi-trash"></i> Delete
                                     </button>
@@ -460,33 +528,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['upload_lesson']) && i
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        <?php if (isset($success)): ?>
-        Swal.fire({
-            icon: 'success',
-            title: 'Success!',
-            text: '<?php echo $success; ?>',
-            timer: 2000,
-            showConfirmButton: false
-        });
-        <?php endif; ?>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    <?php if (isset($success)): ?>
+    Swal.fire({
+        icon: 'success',
+        title: 'Success!',
+        text: '<?php echo addslashes($success); ?>',
+        timer: 3000,
+        showConfirmButton: true
+    });
+    <?php endif; ?>
 
-        function deleteLesson(lessonID) {
-            Swal.fire({
-                title: 'Delete Lesson?',
-                text: "This action cannot be undone!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Yes, delete it!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    window.location.href = 'delete_lesson.php?id=' + lessonID + '&course_id=<?php echo $courseID; ?>';
-                }
-            });
-        }
-    </script>
+    <?php if (isset($error)): ?>
+    Swal.fire({
+        icon: 'error',
+        title: 'Upload Failed!',
+        html: '<div style="text-align:left;"><?php echo addslashes($error); ?></div>',
+        showConfirmButton: true
+    });
+    <?php endif; ?>
+
+    function deleteLesson(lessonID) {
+        Swal.fire({
+            title: 'Delete Lesson?',
+            text: "This action cannot be undone!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = 'delete_lesson.php?id=' + lessonID + '&course_id=<?php echo $courseID; ?>';
+            }
+        });
+    }
+</script>
 </body>
 </html>

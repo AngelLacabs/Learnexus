@@ -301,16 +301,45 @@ body { background:#f8f9fa; }
     </div>
 
     <div class="lesson-viewer">
-        <?php if ($currentLesson): ?>
-            <h4 class="mb-3"><?php echo htmlspecialchars($currentLesson['title']); ?></h4>
-            <iframe src="<?php echo htmlspecialchars($currentLesson['filename']); ?>"
-                width="100%" height="600" style="border:1px solid #ddd; border-radius:8px;"></iframe>
-        <?php else: ?>
-            <div class="alert alert-info">
-                <i class="bi bi-info-circle"></i> Select a lesson from the sidebar to start learning.
-            </div>
-        <?php endif; ?>
-    </div>
+    <?php if ($currentLesson): ?>
+        <h4 class="mb-3"><?php echo htmlspecialchars($currentLesson['title']); ?></h4>
+        
+        <?php
+        // Build correct path for PDF viewing
+        $pdfPath = '../' . $currentLesson['filename'];
+        
+        // Debug: Check if file exists
+        if (!file_exists($pdfPath)) {
+            echo '<div class="alert alert-danger">File not found: ' . htmlspecialchars($pdfPath) . '</div>';
+        }
+        ?>
+        
+        <iframe 
+            src="<?php echo htmlspecialchars($pdfPath); ?>" 
+            width="100%" 
+            height="600" 
+            style="border:1px solid #ddd; border-radius:8px;"
+            type="application/pdf">
+            <p>Your browser does not support PDFs. 
+               <a href="<?php echo htmlspecialchars($pdfPath); ?>" target="_blank">Download the PDF</a>
+            </p>
+        </iframe>
+        
+        <!-- Alternative: Fallback download link -->
+        <div class="mt-2">
+            <a href="<?php echo htmlspecialchars($pdfPath); ?>" 
+               target="_blank" 
+               class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-download"></i> Download PDF
+            </a>
+        </div>
+        
+    <?php else: ?>
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> Select a lesson from the sidebar to start learning.
+        </div>
+    <?php endif; ?>
+</div>
 </div>
 
 </div>
