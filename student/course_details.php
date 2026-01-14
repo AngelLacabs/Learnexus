@@ -185,7 +185,7 @@ $quizzesCount = $stmt->fetch()['count'];
         }
 
         .price-display {
-            font-size: 3rem;
+            font-size: 2rem;
             font-weight: 800;
             background: var(--gradient-accent);
             -webkit-background-clip: text;
