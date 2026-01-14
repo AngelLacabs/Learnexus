@@ -204,38 +204,6 @@ include 'includes/sidebar.php';
                     </div>
                 </div>
             </div>
-            
-            <div class="col-lg-3 col-md-6">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="text-muted mb-1">Avg. Amount</h6>
-                                <h3 class="mb-0">₱<?php echo number_format($stats['avg_amount'] ?? 0, 2); ?></h3>
-                            </div>
-                            <div class="text-info">
-                                <i class="bi bi-graph-up fs-2"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-lg-3 col-md-6">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="text-muted mb-1">Unique Payers</h6>
-                                <h3 class="mb-0"><?php echo number_format($stats['unique_payers']); ?></h3>
-                            </div>
-                            <div class="text-warning">
-                                <i class="bi bi-people-fill fs-2"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
 
         <!-- Status Breakdown -->
@@ -309,19 +277,10 @@ include 'includes/sidebar.php';
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-body">
                 <form method="GET" action="" class="row g-3">
-                    <div class="col-md-3">
-                        <label class="form-label">Search</label>
-                        <input type="text" 
-                               class="form-control" 
-                               name="search" 
-                               placeholder="Student, Email, or Course"
-                               value="<?php echo htmlspecialchars($search); ?>">
-                    </div>
-                    
                     <div class="col-md-2">
                         <label class="form-label">Course</label>
                         <select class="form-select" name="course">
-                            <option value="0">All Courses</option>
+                            <option value="0">Select Course</option>
                             <?php foreach ($courses as $courseData): ?>
                                 <option value="<?php echo $courseData['courseID']; ?>" 
                                     <?php echo $course == $courseData['courseID'] ? 'selected' : ''; ?>>
@@ -342,19 +301,6 @@ include 'includes/sidebar.php';
                         </select>
                     </div>
                     
-                    <div class="col-md-2">
-                        <label class="form-label">Student</label>
-                        <select class="form-select" name="student">
-                            <option value="0">All Students</option>
-                            <?php foreach ($students as $studentData): ?>
-                                <option value="<?php echo $studentData['userID']; ?>" 
-                                    <?php echo $student == $studentData['userID'] ? 'selected' : ''; ?>>
-                                    <?php echo htmlspecialchars($studentData['firstName'] . ' ' . $studentData['lastName']); ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    
                     <div class="col-md-3">
                         <label class="form-label">Transaction Reference</label>
                         <input type="text" 
@@ -364,7 +310,7 @@ include 'includes/sidebar.php';
                                value="<?php echo htmlspecialchars($transaction_ref); ?>">
                     </div>
                     
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label class="form-label">Date From</label>
                         <input type="date" 
                                class="form-control" 
@@ -372,7 +318,7 @@ include 'includes/sidebar.php';
                                value="<?php echo htmlspecialchars($date_from); ?>">
                     </div>
                     
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label class="form-label">Date To</label>
                         <input type="date" 
                                class="form-control" 
@@ -380,7 +326,7 @@ include 'includes/sidebar.php';
                                value="<?php echo htmlspecialchars($date_to); ?>">
                     </div>
                     
-                    <div class="col-md-3 d-flex align-items-end">
+                    <div class="col-md-1 d-flex align-items-end">
                         <div class="d-flex gap-2 w-100">
                             <button type="submit" class="btn btn-primary w-100">
                                 <i class="bi bi-funnel me-2"></i>Filter
@@ -542,7 +488,7 @@ include 'includes/sidebar.php';
                         </table>
                     </div>
 
-                                      <!-- Pagination -->
+                    <!-- Pagination -->
                     <?php if ($totalPages > 1): ?>
                         <nav class="mt-4">
                             <ul class="pagination justify-content-center">
