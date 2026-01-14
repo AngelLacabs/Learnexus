@@ -67,13 +67,15 @@ $completedLessons = (int)$stmt->fetchColumn();
 $allLessonsCompleted = $totalLessons > 0 && $completedLessons === $totalLessons;
 
 /* =====================
-   QUIZ CHECK
+   QUIZ CHECK (single quiz per course)
 ===================== */
-$stmt = $conn->prepare("SELECT quizID FROM quizzes WHERE courseID = ?");
+// fetch a single quiz for this course (one quiz per course policy)
+$stmt = $conn->prepare("SELECT quizID FROM quizzes WHERE courseID = ? LIMIT 1");
 $stmt->execute([$courseID]);
 $quizID = $stmt->fetchColumn();
 
-$quizPassed = false;
+
+$quizPassed = true; // assume true if there are no quizzes
 $quizScore = 0;
 
 if ($quizID) {
@@ -89,9 +91,15 @@ if ($quizID) {
     
     if ($quizResult) {
         $quizPassed = $quizResult['status'] === 'passed';
-        $quizScore = $quizResult['percentage'];
+        $quizScore = (float)$quizResult['percentage'];
+    } else {
+        // user hasn't taken the quiz yet
+        $quizPassed = false;
+        $quizScore = 0;
     }
 }
+
+
 
 /* =====================
    HARD BLOCK (SECURITY)

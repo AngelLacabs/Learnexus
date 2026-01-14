@@ -106,7 +106,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_course']) && 
 
             if (move_uploaded_file($file['tmp_name'], $destination)) {
                 $stmt = $conn->prepare("INSERT INTO lessons (courseID, title, filename) VALUES (?, ?, ?)");
-                $stmt->execute([$courseID, $lessonTitle, '../uploads/lessons/' . $newFilename]);
+                // Store with consistent relative path: uploads/lessons/filename
+                $stmt->execute([$courseID, $lessonTitle, 'uploads/lessons/' . $newFilename]);
             } else {
                 $error = "Failed to upload the file.";
             }

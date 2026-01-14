@@ -741,20 +741,9 @@ $page_title = "My Courses - Learnexus";
                                 <div class="course-body">
                                     <div class="course-title"><?php echo htmlspecialchars($course['title']); ?></div>
                                     <div class="course-meta">
-                                        <i class="bi bi-person"></i> Own by you
-                                        <i class="bi bi-people"></i> <?php echo $course['studentCount']; ?> students
+                                        <?php echo $course['studentCount']; ?> students
                                     </div>
                                     
-                                    <div class="progress-section">
-                                        <div class="progress-label">
-                                            <span><?php echo $course['status'] == 'published' ? 'Finished' : 'Progress'; ?></span>
-                                            <span><?php echo $completion; ?>%</span>
-                                        </div>
-                                        <div class="progress">
-                                            <div class="progress-bar <?php echo $course['status'] == 'published' ? 'finished' : 'progress'; ?>" 
-                                                 style="width: <?php echo $completion; ?>%"></div>
-                                        </div>
-                                    </div>
                                     
                                     <div class="course-actions">
                                         <!-- Manage Course Button -->
@@ -857,10 +846,7 @@ function showCreateCourseModal() {
                     <label>Price (₱)</label>
                     <input type="number" name="price" class="form-control" step="0.01" value="0">
                 </div>
-                <div class="mb-3">
-                    <label>Lesson File (PDF only)</label>
-                    <input type="file" name="lesson_file" class="form-control" accept=".pdf">
-                </div>
+                <div class="mb-3"><small class="text-muted">Note: Upload lesson files later in <strong>Manage Course</strong> after creating the course.</small></div>
             </form>
         `,
         showCancelButton: true,

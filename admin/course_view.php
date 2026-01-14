@@ -281,18 +281,20 @@ include 'includes/sidebar.php';
                         $baseUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]";
                         $projectPath = dirname(dirname($_SERVER['PHP_SELF'])); // Gets /Learnexus
                         
-                        // Create web URL
-                        if (strpos($filePath, '../') === 0) {
-                            // Remove ../ prefix for URL
-                            $relativePath = substr($filePath, 3); // Remove ../
-                            $fileUrl = $baseUrl . $projectPath . '/' . $relativePath;
-                        } else {
-                            $fileUrl = $baseUrl . $projectPath . '/' . ltrim($filePath, '/');
+                        // Normalize stored file path to remove any leading ../ or ./ and leading slashes
+                        $normalizedPath = preg_replace('#^(\./|\.\./)+#', '', $filePath);
+                        $normalizedPath = ltrim($normalizedPath, '/');
+                        
+                        // If filename is only a basename (no directories), assume uploads/lessons/
+                        if (basename($normalizedPath) === $normalizedPath) {
+                            $normalizedPath = 'uploads/lessons/' . $normalizedPath;
                         }
                         
-                        // Create server path for file_exists check
-                        // SIMPLE FIX: Use known XAMPP path
-                        $serverPath = 'C:/xampp/htdocs/Learnexus/' . substr($filePath, 3);
+                        // Create web URL
+                        $fileUrl = $baseUrl . $projectPath . '/' . $normalizedPath;
+                        
+                        // Create server path from project root and check existence
+                        $serverPath = realpath(__DIR__ . '/../' . $normalizedPath) ?: (__DIR__ . '/../' . $normalizedPath);
                         $fileExists = file_exists($serverPath);
                         ?>
                         

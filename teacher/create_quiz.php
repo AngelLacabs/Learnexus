@@ -14,10 +14,25 @@ $stmt = $conn->prepare("SELECT * FROM users WHERE userID = ?");
 $stmt->execute([$teacherID]);
 $user = $stmt->fetch();
 
-// Get teacher's courses
-$stmt = $conn->prepare("SELECT courseID, title FROM courses WHERE teacherID = ? ORDER BY title");
+// Get teacher's courses and whether each course already has a quiz (quizCount)
+$stmt = $conn->prepare("SELECT c.courseID, c.title, (SELECT COUNT(*) FROM quizzes q WHERE q.courseID = c.courseID) as quizCount FROM courses c WHERE c.teacherID = ? ORDER BY c.title");
 $stmt->execute([$teacherID]);
 $courses = $stmt->fetchAll();
+
+// Preselect from query string if provided
+$preselectCourse = isset($_GET['course_id']) ? intval($_GET['course_id']) : null;
+$selectedCourseId = $preselectCourse;
+
+// If preselectCourse already has a quiz, redirect to edit that quiz
+if ($preselectCourse) {
+    $stmt = $conn->prepare("SELECT quizID FROM quizzes WHERE courseID = ? LIMIT 1");
+    $stmt->execute([$preselectCourse]);
+    $existingQuiz = $stmt->fetchColumn();
+    if ($existingQuiz) {
+        header('Location: edit_quiz.php?id=' . $existingQuiz);
+        exit();
+    }
+}
 
 // Handle quiz creation
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -408,7 +423,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <select name="courseID" class="form-select" required>
                         <option value="">Choose a course...</option>
                         <?php foreach ($courses as $course): ?>
-                            <option value="<?php echo $course['courseID']; ?>"><?php echo htmlspecialchars($course['title']); ?></option>
+                            <?php $disabled = $course['quizCount'] > 0 ? 'disabled' : ''; ?>
+                            <?php $selected = $selectedCourseId && $selectedCourseId == $course['courseID'] ? 'selected' : ''; ?>
+                            <option value="<?php echo $course['courseID']; ?>" <?php echo $disabled . ' ' . $selected; ?>><?php echo htmlspecialchars($course['title']); ?><?php echo $course['quizCount'] > 0 ? ' (Quiz exists)' : ''; ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>

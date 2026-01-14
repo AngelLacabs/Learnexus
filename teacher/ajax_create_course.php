@@ -37,7 +37,7 @@ try {
     $courseID = $conn->lastInsertId();
 
     // 2️⃣ Optional: upload first lesson (PDF only)
-    if (!empty($_FILES['lesson_file']['name'])) {
+    if (false) { // lesson upload disabled - use Manage Course
 
         $ext = strtolower(pathinfo($_FILES['lesson_file']['name'], PATHINFO_EXTENSION));
         if ($ext !== 'pdf') {
@@ -58,7 +58,8 @@ try {
             INSERT INTO lessons (courseID, title, filename)
             VALUES (?, ?, ?)
         ");
-        $stmt->execute([$courseID, 'Introduction', $fileName]);
+        // Store with consistent relative path: uploads/lessons/filename
+        $stmt->execute([$courseID, 'Introduction', 'uploads/lessons/' . $fileName]);
     }
 
     $conn->commit();

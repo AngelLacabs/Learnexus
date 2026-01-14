@@ -202,11 +202,40 @@ if (!$submitted && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->execute([$resultID, (int)$questionID, (int)$selectedOption]);
     }
     
-    // Update enrollment status if passed
-    if ($passed) {
-        $stmt = $conn->prepare("UPDATE enrollments SET status = 'completed', completedAt = NOW() WHERE enrollmentID = ?");
-        $stmt->execute([$enrollmentID]);
+    // Recalculate overall course progress (do NOT auto-complete on passing a single quiz)
+    // Count lessons and completed lessons
+    $stmt = $conn->prepare("SELECT COUNT(*) FROM lessons WHERE courseID = ?");
+    $stmt->execute([$courseID]);
+    $totalLessons = (int)$stmt->fetchColumn();
+
+    $stmt = $conn->prepare("SELECT COUNT(*) FROM lesson_completions WHERE userID = ? AND lessonID IN (SELECT lessonID FROM lessons WHERE courseID = ?)");
+    $stmt->execute([$userID, $courseID]);
+    $completedLessons = (int)$stmt->fetchColumn();
+
+    // Under one-quiz-per-course policy, count the single quiz if it exists
+    $totalQuizzes = $quiz ? 1 : 0;
+    $passedQuizzes = 0;
+
+    // Check latest result for this quiz
+    if ($quiz) {
+        $stmt = $conn->prepare("SELECT passed FROM quiz_results WHERE quizID = ? AND userID = ? ORDER BY takenAt DESC LIMIT 1");
+        $stmt->execute([$quizID, $userID]);
+        $r = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($r && $r['passed']) $passedQuizzes = 1;
     }
+
+    $totalItems = $totalLessons + $totalQuizzes;
+    $completedItems = $completedLessons + $passedQuizzes;
+    $progressPercentage = $totalItems > 0 ? round(($completedItems / $totalItems) * 100) : 0;
+
+    // Update enrollment progress and status based on recalculated progress
+    $isNowCompleted = ($progressPercentage >= 100);
+    $statusToSet = $isNowCompleted ? 'completed' : 'active';
+    $stmt = $conn->prepare("UPDATE enrollments SET progressPercentage = ?, completedAt = ?, status = ? WHERE enrollmentID = ?");
+    $stmt->execute([$progressPercentage, $isNowCompleted ? date('Y-m-d H:i:s') : null, $statusToSet, $enrollmentID]);
+
+    // Note: certificate/voucher generation handled by course view or certificate page when appropriate
+    // No immediate status flip to 'completed' here unless progress is 100% (handled by completedAt above)
 }
 
 // Helper function to convert option index to letter

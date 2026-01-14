@@ -34,9 +34,14 @@ $stmt = $conn->prepare("SELECT COUNT(*) as count FROM lessons WHERE courseID = ?
 $stmt->execute([$courseID]);
 $totalLessons = $stmt->fetch()['count'];
 
+// Count quizzes (should be at most 1) and count completed students
 $stmt = $conn->prepare("SELECT COUNT(*) as count FROM quizzes WHERE courseID = ?");
 $stmt->execute([$courseID]);
-$totalQuizzes = $stmt->fetch()['count'];
+$totalQuizCount = (int)$stmt->fetch()['count'];
+
+$stmt = $conn->prepare("SELECT COUNT(*) as count FROM enrollments WHERE courseID = ? AND (status = 'completed' OR completedAt IS NOT NULL)");
+$stmt->execute([$courseID]);
+$completedStudents = (int)$stmt->fetch()['count'];
 
 // Get all lessons
 $stmt = $conn->prepare("SELECT * FROM lessons WHERE courseID = ? ORDER BY uploadedAt DESC");
@@ -1008,11 +1013,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['upload_lesson']) && i
                 
                 <div class="stat-card">
                     <div class="stat-icon">
-                        <i class="bi bi-patch-question-fill"></i>
+                        <i class="bi bi-check-circle-fill"></i>
                     </div>
                     <div class="stat-content">
-                        <h3>Total Quizzes</h3>
-                        <div class="number"><?php echo $totalQuizzes; ?></div>
+                        <h3>Students Completed</h3>
+                        <div class="number"><?php echo $completedStudents; ?></div>
                     </div>
                 </div>
             </div>
@@ -1166,18 +1171,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['upload_lesson']) && i
                 <!-- Quizzes Tab -->
                 <div id="quizzes-tab" class="tab-content">
                     <div class="section-card">
-                        <div class="section-title">
+                                <div class="section-title">
                             <i class="bi bi-plus-circle"></i> Create New Quiz
                         </div>
                         
-                        <a href="create_quiz.php?course_id=<?php echo $courseID; ?>" class="btn-success">
-                            <i class="bi bi-plus-lg"></i> Create Quiz
-                        </a>
+                        <?php if (count($quizzes) > 0): ?>
+                            <button class="btn-success" disabled title="Only one quiz is allowed per course"> <i class="bi bi-plus-lg"></i> Create Quiz</button>
+                            <div class="text-muted" style="margin-top:8px;">Only one quiz is allowed per course. Edit the existing quiz below.</div>
+                        <?php else: ?>
+                            <a href="create_quiz.php?course_id=<?php echo $courseID; ?>" class="btn-success">
+                                <i class="bi bi-plus-lg"></i> Create Quiz
+                            </a>
+                        <?php endif; ?>
                     </div>
 
                     <div class="section-card">
                         <div class="section-title">
-                            <i class="bi bi-list"></i> All Quizzes (<?php echo count($quizzes); ?>)
+                            <i class="bi bi-list"></i> Quiz <?php echo count($quizzes) > 0 ? '(1)' : '(0)'; ?>
                         </div>
                         
                         <?php if (count($quizzes) > 0): ?>
@@ -1309,7 +1319,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['upload_lesson']) && i
                     <ul>
                         <li>The course: <strong><?php echo htmlspecialchars($course['title']); ?></strong></li>
                         <li>All lessons (<?php echo $totalLessons; ?> files)</li>
-                        <li>All quizzes (<?php echo $totalQuizzes; ?> quizzes)</li>
+                        <li>Quiz (<?php echo $totalQuizCount > 0 ? 1 : 0; ?>)</li>
                         <li>All student enrollments (<?php echo $enrolledStudents; ?> students)</li>
                     </ul>
                     <p class="text-danger"><strong>This action cannot be undone!</strong></p>
