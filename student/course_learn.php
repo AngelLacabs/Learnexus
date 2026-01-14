@@ -121,9 +121,9 @@ if ($quizID) {
         LIMIT 1
     ");
     $stmt->execute([$userID, $quizID]);
-    $quizStatus = $stmt->fetchColumn();
-    $quizTaken = !empty($quizStatus);
-    $quizPassed = $quizStatus === 'passed';
+    $status = $stmt->fetchColumn();
+    $quizTaken = !empty($status);
+    $quizPassed = $status === 'passed';
 }
 
 /* =====================

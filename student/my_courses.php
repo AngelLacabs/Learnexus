@@ -53,7 +53,17 @@ $stmt = $conn->prepare("
                 ) THEN 1 
                 ELSE 0 
             END
-        ) as quizPassed
+        ) as quizPassed,
+        
+        (
+            SELECT qr.status FROM quizresults qr
+            WHERE qr.userID = e.userID
+              AND qr.quizID = (
+                  SELECT quizID FROM quizzes WHERE courseID = c.courseID LIMIT 1
+              )
+            ORDER BY qr.takenAt DESC
+            LIMIT 1
+        ) as quizStatus
         
     FROM enrollments e
     JOIN courses c ON e.courseID = c.courseID
@@ -74,6 +84,20 @@ foreach ($enrolledCourses as &$course) {
     
     if ($course['quizPassed']) {
         $completedSteps++;
+    }
+    
+    // Normalize quizStatus (avoid undefined index warnings)
+    if (empty($course['quizID'])) {
+        // No quiz exists for this course
+        $course['quizStatus'] = 'not_available';
+    } else {
+        // If database returned a status (e.g., 'passed' or 'failed'), keep it; otherwise mark as not_taken
+        if (!isset($course['quizStatus']) || $course['quizStatus'] === null || $course['quizStatus'] === '') {
+            $course['quizStatus'] = 'not_taken';
+        } else {
+            // keep as-is (likely 'passed' or 'failed')
+            $course['quizStatus'] = $course['quizStatus'];
+        }
     }
     
     // Store the calculated progress
