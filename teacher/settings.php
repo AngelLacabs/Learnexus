@@ -162,232 +162,298 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
         }
 
         body {
-            background: #f5f6fa;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
         }
-        
-        /* Top Navbar */
-        .top-navbar {
-            background: linear-gradient(135deg, #7fb3cd 0%, #7d4fab 100%);
-            padding: 16px 32px;
+
+        /* Main Container */
+        .dashboard-container {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 1001;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            min-height: 100vh;
         }
 
-        .navbar-brand {
-            font-size: 22px;
-            font-weight: 700;
-            color: white;
-            text-decoration: none;
-            letter-spacing: 0.5px;
-        }
-
-        .navbar-user {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            color: white;
-            cursor: pointer;
-            padding: 8px 16px;
-            border-radius: 8px;
-            transition: background 0.2s;
-        }
-
-        .navbar-user:hover {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .navbar-avatar {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #667eea;
-            font-weight: 700;
-            overflow: hidden;
-        }
-
-        .navbar-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        /* Sidebar */
+        /* Sidebar - Left side like the image */
         .sidebar {
-            width: 280px;
-            height: calc(100vh - 68px);
+            width: 250px;
             background: white;
+            padding: 30px 0;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
             position: fixed;
             left: 0;
-            top: 68px;
-            border-right: 1px solid #e5e7eb;
-            overflow-y: auto;
+            top: 0;
+            bottom: 0;
             z-index: 1000;
         }
-        
+
         .sidebar-header {
-            padding: 24px 20px;
-            border-bottom: 1px solid #e5e7eb;
+            padding: 0 25px 30px;
+            border-bottom: 1px solid #eaeaea;
+            margin-bottom: 30px;
         }
 
         .sidebar-title {
-            font-size: 18px;
+            font-size: 24px;
             font-weight: 700;
-            color: #374151;
+            color: #2d3436;
+            letter-spacing: 0.5px;
         }
-        
+
         .sidebar-menu {
-            padding: 16px 0;
+            padding: 0 20px;
         }
 
         .menu-item {
-            padding: 14px 24px;
             display: flex;
             align-items: center;
-            gap: 14px;
-            color: #6b7280;
+            gap: 12px;
+            padding: 14px 16px;
+            color: #636e72;
             text-decoration: none;
-            transition: all 0.2s;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            transition: all 0.3s;
             font-size: 15px;
+            font-weight: 500;
         }
 
         .menu-item:hover {
-            background: #f3f4f6;
-            color: #374151;
+            background: linear-gradient(135deg, #7fb3cd 0%, #7d4fab 100%);
+            color: white;
+            transform: translateX(5px);
         }
 
         .menu-item.active {
             background: linear-gradient(135deg, #7fb3cd 0%, #7d4fab 100%);
             color: white;
             font-weight: 600;
+            box-shadow: 0 4px 12px rgba(125, 79, 171, 0.2);
         }
 
         .menu-item i {
-            font-size: 20px;
+            font-size: 18px;
             width: 24px;
         }
 
         .sidebar-footer {
-            padding: 16px;
-            border-top: 1px solid #e5e7eb;
-            margin-top: auto;
+            position: absolute;
+            bottom: 30px;
+            left: 0;
+            right: 0;
+            padding: 0 25px;
         }
-        
+
         /* Main Content */
         .main-content {
-            margin-left: 280px;
-            margin-top: 68px;
-            padding: 32px;
-            min-height: calc(100vh - 68px);
-        }
-        
-        /* Settings Layout */
-        .settings-layout {
-            display: grid;
-            grid-template-columns: 280px 1fr;
-            gap: 30px;
-            max-width: 1200px;
+            flex: 1;
+            margin-left: 250px;
+            padding: 30px;
         }
 
-        .settings-sidebar {
-            background: white;
-            border-radius: 12px;
-            padding: 24px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            height: fit-content;
-        }
-
-        .avatar-section {
-            text-align: center;
+        /* Top Header */
+        .top-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
             padding: 20px 0;
-            border-bottom: 1px solid #e0e0e0;
-            margin-bottom: 20px;
         }
 
-        .avatar {
-            width: 100px;
-            height: 100px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .header-left h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: #2d3436;
+            margin-bottom: 8px;
+        }
+
+        .header-left p {
+            color: #636e72;
+            font-size: 16px;
+        }
+
+        /* User Profile */
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            cursor: pointer;
+            transition: transform 0.2s;
+            border: 1px solid #f0f0f0;
+        }
+
+        .user-profile:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
+            background: linear-gradient(135deg, #7fb3cd 0%, #7d4fab 100%);
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
-            font-size: 40px;
-            font-weight: 600;
-            margin: 0 auto 15px;
+            font-weight: 700;
+            font-size: 16px;
             overflow: hidden;
-            border: 4px solid white;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
 
-        .avatar img {
+        .user-avatar img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
 
-        .settings-sidebar-menu {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .settings-sidebar-menu li {
-            padding: 14px 16px;
-            cursor: pointer;
-            border-radius: 8px;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            transition: all 0.2s;
-            color: #6b7280;
-            font-size: 15px;
-        }
-
-        .settings-sidebar-menu li:hover {
-            background: #f3f4f6;
-            color: #374151;
-        }
-
-        .settings-sidebar-menu li.active {
-            background: linear-gradient(135deg, #7fb3cd 0%, #7d4fab 100%);
-            color: white;
+        .user-info h4 {
+            font-size: 14px;
             font-weight: 600;
+            color: #333;
+            margin-bottom: 2px;
         }
 
-        .settings-content {
+        .user-info p {
+            font-size: 12px;
+            color: #666;
+        }
+
+        /* Settings Layout */
+        .settings-layout {
             background: white;
             border-radius: 12px;
-            padding: 32px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            padding: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .settings-header {
+            text-align: center;
+            padding: 20px 0;
+            margin-bottom: 40px;
+            border-bottom: 1px solid #eaeaea;
+        }
+
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, #7fb3cd 0%, #7d4fab 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 48px;
+            font-weight: 700;
+            margin: 0 auto 15px;
+            overflow: hidden;
+            border: 4px solid white;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        }
+
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .profile-name {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2d3436;
+            margin-bottom: 5px;
+        }
+
+        .profile-role {
+            font-size: 14px;
+            color: #636e72;
+            margin-bottom: 15px;
+        }
+
+        .avatar-form {
+            margin-top: 15px;
+        }
+
+        .btn-change-avatar {
+            background: #f8f9fa;
+            color: #374151;
+            padding: 8px 16px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.2s;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-change-avatar:hover {
+            background: #e9ecef;
+            border-color: #dee2e6;
+        }
+
+        #avatarInput {
+            display: none;
+        }
+
+        /* Tabs */
+        .settings-tabs {
+            display: flex;
+            gap: 10px;
+            border-bottom: 2px solid #e0e0e0;
+            margin-bottom: 30px;
+            padding: 0 0 15px 0;
+        }
+
+        .settings-tab {
+            padding: 12px 24px;
+            color: #666;
+            font-weight: 500;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s;
+            border-radius: 6px 6px 0 0;
+        }
+
+        .settings-tab.active {
+            color: #7d4fab;
+            border-bottom-color: #7d4fab;
+            background: rgba(125, 79, 171, 0.05);
+        }
+
+        .settings-tab:hover:not(.active) {
+            color: #7d4fab;
+            background: rgba(125, 79, 171, 0.05);
+        }
+
+        /* Tab Content */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
         }
 
         .section-title {
             font-size: 24px;
             font-weight: 700;
             margin-bottom: 8px;
-            color: #1f2937;
+            color: #2d3436;
         }
 
         .section-subtitle {
-            color: #6b7280;
+            color: #636e72;
             font-size: 15px;
             margin-bottom: 30px;
         }
 
+        /* Forms */
         .form-label {
             font-weight: 500;
             margin-bottom: 8px;
@@ -399,73 +465,74 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
             border: 1px solid #e5e7eb;
             border-radius: 8px;
             transition: border-color 0.2s;
+            width: 100%;
         }
 
         .form-control:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            outline: none;
+            border-color: #7d4fab;
+            box-shadow: 0 0 0 3px rgba(125, 79, 171, 0.1);
         }
 
-        .btn-save {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 12px 32px;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            transition: all 0.2s;
-            cursor: pointer;
+        .form-text {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
         }
 
-        .btn-save:hover {
-            background: linear-gradient(135deg, #5a6fd8 0%, #6a4098 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        /* Password Input Groups */
+        .input-group {
+            display: flex;
         }
 
-        .btn-logout {
-            background: #f8f9fa;
-            color: #374151;
-            padding: 12px 20px;
+        .input-group .form-control {
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+
+        .input-group .btn-password-toggle {
+            background: white;
             border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            width: 100%;
-            margin-top: 20px;
-            font-weight: 500;
-            transition: all 0.2s;
+            border-left: none;
+            border-top-right-radius: 8px;
+            border-bottom-right-radius: 8px;
+            padding: 0 15px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            color: #666;
         }
 
-        .btn-logout:hover {
-            background: #e9ecef;
-            color: #dc3545;
+        .input-group .btn-password-toggle:hover {
+            background: #f8f9fa;
         }
 
-        .btn-delete {
-            background: #dc3545;
+        /* Buttons */
+        .btn-save {
+            background: linear-gradient(135deg, #7fb3cd 0%, #7d4fab 100%);
             color: white;
             padding: 12px 32px;
             border: none;
             border-radius: 8px;
             font-weight: 600;
-            margin-top: 30px;
             transition: all 0.2s;
             cursor: pointer;
-            display: flex;
+            display: inline-flex;
             align-items: center;
             gap: 8px;
         }
 
-        .btn-delete:hover {
-            background: #c82333;
+        .btn-save:hover {
+            background: linear-gradient(135deg, #6fa3bd 0%, #6d3f9b 100%);
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+            box-shadow: 0 4px 12px rgba(125, 79, 171, 0.3);
         }
 
+        /* Danger Zone */
         .danger-zone {
             border-top: 2px solid #fee;
             padding-top: 30px;
@@ -481,207 +548,310 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
             gap: 8px;
         }
 
-        .input-group-text {
-            background: white;
-            border: 1px solid #e5e7eb;
-            cursor: pointer;
-        }
-
-        #avatarInput {
-            display: none;
-        }
-
-        .btn-change-avatar {
-            background: #f8f9fa;
-            color: #374151;
-            padding: 8px 16px;
-            border: 1px solid #e5e7eb;
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+            padding: 12px 24px;
+            border: none;
             border-radius: 8px;
-            font-size: 14px;
-            margin-top: 10px;
+            font-weight: 600;
             transition: all 0.2s;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        .btn-change-avatar:hover {
-            background: #e9ecef;
-            border-color: #dee2e6;
+        .btn-delete:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+        }
+
+        /* UPDATED: Simple Red Hover Logout Button */
+        .btn-logout-fixed {
+            position: fixed;
+            bottom: 40px;
+            right: 40px;
+            background: transparent;
+            color: #666;
+            border: 2px solid #ddd;
+            padding: 12px 24px;
+            border-radius: 20px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            z-index: 998;
+            overflow: hidden;
+            text-decoration: none;
+        }
+
+        .btn-logout-fixed:hover {
+            background: #dc3545;
+            color: white;
+            border-color: #dc3545;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+        }
+
+        /* UPDATED: Sidebar Logout Button - Simple Red Hover */
+        .menu-item.logout-item {
+            background: transparent;
+            color: #666;
+            border: 2px solid #ddd;
+            margin: 10px 16px;
+            border-radius: 20px;
+            padding: 12px 16px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .menu-item.logout-item:hover {
+            background: #dc3545;
+            color: white;
+            border-color: #dc3545;
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 70px;
+                padding: 20px 0;
+            }
+            
+            .sidebar-title, .menu-item span, .user-info h4, .user-info p {
+                display: none;
+            }
+            
+            .main-content {
+                margin-left: 70px;
+                padding: 20px;
+            }
+            
+            .top-header {
+                flex-direction: column;
+                gap: 15px;
+                align-items: flex-start;
+            }
+            
+            .user-profile {
+                align-self: flex-start;
+            }
+            
+            .settings-tabs {
+                overflow-x: auto;
+                flex-wrap: nowrap;
+            }
+            
+            .profile-avatar {
+                width: 100px;
+                height: 100px;
+                font-size: 36px;
+            }
+            
+            .btn-logout-fixed {
+                bottom: 20px;
+                right: 20px;
+                padding: 10px 20px;
+                font-size: 14px;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- Top Navbar -->
-    <div class="top-navbar">
-        <a href="dashboard.php" class="navbar-brand">LEARNEXUS</a>
-        <div class="navbar-user" onclick="window.location.href='settings.php'">
-            <span style="font-weight: 600;">
-                <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>
-            </span>
-            <div class="navbar-avatar">
-                <?php if (!empty($user['avatar']) && file_exists($user['avatar'])): ?>
-                    <img src="<?php echo htmlspecialchars($user['avatar']); ?>" alt="Avatar">
-                <?php else: ?>
-                    <?php echo strtoupper(substr($_SESSION['first_name'], 0, 1)); ?>
-                <?php endif; ?>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">LEARNEXUS</div>
+            </div>
+            
+            <div class="sidebar-menu">
+                <a href="dashboard.php" class="menu-item">
+                    <i class="bi bi-speedometer2"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="courses.php" class="menu-item">
+                    <i class="bi bi-book"></i>
+                    <span>Courses</span>
+                </a>
+                <a href="quizzes.php" class="menu-item">
+                    <i class="bi bi-patch-question"></i>
+                    <span>Quizzes</span>
+                </a>
+                <a href="enrollees.php" class="menu-item">
+                    <i class="bi bi-people"></i>
+                    <span>Enrollees</span>
+                </a>
+                <a href="settings.php" class="menu-item active">
+                    <i class="bi bi-gear"></i>
+                    <span>Settings</span>
+                </a>
+            </div>
+            
+            <div class="sidebar-footer">
+                <a href="../logout.php" class="menu-item logout-item">
+                    <i class="bi bi-box-arrow-left"></i>
+                    <span>Logout</span>
+                </a>
             </div>
         </div>
-    </div>
 
-    <!-- Sidebar -->
-    <div class="sidebar">
-        <div class="sidebar-header">
-            <div class="sidebar-title">Teacher Panel</div>
-        </div>
-        
-        <div class="sidebar-menu">
-            <a href="dashboard.php" class="menu-item">
-                <i class="bi bi-speedometer2"></i>
-                <span>Dashboard</span>
-            </a>
-            <a href="courses.php" class="menu-item">
-                <i class="bi bi-book"></i>
-                <span>Courses</span>
-            </a>
-            <a href="quizzes.php" class="menu-item">
-                <i class="bi bi-patch-question"></i>
-                <span>Quizzes</span>
-            </a>
-            <a href="enrollees.php" class="menu-item">
-                <i class="bi bi-people"></i>
-                <span>Enrollees</span>
-            </a>
-            <a href="settings.php" class="menu-item active">
-                <i class="bi bi-gear"></i>
-                <span>Settings</span>
-            </a>
-        </div>
-        
-        <div class="sidebar-footer">
-            <a href="../logout.php" class="menu-item">
-                <i class="bi bi-box-arrow-left"></i>
-                <span>Logout</span>
-            </a>
-        </div>
-    </div>
-
-    <!-- Main Content -->
-    <div class="main-content">
-        <div class="settings-layout">
-            <div class="settings-sidebar">
-                <div class="avatar-section">
-                    <div class="avatar">
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Top Header -->
+            <div class="top-header">
+                <div class="header-left">
+                    <h1>Settings</h1>
+                    <p>Manage your account settings and preferences</p>
+                </div>
+                
+                <!-- User Profile -->
+                <div class="user-profile" onclick="window.location.href='settings.php'">
+                    <div class="user-avatar">
                         <?php if (!empty($user['avatar']) && file_exists($user['avatar'])): ?>
                             <img src="<?php echo htmlspecialchars($user['avatar']); ?>" alt="Avatar">
                         <?php else: ?>
                             <?php echo strtoupper(substr($_SESSION['first_name'], 0, 1)); ?>
                         <?php endif; ?>
                     </div>
-                    <h6 class="mb-1"><?php echo htmlspecialchars($user['firstName'] . ' ' . $user['lastName']); ?></h6>
-                    <small class="text-muted">Teacher ID: <?php echo htmlspecialchars($user['teacherNumber']); ?></small>
+                    <div class="user-info">
+                        <h4><?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?></h4>
+                        <p>Teacher</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Layout -->
+            <div class="settings-layout">
+                <!-- Profile Header -->
+                <div class="settings-header">
+                    <div class="profile-avatar">
+                        <?php if (!empty($user['avatar']) && file_exists($user['avatar'])): ?>
+                            <img src="<?php echo htmlspecialchars($user['avatar']); ?>" alt="Avatar">
+                        <?php else: ?>
+                            <?php echo strtoupper(substr($_SESSION['first_name'], 0, 1)); ?>
+                        <?php endif; ?>
+                    </div>
+                    <div class="profile-name"><?php echo htmlspecialchars($user['firstName'] . ' ' . $user['lastName']); ?></div>
+                    <div class="profile-role">Teacher</div>
                     
-                    <form method="POST" enctype="multipart/form-data" id="avatarForm">
+                    <form method="POST" enctype="multipart/form-data" id="avatarForm" class="avatar-form">
                         <input type="file" name="avatar" id="avatarInput" accept="image/*" onchange="document.getElementById('avatarForm').submit()">
                         <button type="button" class="btn-change-avatar" onclick="document.getElementById('avatarInput').click()">
                             <i class="bi bi-camera"></i> Change Avatar
                         </button>
                     </form>
                 </div>
-                
-                <ul class="settings-sidebar-menu">
-                    <li class="active" data-tab="personal">
-                        <i class="bi bi-person"></i> Personal Information
-                    </li>
-                    <li data-tab="security">
-                        <i class="bi bi-lock"></i> Password & Security
-                    </li>
-                </ul>
-                
-                <button class="btn-logout" onclick="window.location.href='../logout.php'">
-                    <i class="bi bi-box-arrow-left"></i> Logout
-                </button>
-            </div>
 
-            <div class="settings-content">
-                <div class="tab-content active" id="personal-tab">
+                <!-- Tabs -->
+                <div class="settings-tabs">
+                    <div class="settings-tab active" data-tab="personal">Personal Information</div>
+                    <div class="settings-tab" data-tab="security">Password & Security</div>
+                </div>
+
+                <!-- Personal Information Tab -->
+                <div id="personal-tab" class="tab-content active">
                     <div class="section-title">Personal Information</div>
                     <div class="section-subtitle">Update your personal details and information.</div>
                     
                     <form method="POST">
                         <input type="hidden" name="update_info" value="1">
                         
-                        <div class="row">
-                            <div class="col-md-4 mb-3">
+                        <div class="row g-3">
+                            <div class="col-md-4">
                                 <label class="form-label">First Name</label>
                                 <input type="text" name="firstName" class="form-control" value="<?php echo htmlspecialchars($user['firstName']); ?>" required>
                             </div>
-                            <div class="col-md-4 mb-3">
+                            <div class="col-md-4">
                                 <label class="form-label">Middle Initial</label>
                                 <input type="text" name="middleInitial" class="form-control" maxlength="5" value="<?php echo htmlspecialchars($user['middleInitial']); ?>">
                             </div>
-                            <div class="col-md-4 mb-3">
+                            <div class="col-md-4">
                                 <label class="form-label">Last Name</label>
                                 <input type="text" name="lastName" class="form-control" value="<?php echo htmlspecialchars($user['lastName']); ?>" required>
                             </div>
                         </div>
                         
-                        <div class="mb-3">
-                            <label class="form-label">Email address</label>
-                            <input type="email" name="email" class="form-control" value="<?php echo htmlspecialchars($user['email']); ?>" required>
-                            <small class="text-muted">
-                                <i class="bi bi-envelope"></i> Email notifications will be sent to this address
-                            </small>
+                        <div class="row g-3 mt-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Email address</label>
+                                <input type="email" name="email" class="form-control" value="<?php echo htmlspecialchars($user['email']); ?>" required>
+                                <div class="form-text">
+                                    <i class="bi bi-envelope"></i> Email notifications will be sent to this address
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Phone Number</label>
+                                <input type="text" name="phone" class="form-control" maxlength="11" value="<?php echo htmlspecialchars($user['phone']); ?>">
+                                <div class="form-text">
+                                    <i class="bi bi-telephone"></i> SMS notifications
+                                </div>
+                            </div>
                         </div>
                         
-                        <div class="mb-3">
-                            <label class="form-label">Phone Number</label>
-                            <input type="text" name="phone" class="form-control" maxlength="11" value="<?php echo htmlspecialchars($user['phone']); ?>">
-                            <small class="text-muted">
-                                <i class="bi bi-telephone"></i> SMS notifications
-                            </small>
+                        <div class="mt-4">
+                            <button type="submit" class="btn-save">
+                                <i class="bi bi-check-circle"></i> Save Changes
+                            </button>
                         </div>
-                        
-                        <button type="submit" class="btn-save">Save Changes</button>
                     </form>
                 </div>
 
-                <div class="tab-content" id="security-tab" style="display: none;">
+                <!-- Password & Security Tab -->
+                <div id="security-tab" class="tab-content">
                     <div class="section-title">Password and Security</div>
                     <div class="section-subtitle">Manage your password and login settings.</div>
                     
                     <form method="POST">
                         <input type="hidden" name="update_password" value="1">
                         
-                        <div class="mb-3">
-                            <label class="form-label">Current Password</label>
-                            <div class="input-group">
-                                <input type="password" name="currentPassword" class="form-control" required>
-                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword(this)">
-                                    <i class="bi bi-eye"></i>
-                                </button>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Current Password</label>
+                                <div class="input-group">
+                                    <input type="password" name="currentPassword" class="form-control" id="currentPassword" required>
+                                    <button class="btn-password-toggle" type="button" onclick="togglePassword('currentPassword')">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                         
-                        <div class="mb-3">
-                            <label class="form-label">New Password</label>
-                            <div class="input-group">
-                                <input type="password" name="newPassword" class="form-control" required>
-                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword(this)">
-                                    <i class="bi bi-eye"></i>
-                                </button>
+                        <div class="row g-3 mt-3">
+                            <div class="col-md-6">
+                                <label class="form-label">New Password</label>
+                                <div class="input-group">
+                                    <input type="password" name="newPassword" class="form-control" id="newPassword" required>
+                                    <button class="btn-password-toggle" type="button" onclick="togglePassword('newPassword')">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </div>
+                                <div class="form-text">Minimum 6 characters</div>
                             </div>
-                            <small class="text-muted">Minimum 6 characters</small>
+                            <div class="col-md-6">
+                                <label class="form-label">Confirm Password</label>
+                                <div class="input-group">
+                                    <input type="password" name="confirmPassword" class="form-control" id="confirmPassword" required>
+                                    <button class="btn-password-toggle" type="button" onclick="togglePassword('confirmPassword')">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                         
-                        <div class="mb-3">
-                            <label class="form-label">Confirm Password</label>
-                            <div class="input-group">
-                                <input type="password" name="confirmPassword" class="form-control" required>
-                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword(this)">
-                                    <i class="bi bi-eye"></i>
-                                </button>
-                            </div>
+                        <div class="mt-4">
+                            <button type="submit" class="btn-save">
+                                <i class="bi bi-key"></i> Update Password
+                            </button>
                         </div>
-                        
-                        <button type="submit" class="btn-save">Update Password</button>
                     </form>
                     
                     <!-- Danger Zone -->
@@ -696,6 +866,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
                     </div>
                 </div>
             </div>
+
         </div>
     </div>
 
@@ -756,8 +927,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
             }
         }
 
-        function togglePassword(button) {
-            const input = button.previousElementSibling;
+        function togglePassword(inputId) {
+            const input = document.getElementById(inputId);
+            const button = input.nextElementSibling;
             const icon = button.querySelector('i');
             
             if (input.type === 'password') {
@@ -771,14 +943,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
             }
         }
 
-        document.querySelectorAll('.settings-sidebar-menu li').forEach(item => {
-            item.addEventListener('click', function() {
-                document.querySelectorAll('.settings-sidebar-menu li').forEach(li => li.classList.remove('active'));
+        // Tab functionality
+        document.querySelectorAll('.settings-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
                 this.classList.add('active');
                 
-                const tab = this.dataset.tab;
-                document.querySelectorAll('.tab-content').forEach(content => content.style.display = 'none');
-                document.getElementById(tab + '-tab').style.display = 'block';
+                const tabId = this.dataset.tab;
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                document.getElementById(tabId + '-tab').classList.add('active');
             });
         });
 
