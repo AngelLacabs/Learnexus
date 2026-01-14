@@ -17,36 +17,36 @@ $user = $stmt->fetch();
 // Handle avatar upload
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['avatar'])) {
     $uploadDir = '../uploads/avatars/';
-    
+
     if (!file_exists($uploadDir)) {
         mkdir($uploadDir, 0777, true);
     }
-    
+
     $file = $_FILES['avatar'];
     $fileName = $file['name'];
     $fileTmpName = $file['tmp_name'];
     $fileSize = $file['size'];
     $fileError = $file['error'];
-    
+
     $fileExt = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
     $allowed = ['jpg', 'jpeg', 'png', 'gif'];
-    
+
     if (in_array($fileExt, $allowed)) {
         if ($fileError === 0) {
             if ($fileSize < 5000000) {
                 $newFileName = 'avatar_' . $userID . '_' . time() . '.' . $fileExt;
                 $fileDestination = $uploadDir . $newFileName;
-                
+
                 if (!empty($user['avatar']) && file_exists($user['avatar'])) {
                     unlink($user['avatar']);
                 }
-                
+
                 if (move_uploaded_file($fileTmpName, $fileDestination)) {
                     $stmt = $conn->prepare("UPDATE users SET avatar = ? WHERE userID = ?");
                     $stmt->execute([$fileDestination, $userID]);
-                    
+
                     $success = "Avatar updated successfully!";
-                    
+
                     $stmt = $conn->prepare("SELECT * FROM users WHERE userID = ?");
                     $stmt->execute([$userID]);
                     $user = $stmt->fetch();
@@ -71,19 +71,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_info'])) {
     $lastName = trim($_POST['lastName']);
     $email = trim($_POST['email']);
     $phone = trim($_POST['phone']);
-    
+
     $stmt = $conn->prepare("
         UPDATE users 
         SET firstName = ?, middleInitial = ?, lastName = ?, email = ?, phone = ?
         WHERE userID = ?
     ");
     $stmt->execute([$firstName, $middleInitial, $lastName, $email, $phone, $userID]);
-    
+
     $_SESSION['first_name'] = $firstName;
     $_SESSION['last_name'] = $lastName;
-    
+
     $success = "Personal information updated successfully!";
-    
+
     $stmt = $conn->prepare("SELECT * FROM users WHERE userID = ?");
     $stmt->execute([$userID]);
     $user = $stmt->fetch();
@@ -94,7 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_password'])) {
     $currentPassword = $_POST['currentPassword'];
     $newPassword = $_POST['newPassword'];
     $confirmPassword = $_POST['confirmPassword'];
-    
+
     if (password_verify($currentPassword, $user['passwordHash'])) {
         if ($newPassword === $confirmPassword) {
             if (strlen($newPassword) >= 6) {
@@ -102,7 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_password'])) {
                 $stmt = $conn->prepare("UPDATE users SET passwordHash = ? WHERE userID = ?");
                 $stmt->execute([$newHash, $userID]);
                 $success = "Password updated successfully!";
-                
+
                 $stmt = $conn->prepare("SELECT * FROM users WHERE userID = ?");
                 $stmt->execute([$userID]);
                 $user = $stmt->fetch();
@@ -120,12 +120,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_password'])) {
 // Handle account deletion
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
     $confirmPassword = $_POST['deletePassword'];
-    
+
     if (password_verify($confirmPassword, $user['passwordHash'])) {
         if (!empty($user['avatar']) && file_exists($user['avatar'])) {
             unlink($user['avatar']);
         }
-        
+
         $stmt = $conn->prepare("DELETE FROM users WHERE userID = ?");
         if ($stmt->execute([$userID])) {
             session_destroy();
@@ -143,6 +143,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -163,7 +164,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
 
         .sidebar {
             background: linear-gradient(180deg, #e8f0fe 0%, #f0f4ff 50%, #f8f9fa 100%);
-            box-shadow: 4px 0 20px rgba(0,0,0,0.08);
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.08);
         }
 
         .sidebar-brand {
@@ -214,7 +215,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
             background: white;
             border: none;
             border-radius: 12px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
         }
 
         .hamburger-icon span {
@@ -270,7 +271,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
             font-weight: 700;
             overflow: hidden;
             border: 4px solid white;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
         }
 
         .avatar-circle img {
@@ -394,8 +395,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .input-group .btn {
@@ -407,9 +415,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
         }
     </style>
 </head>
+
 <body>
     <div class="position-fixed top-0 start-0 p-3 d-lg-none" style="z-index: 1100;">
-        <button class="hamburger-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" id="hamburgerBtn">
+        <button class="hamburger-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar"
+            id="hamburgerBtn">
             <div class="hamburger-icon d-flex flex-column align-items-center justify-content-center">
                 <span></span>
                 <span></span>
@@ -418,40 +428,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
         </button>
     </div>
 
-    <aside class="sidebar offcanvas-lg offcanvas-start position-fixed top-0 start-0 h-100" style="width: var(--sidebar-width);" id="sidebar">
+    <aside class="sidebar offcanvas-lg offcanvas-start position-fixed top-0 start-0 h-100"
+        style="width: var(--sidebar-width);" id="sidebar">
         <div class="offcanvas-header d-lg-none border-bottom">
             <h5 class="offcanvas-title sidebar-brand">LEARNEXUS</h5>
         </div>
 
         <div class="offcanvas-body p-0 d-flex flex-column h-100">
             <div class="sidebar-brand px-4 py-4 mb-4 d-none d-lg-block">LEARNEXUS</div>
-            
+
             <nav class="flex-grow-1 px-3">
-                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium" href="dashboard.php">
+                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium"
+                    href="dashboard.php">
                     <i class="bi bi-grid fs-5"></i><span>Dashboard</span>
                 </a>
-                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium" href="course_catalog.php">
+                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium"
+                    href="course_catalog.php">
                     <i class="bi bi-book fs-5"></i><span>Course Catalog</span>
                 </a>
-                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium" href="my_courses.php">
+                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium"
+                    href="my_courses.php">
                     <i class="bi bi-journal-bookmark fs-5"></i><span>My Courses</span>
                 </a>
-                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium" href="certificates.php">
+                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium"
+                    href="certificates.php">
                     <i class="bi bi-award fs-5"></i><span>Certificates</span>
                 </a>
-                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium" href="vouchers.php">
+                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium"
+                    href="vouchers.php">
                     <i class="bi bi-ticket-perforated fs-5"></i><span>Vouchers</span>
                 </a>
-                <a class="nav-link active d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium" href="settings.php">
+                <a class="nav-link active d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium"
+                    href="settings.php">
                     <i class="bi bi-gear fs-5"></i><span>Settings</span>
                 </a>
-                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium" href="ai_chatbot.php">
+                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium"
+                    href="ai_chatbot.php">
                     <i class="bi bi-robot fs-5"></i><span>AI Tutor</span>
                 </a>
             </nav>
-            
+
             <div class="p-3 mt-auto">
-                <button class="btn btn-outline-danger w-100 rounded-pill fw-semibold" onclick="window.location.href='../logout.php'">
+                <button class="btn btn-outline-danger w-100 rounded-pill fw-semibold"
+                    onclick="window.location.href='../logout.php'">
                     <i class="bi bi-box-arrow-left me-2"></i>Logout
                 </button>
             </div>
@@ -467,16 +486,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
                             <div>
                                 <h4 class="mb-0 fw-bold">Settings</h4>
                             </div>
-                            
-                            <div class="d-flex align-items-center gap-3" onclick="window.location.href='settings.php'" role="button" style="flex-shrink: 0;">
+
+                            <div class="d-flex align-items-center gap-3" onclick="window.location.href='settings.php'"
+                                role="button" style="flex-shrink: 0;">
                                 <span class="fw-semibold d-none d-sm-inline text-nowrap">
                                     <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>
                                 </span>
-                                <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold" 
-                                     style="width: 45px; height: 45px; min-width: 45px; background: linear-gradient(135deg, #667eea, #764ba2);">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold"
+                                    style="width: 45px; height: 45px; min-width: 45px; background: linear-gradient(135deg, #667eea, #764ba2);">
                                     <?php if (!empty($user['avatar']) && file_exists($user['avatar'])): ?>
-                                        <img src="<?php echo htmlspecialchars($user['avatar']); ?>" alt="Avatar" 
-                                             class="w-100 h-100 rounded-circle object-fit-cover">
+                                        <img src="<?php echo htmlspecialchars($user['avatar']); ?>" alt="Avatar"
+                                            class="w-100 h-100 rounded-circle object-fit-cover">
                                     <?php else: ?>
                                         <?php echo strtoupper(substr($_SESSION['first_name'], 0, 1)); ?>
                                     <?php endif; ?>
@@ -500,15 +520,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
                                     <?php endif; ?>
                                 </div>
                                 <form method="POST" enctype="multipart/form-data" id="avatarForm">
-                                    <input type="file" name="avatar" id="avatarInput" accept="image/*" onchange="document.getElementById('avatarForm').submit()">
+                                    <input type="file" name="avatar" id="avatarInput" accept="image/*"
+                                        onchange="document.getElementById('avatarForm').submit()">
                                     <label for="avatarInput" class="avatar-upload-btn">
                                         <i class="bi bi-camera-fill"></i>
                                     </label>
                                 </form>
                             </div>
-                            <h3 class="fw-bold mt-3 mb-1"><?php echo htmlspecialchars($user['firstName'] . ' ' . $user['lastName']); ?></h3>
+                            <h3 class="fw-bold mt-3 mb-1">
+                                <?php echo htmlspecialchars($user['firstName'] . ' ' . $user['lastName']); ?></h3>
                             <p class="mb-0 opacity-75">
-                                <i class="bi bi-person-badge me-2"></i>Student ID: <?php echo htmlspecialchars($user['studentNumber']); ?>
+                                <i class="bi bi-person-badge me-2"></i>Student ID:
+                                <?php echo htmlspecialchars($user['studentNumber']); ?>
                             </p>
                         </div>
                     </div>
@@ -534,58 +557,61 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
                                         <i class="bi bi-info-circle fs-4 text-primary"></i>
                                         <div>
                                             <h6 class="fw-bold mb-1">Keep your information up to date</h6>
-                                            <p class="mb-0 small text-muted">Your personal information helps us provide you with a better learning experience.</p>
+                                            <p class="mb-0 small text-muted">Your personal information helps us provide
+                                                you with a better learning experience.</p>
                                         </div>
                                     </div>
                                 </div>
 
                                 <form method="POST">
                                     <input type="hidden" name="update_info" value="1">
-                                    
+
                                     <div class="row">
                                         <div class="col-md-5 mb-3">
                                             <label class="form-label fw-semibold">
                                                 <i class="bi bi-person text-primary me-2"></i>First Name
                                             </label>
-                                            <input type="text" name="firstName" class="form-control" 
-                                                   value="<?php echo htmlspecialchars($user['firstName']); ?>" required>
+                                            <input type="text" name="firstName" class="form-control"
+                                                value="<?php echo htmlspecialchars($user['firstName']); ?>" required>
                                         </div>
                                         <div class="col-md-2 mb-3">
                                             <label class="form-label fw-semibold">M.I.</label>
                                             <input type="text" name="middleInitial" class="form-control" maxlength="5"
-                                                   value="<?php echo htmlspecialchars($user['middleInitial']); ?>">
+                                                value="<?php echo htmlspecialchars($user['middleInitial']); ?>">
                                         </div>
                                         <div class="col-md-5 mb-3">
                                             <label class="form-label fw-semibold">
                                                 <i class="bi bi-person text-primary me-2"></i>Last Name
                                             </label>
-                                            <input type="text" name="lastName" class="form-control" 
-                                                   value="<?php echo htmlspecialchars($user['lastName']); ?>" required>
+                                            <input type="text" name="lastName" class="form-control"
+                                                value="<?php echo htmlspecialchars($user['lastName']); ?>" required>
                                         </div>
                                     </div>
-                                    
+
                                     <div class="mb-3">
                                         <label class="form-label fw-semibold">
                                             <i class="bi bi-envelope text-primary me-2"></i>Email Address
                                         </label>
-                                        <input type="email" name="email" class="form-control" 
-                                               value="<?php echo htmlspecialchars($user['email']); ?>" required>
+                                        <input type="email" name="email" class="form-control"
+                                            value="<?php echo htmlspecialchars($user['email']); ?>" required>
                                         <small class="text-muted">
-                                            <i class="bi bi-shield-check me-1"></i>We'll send important notifications to this email
+                                            <i class="bi bi-shield-check me-1"></i>We'll send important notifications to
+                                            this email
                                         </small>
                                     </div>
-                                    
+
                                     <div class="mb-4">
                                         <label class="form-label fw-semibold">
                                             <i class="bi bi-telephone text-primary me-2"></i>Phone Number
                                         </label>
                                         <input type="text" name="phone" class="form-control" maxlength="11"
-                                               value="<?php echo htmlspecialchars($user['phone']); ?>" placeholder="09XXXXXXXXX">
+                                            value="<?php echo htmlspecialchars($user['phone']); ?>"
+                                            placeholder="09XXXXXXXXX">
                                         <small class="text-muted">
                                             <i class="bi bi-chat-dots me-1"></i>Optional - for SMS notifications
                                         </small>
                                     </div>
-                                    
+
                                     <button type="submit" class="btn btn-save">
                                         <i class="bi bi-check-circle me-2"></i>Save Changes
                                     </button>
@@ -599,35 +625,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
                                         <i class="bi bi-shield-check fs-4 text-primary"></i>
                                         <div>
                                             <h6 class="fw-bold mb-1">Protect your account</h6>
-                                            <p class="mb-0 small text-muted">Use a strong password and update it regularly to keep your account secure.</p>
+                                            <p class="mb-0 small text-muted">Use a strong password and update it
+                                                regularly to keep your account secure.</p>
                                         </div>
                                     </div>
                                 </div>
 
                                 <h5 class="fw-bold mb-3">Change Password</h5>
-                                
+
                                 <form method="POST">
                                     <input type="hidden" name="update_password" value="1">
-                                    
+
                                     <div class="mb-3">
                                         <label class="form-label fw-semibold">
                                             <i class="bi bi-key text-primary me-2"></i>Current Password
                                         </label>
                                         <div class="input-group">
                                             <input type="password" name="currentPassword" class="form-control" required>
-                                            <button class="btn btn-outline-secondary" type="button" onclick="togglePassword(this)">
+                                            <button class="btn btn-outline-secondary" type="button"
+                                                onclick="togglePassword(this)">
                                                 <i class="bi bi-eye"></i>
                                             </button>
                                         </div>
                                     </div>
-                                    
+
                                     <div class="mb-3">
                                         <label class="form-label fw-semibold">
                                             <i class="bi bi-key-fill text-primary me-2"></i>New Password
                                         </label>
                                         <div class="input-group">
                                             <input type="password" name="newPassword" class="form-control" required>
-                                            <button class="btn btn-outline-secondary" type="button" onclick="togglePassword(this)">
+                                            <button class="btn btn-outline-secondary" type="button"
+                                                onclick="togglePassword(this)">
                                                 <i class="bi bi-eye"></i>
                                             </button>
                                         </div>
@@ -635,19 +664,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
                                             <i class="bi bi-info-circle me-1"></i>Minimum 6 characters
                                         </small>
                                     </div>
-                                    
+
                                     <div class="mb-4">
                                         <label class="form-label fw-semibold">
                                             <i class="bi bi-check-circle text-primary me-2"></i>Confirm New Password
                                         </label>
                                         <div class="input-group">
                                             <input type="password" name="confirmPassword" class="form-control" required>
-                                            <button class="btn btn-outline-secondary" type="button" onclick="togglePassword(this)">
+                                            <button class="btn btn-outline-secondary" type="button"
+                                                onclick="togglePassword(this)">
                                                 <i class="bi bi-eye"></i>
                                             </button>
                                         </div>
                                     </div>
-                                    
+
                                     <button type="submit" class="btn btn-save">
                                         <i class="bi bi-shield-check me-2"></i>Update Password
                                     </button>
@@ -658,7 +688,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
                                         <i class="bi bi-exclamation-triangle-fill me-2"></i>Danger Zone
                                     </h5>
                                     <p class="text-muted mb-3">
-                                        Once you delete your account, all your data including courses, progress, and certificates will be permanently removed. This action cannot be undone.
+                                        Once you delete your account, all your data including courses, progress, and
+                                        certificates will be permanently removed. This action cannot be undone.
                                     </p>
                                     <button type="button" class="btn btn-delete" onclick="confirmDeleteAccount()">
                                         <i class="bi bi-trash me-2"></i>Delete My Account
@@ -683,10 +714,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
         }
 
         document.querySelectorAll('.settings-tab').forEach(tab => {
-            tab.addEventListener('click', function() {
+            tab.addEventListener('click', function () {
                 document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
                 this.classList.add('active');
-                
+
                 const tabName = this.dataset.tab;
                 document.querySelectorAll('.tab-content-section').forEach(content => {
                     content.classList.remove('active');
@@ -698,7 +729,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
         function togglePassword(button) {
             const input = button.closest('.input-group').querySelector('input');
             const icon = button.querySelector('i');
-            
+
             if (input.type === 'password') {
                 input.type = 'text';
                 icon.classList.remove('bi-eye');
@@ -714,30 +745,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
             Swal.fire({
                 title: 'Delete Account?',
                 html: `
-                    <div style="text-align: left;">
-                        <p style="color: #666; margin-bottom: 20px;">
-                                This action cannot be undone. All your data including:
-                                <ul style="text-align: left; margin: 10px 0; padding-left: 20px;">
-                                    <li>Your personal information</li>
-                                    <li>Course progress and achievements</li>
-                                    <li>Certificates earned</li>
-                                    <li>Learning history and statistics</li>
-                                </ul>
-                                will be permanently deleted.
-                            </p>
-                            <label style="display: block; text-align: left; margin-bottom: 8px; font-weight: 500;">
-                                <i class="bi bi-key me-2"></i>Enter your password to confirm
-                            </label>
-                            <div style="position: relative;">
-                                <input type="password" id="deletePasswordInput" class="swal2-input" 
-                                       placeholder="Enter your current password" style="width: 100%; padding-right: 45px;">
-                                <button type="button" onclick="toggleDeletePassword()" 
-                                        style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); 
-                                               background: none; border: none; cursor: pointer; padding: 5px;">
-                                    <i class="bi bi-eye" id="deletePasswordIcon" style="font-size: 18px; color: #666;"></i>
-                                </button>
-                            </div>
-                `,
+            <div class="text-start">
+                <p class="text-secondary mb-3">
+                    This action cannot be undone. All your data including:
+                    <ul class="text-start ps-4 mb-3">
+                        <li>Your personal information</li>
+                        <li>Course progress and achievements</li>
+                        <li>Certificates earned</li>
+                        <li>Learning history and statistics</li>
+                    </ul>
+                    will be permanently deleted.
+                </p>
+                <label class="form-label fw-medium mb-2 d-block">
+                    <i class="bi bi-key me-2"></i>Enter your password to confirm
+                </label>
+                <div class="input-group">
+                    <input type="password" id="deletePasswordInput" class="form-control" 
+                           placeholder="Enter your current password">
+                    <button class="btn btn-outline-secondary" type="button" onclick="toggleDeletePassword()">
+                        <i class="bi bi-eye" id="deletePasswordIcon"></i>
+                    </button>
+                </div>
+            </div>
+        `,
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#dc3545',
@@ -754,23 +784,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
                         return false;
                     }
                     return password;
+                },
+                didOpen: () => {
+                    // Ensure Bootstrap styles are applied
+                    const input = document.getElementById('deletePasswordInput');
+                    const button = input.nextElementSibling;
+                    if (button) {
+                        button.style.borderRadius = '0 8px 8px 0';
+                    }
                 }
             }).then((result) => {
                 if (result.isConfirmed && result.value) {
                     const form = document.createElement('form');
                     form.method = 'POST';
                     form.style.display = 'none';
-                    
+
                     const deleteAccountInput = document.createElement('input');
                     deleteAccountInput.type = 'hidden';
                     deleteAccountInput.name = 'delete_account';
                     deleteAccountInput.value = '1';
-                    
+
                     const passwordInput = document.createElement('input');
                     passwordInput.type = 'hidden';
                     passwordInput.name = 'deletePassword';
                     passwordInput.value = result.value;
-                    
+
                     form.appendChild(deleteAccountInput);
                     form.appendChild(passwordInput);
                     document.body.appendChild(form);
@@ -778,11 +816,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
                 }
             });
         }
-
+        
         function toggleDeletePassword() {
             const input = document.getElementById('deletePasswordInput');
             const icon = document.getElementById('deletePasswordIcon');
-            
+
             if (input.type === 'password') {
                 input.type = 'text';
                 icon.classList.remove('bi-eye');
@@ -821,4 +859,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
         <?php endif; ?>
     </script>
 </body>
+
 </html>
