@@ -286,7 +286,7 @@ foreach ($enrolledCourses as $course) {
             <!-- Page Title -->
             <div class="row mb-4">
                 <div class="col-12">
-                    <h1 class="h3 fw-bold">My Courses</h1>
+                    <h1 class="h3 fw-bold"><i class="bi bi-journal-bookmark me-2"></i>My Courses</h1>
                     <p class="text-muted">Continue learning where you left off</p>
                 </div>
             </div>
