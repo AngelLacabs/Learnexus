@@ -235,7 +235,7 @@ unset($_SESSION['new_voucher_code']);
                     <div class="card border-0 rounded-4 shadow-sm">
                         <div class="card-body p-3 d-flex justify-content-between align-items-center">
                             <div>
-                                <h4 class="mb-0 fw-bold">My Vouchers</h4>
+                                <h4 class="mb-0 fw-bold"><i class="bi bi-ticket-perforated me-2"></i>My Vouchers</h4>
                             </div>
                             
                             <div class="d-flex align-items-center gap-3" onclick="window.location.href='settings.php'" role="button">
@@ -258,7 +258,7 @@ unset($_SESSION['new_voucher_code']);
 
             <div class="row mb-4">
                 <div class="col-12">
-                    <h1 class="h3 fw-bold"><i class="bi bi-ticket-perforated me-2"></i>SoleSource Vouchers</h1>
+                    <h1 class="h3 fw-bold">SoleSource Vouchers</h1>
                     <p class="text-muted">Redeem these codes at SoleSource for exclusive discounts!</p>
                 </div>
             </div>
