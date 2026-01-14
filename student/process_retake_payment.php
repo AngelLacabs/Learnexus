@@ -61,7 +61,7 @@ try {
     
     // 4. Delete all lesson completions for this course
     $stmt = $conn->prepare("
-        DELETE FROM lesson_completions 
+        DELETE FROM lessoncompletion 
         WHERE userID = ? 
         AND lessonID IN (
             SELECT lessonID FROM lessons WHERE courseID = ?

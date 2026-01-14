@@ -64,10 +64,7 @@ try {
     $stmt->execute([$courseID]);
     $recentEnrollments = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
-    // Get course modules
-    $stmt = $conn->prepare("SELECT * FROM modules WHERE courseID = ? ORDER BY orderNumber");
-    $stmt->execute([$courseID]);
-    $modules = $stmt->fetchAll(PDO::FETCH_ASSOC);
+     
     
     // Get lessons
     $stmt = $conn->prepare("SELECT * FROM lessons WHERE courseID = ? ORDER BY uploadedAt");
@@ -82,7 +79,7 @@ try {
     // Get quiz questions count
     $quizQuestionsCount = 0;
     foreach ($quizzes as $quiz) {
-        $stmt = $conn->prepare("SELECT COUNT(*) FROM quiz_questions WHERE quizID = ?");
+        $stmt = $conn->prepare("SELECT COUNT(*) FROM quizquestions WHERE quizID = ?");
         $stmt->execute([$quiz['quizID']]);
         $quizQuestionsCount += $stmt->fetchColumn();
     }
@@ -298,16 +295,7 @@ include 'includes/sidebar.php';
                         $fileExists = file_exists($serverPath);
                         ?>
                         
-                        <!-- Preview PDF Button -->
-                        <button type="button" 
-                                class="btn btn-outline-primary preview-pdf-btn"
-                                data-pdf-url="<?php echo htmlspecialchars($fileUrl); ?>"
-                                data-pdf-title="<?php echo htmlspecialchars($lesson['title']); ?>"
-                                <?php echo !$fileExists ? 'disabled title="File not found on server"' : ''; ?>
-                                data-bs-toggle="tooltip" 
-                                title="Preview PDF">
-                            <i class="bi bi-eye"></i>
-                        </button>
+
                         
                         <!-- Download PDF Button -->
                         <a href="<?php echo htmlspecialchars($fileUrl); ?>" 
@@ -338,12 +326,7 @@ include 'includes/sidebar.php';
                             <span class="text-success">
                                 <i class="bi bi-check-circle me-1"></i>File available
                             </span>
-                            <a href="#" 
-                               class="text-primary preview-pdf-link ms-2"
-                               data-pdf-url="<?php echo htmlspecialchars($fileUrl); ?>"
-                               data-pdf-title="<?php echo htmlspecialchars($lesson['title']); ?>">
-                                <i class="bi bi-play-circle me-1"></i>Preview this lesson
-                            </a>
+
                         <?php else: ?>
                             <span class="text-danger">
                                 <i class="bi bi-exclamation-triangle me-1"></i>
@@ -528,378 +511,11 @@ include 'includes/sidebar.php';
     </div>
 </div>
 
-<!-- PDF Preview Modal -->
-<div class="modal fade" id="pdfPreviewModal" tabindex="-1" aria-labelledby="pdfPreviewModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-fullscreen-lg-down">
-        <div class="modal-content">
-            <div class="modal-header bg-light">
-                <h5 class="modal-title" id="pdfPreviewModalLabel">
-                    <i class="bi bi-file-earmark-pdf text-danger me-2"></i>
-                    <span id="pdfModalTitle">PDF Preview</span>
-                </h5>
-                <div class="d-flex align-items-center">
-                    <span class="badge bg-secondary me-2" id="pdfPageInfo">Page: 1/1</span>
-                    <button type="button" class="btn btn-sm btn-outline-secondary me-2" id="zoomOutBtn">
-                        <i class="bi bi-zoom-out"></i>
-                    </button>
-                    <button type="button" class="btn btn-sm btn-outline-secondary me-2" id="zoomInBtn">
-                        <i class="bi bi-zoom-in"></i>
-                    </button>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-            </div>
-            <div class="modal-body p-0">
-                <div class="container-fluid h-100">
-                    <div class="row h-100">
-                        <!-- PDF Navigation Sidebar (Collapsible) -->
-                        <div class="col-lg-3 col-md-4 border-end bg-light d-none d-md-block" id="pdfSidebar">
-                            <div class="p-3">
-                                <h6 class="mb-3">Thumbnails</h6>
-                                <div class="nav flex-column nav-pills" id="pdfThumbnails" role="tablist" aria-orientation="vertical">
-                                    <!-- Thumbnails will be loaded here -->
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- PDF Viewer Area -->
-                        <div class="col-lg-9 col-md-8" id="pdfViewerArea">
-                            <div class="position-relative h-100">
-                                <!-- PDF Canvas Container -->
-                                <div id="pdfCanvasContainer" class="overflow-auto" style="height: calc(100vh - 200px);">
-                                    <canvas id="pdfCanvas" class="mx-auto d-block"></canvas>
-                                </div>
-                                
-                                <!-- PDF Controls -->
-                                <div class="position-fixed bottom-0 start-0 end-0 bg-white border-top p-3">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <button type="button" class="btn btn-sm btn-outline-primary" id="prevPageBtn">
-                                                <i class="bi bi-chevron-left"></i> Previous
-                                            </button>
-                                            <span class="mx-2">
-                                                Page: <span id="currentPage">1</span> of <span id="totalPages">1</span>
-                                            </span>
-                                            <button type="button" class="btn btn-sm btn-outline-primary" id="nextPageBtn">
-                                                Next <i class="bi bi-chevron-right"></i>
-                                            </button>
-                                        </div>
-                                        <div>
-                                            <div class="input-group input-group-sm" style="width: 120px;">
-                                                <input type="number" 
-                                                       class="form-control" 
-                                                       id="pageJumpInput" 
-                                                       min="1" 
-                                                       value="1" 
-                                                       style="width: 60px;">
-                                                <button class="btn btn-outline-secondary" type="button" id="goToPageBtn">
-                                                    Go
-                                                </button>
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <div class="btn-group" role="group">
-                                                <button type="button" class="btn btn-sm btn-outline-secondary" id="sidebarToggleBtn">
-                                                    <i class="bi bi-layout-sidebar"></i>
-                                                </button>
-                                                <a href="#" class="btn btn-sm btn-outline-success" id="downloadPdfBtn">
-                                                    <i class="bi bi-download"></i> Download
-                                                </a>
-                                                <a href="#" class="btn btn-sm btn-outline-info" id="openInNewTabBtn" target="_blank">
-                                                    <i class="bi bi-box-arrow-up-right"></i>
-                                                </a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- Zoom Control -->
-                                    <div class="mt-2">
-                                        <label class="form-label small">Zoom: <span id="zoomLevel">100</span>%</label>
-                                        <input type="range" 
-                                               class="form-range" 
-                                               id="zoomSlider" 
-                                               min="25" 
-                                               max="500" 
-                                               value="100" 
-                                               step="25">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
-<!-- Load PDF.js Library -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // PDF.js Configuration
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-    
-    let pdfDoc = null;
-    let currentPage = 1;
-    let totalPages = 1;
-    let scale = 1;
-    let pdfUrl = '';
-    let pdfTitle = '';
-    
-    // PDF Preview Modal Elements
-    const pdfPreviewModal = new bootstrap.Modal(document.getElementById('pdfPreviewModal'));
-    const pdfCanvas = document.getElementById('pdfCanvas');
-    const ctx = pdfCanvas.getContext('2d');
-    const pdfModalTitle = document.getElementById('pdfModalTitle');
-    const currentPageSpan = document.getElementById('currentPage');
-    const totalPagesSpan = document.getElementById('totalPages');
-    const pageJumpInput = document.getElementById('pageJumpInput');
-    const pdfPageInfo = document.getElementById('pdfPageInfo');
-    const zoomLevelSpan = document.getElementById('zoomLevel');
-    const zoomSlider = document.getElementById('zoomSlider');
-    const downloadPdfBtn = document.getElementById('downloadPdfBtn');
-    const openInNewTabBtn = document.getElementById('openInNewTabBtn');
-    
-    // Navigation Elements
-    const prevPageBtn = document.getElementById('prevPageBtn');
-    const nextPageBtn = document.getElementById('nextPageBtn');
-    const goToPageBtn = document.getElementById('goToPageBtn');
-    const zoomInBtn = document.getElementById('zoomInBtn');
-    const zoomOutBtn = document.getElementById('zoomOutBtn');
-    const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
-    const pdfSidebar = document.getElementById('pdfSidebar');
-    const pdfViewerArea = document.getElementById('pdfViewerArea');
-    const pdfThumbnails = document.getElementById('pdfThumbnails');
-    
-    // Handle PDF Preview Button Clicks
-    const previewButtons = document.querySelectorAll('.preview-pdf-btn, .preview-pdf-link');
-    previewButtons.forEach(button => {
-        button.addEventListener('click', function(e) {
-            e.preventDefault();
-            pdfUrl = this.getAttribute('data-pdf-url');
-            pdfTitle = this.getAttribute('data-pdf-title');
-            
-            if (!pdfUrl) {
-                alert('PDF URL not found');
-                return;
-            }
-            
-            // Set modal title
-            pdfModalTitle.textContent = pdfTitle;
-            downloadPdfBtn.href = pdfUrl;
-            openInNewTabBtn.href = pdfUrl;
-            
-            // Reset PDF viewer
-            resetPdfViewer();
-            
-            // Load and display the PDF
-            loadAndDisplayPdf(pdfUrl);
-            
-            // Show modal
-            pdfPreviewModal.show();
-        });
-    });
-    
-    // Reset PDF viewer state
-    function resetPdfViewer() {
-        pdfDoc = null;
-        currentPage = 1;
-        scale = 1;
-        pdfCanvas.width = 0;
-        pdfCanvas.height = 0;
-        currentPageSpan.textContent = '1';
-        totalPagesSpan.textContent = '1';
-        pageJumpInput.value = '1';
-        pdfPageInfo.textContent = 'Page: 1/1';
-        zoomLevelSpan.textContent = '100';
-        zoomSlider.value = '100';
-        pdfThumbnails.innerHTML = '';
-    }
-    
-    // Load and display PDF
-    async function loadAndDisplayPdf(url) {
-        try {
-            // Show loading state
-            pdfModalTitle.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Loading PDF...`;
-            
-            // Load the PDF
-            const loadingTask = pdfjsLib.getDocument(url);
-            pdfDoc = await loadingTask.promise;
-            
-            totalPages = pdfDoc.numPages;
-            totalPagesSpan.textContent = totalPages;
-            pdfPageInfo.textContent = `Page: 1/${totalPages}`;
-            
-            // Reset modal title
-            pdfModalTitle.textContent = pdfTitle;
-            
-            // Render first page
-            await renderPage(currentPage);
-            
-            // Generate thumbnails
-            await generateThumbnails();
-            
-        } catch (error) {
-            console.error('Error loading PDF:', error);
-            pdfModalTitle.textContent = 'Error Loading PDF';
-            alert('Unable to load PDF. Please try downloading the file instead.');
-        }
-    }
-    
-    // Render a specific page
-    async function renderPage(pageNum) {
-        if (!pdfDoc || pageNum < 1 || pageNum > totalPages) {
-            return;
-        }
-        
-        currentPage = pageNum;
-        currentPageSpan.textContent = currentPage;
-        pageJumpInput.value = currentPage;
-        pdfPageInfo.textContent = `Page: ${currentPage}/${totalPages}`;
-        
-        // Highlight active thumbnail
-        const thumbnails = pdfThumbnails.querySelectorAll('.nav-link');
-        thumbnails.forEach((thumb, index) => {
-            thumb.classList.remove('active');
-            if (index + 1 === pageNum) {
-                thumb.classList.add('active');
-            }
-        });
-        
-        try {
-            const page = await pdfDoc.getPage(pageNum);
-            const viewport = page.getViewport({ scale: scale });
-            
-            // Set canvas dimensions
-            pdfCanvas.width = viewport.width;
-            pdfCanvas.height = viewport.height;
-            
-            // Render PDF page
-            const renderContext = {
-                canvasContext: ctx,
-                viewport: viewport
-            };
-            
-            await page.render(renderContext).promise;
-            
-        } catch (error) {
-            console.error('Error rendering page:', error);
-        }
-    }
-    
-    // Generate thumbnail previews
-    async function generateThumbnails() {
-        pdfThumbnails.innerHTML = '';
-        
-        for (let i = 1; i <= Math.min(totalPages, 10); i++) { // Limit to 10 thumbnails for performance
-            const li = document.createElement('div');
-            li.className = 'nav-item mb-2';
-            
-            const button = document.createElement('button');
-            button.className = 'nav-link text-start';
-            button.type = 'button';
-            button.setAttribute('data-page', i);
-            button.innerHTML = `
-                <div class="d-flex align-items-center">
-                    <div class="me-2 text-center" style="width: 40px;">
-                        <i class="bi bi-file-earmark"></i>
-                    </div>
-                    <div>
-                        <small class="d-block">Page ${i}</small>
-                        <small class="text-muted">Click to view</small>
-                    </div>
-                </div>
-            `;
-            
-            button.addEventListener('click', () => {
-                renderPage(i);
-                // Scroll to top of canvas
-                document.getElementById('pdfCanvasContainer').scrollTop = 0;
-            });
-            
-            li.appendChild(button);
-            pdfThumbnails.appendChild(li);
-        }
-        
-        // Mark first page as active
-        if (pdfThumbnails.firstChild) {
-            pdfThumbnails.firstChild.querySelector('.nav-link').classList.add('active');
-        }
-    }
-    
-    // Navigation Event Listeners
-    prevPageBtn.addEventListener('click', () => {
-        if (currentPage > 1) {
-            renderPage(currentPage - 1);
-        }
-    });
-    
-    nextPageBtn.addEventListener('click', () => {
-        if (currentPage < totalPages) {
-            renderPage(currentPage + 1);
-        }
-    });
-    
-    goToPageBtn.addEventListener('click', () => {
-        const pageNum = parseInt(pageJumpInput.value);
-        if (pageNum >= 1 && pageNum <= totalPages) {
-            renderPage(pageNum);
-        } else {
-            alert(`Please enter a page number between 1 and ${totalPages}`);
-            pageJumpInput.value = currentPage;
-        }
-    });
-    
-    pageJumpInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            goToPageBtn.click();
-        }
-    });
-    
-    // Zoom Controls
-    zoomInBtn.addEventListener('click', () => {
-        if (scale < 5) {
-            scale += 0.25;
-            updateZoom();
-        }
-    });
-    
-    zoomOutBtn.addEventListener('click', () => {
-        if (scale > 0.25) {
-            scale -= 0.25;
-            updateZoom();
-        }
-    });
-    
-    zoomSlider.addEventListener('input', (e) => {
-        scale = parseInt(e.target.value) / 100;
-        updateZoom();
-    });
-    
-    function updateZoom() {
-        zoomLevelSpan.textContent = Math.round(scale * 100);
-        zoomSlider.value = Math.round(scale * 100);
-        renderPage(currentPage);
-    }
-    
-    // Toggle Sidebar
-    sidebarToggleBtn.addEventListener('click', () => {
-        const sidebar = document.getElementById('pdfSidebar');
-        const viewerArea = document.getElementById('pdfViewerArea');
-        
-        if (sidebar.classList.contains('d-none')) {
-            sidebar.classList.remove('d-none');
-            viewerArea.classList.remove('col-lg-12');
-            viewerArea.classList.add('col-lg-9', 'col-md-8');
-            sidebarToggleBtn.innerHTML = '<i class="bi bi-layout-sidebar"></i>';
-        } else {
-            sidebar.classList.add('d-none');
-            viewerArea.classList.remove('col-lg-9', 'col-md-8');
-            viewerArea.classList.add('col-lg-12');
-            sidebarToggleBtn.innerHTML = '<i class="bi bi-layout-sidebar-inset"></i>';
-        }
-    });
-    
     // Handle reject course button click
     const rejectBtn = document.querySelector('.reject-course-btn');
     const rejectModal = new bootstrap.Modal(document.getElementById('rejectCourseModal'));
@@ -925,10 +541,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return new bootstrap.Tooltip(tooltipTriggerEl);
     });
     
-    // Reset PDF viewer when modal is closed
-    document.getElementById('pdfPreviewModal').addEventListener('hidden.bs.modal', function () {
-        resetPdfViewer();
-    });
+
 });
 </script>
 

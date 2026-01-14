@@ -60,7 +60,7 @@ $maskedPhone = maskPhone($phone);
 
                             <div class="text-center mt-4">
                                 <p class="text-muted mb-2">Didn't receive the code?</p>
-                                <a href="resend_sms_otp.php" class="btn btn-outline-secondary btn-sm" id="resendBtn">Resend OTP</a>
+                                <a href="resend_smsotp.php" class="btn btn-outline-secondary btn-sm" id="resendBtn">Resend OTP</a>
                                 <div id="resendTimer" class="mt-2 text-muted small"></div>
                             </div>
 

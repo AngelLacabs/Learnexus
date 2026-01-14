@@ -15,10 +15,10 @@ $user = $stmt->fetch();
 
 
 // Get all quizzes by teacher with course info
-// NEW - querying 'quiz_questions' table (the actual table name)
+// NEW - querying 'quizquestions' table (the actual table name)
 $stmt = $conn->prepare("
     SELECT q.*, c.title as courseTitle,
-           (SELECT COUNT(*) FROM quiz_questions WHERE quizID = q.quizID) as questionCount
+           (SELECT COUNT(*) FROM quizquestions WHERE quizID = q.quizID) as questionCount
     FROM quizzes q
     JOIN courses c ON q.courseID = c.courseID
     WHERE c.teacherID = ?

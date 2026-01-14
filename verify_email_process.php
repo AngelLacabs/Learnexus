@@ -31,7 +31,7 @@ try {
     
     // Try standard column names first
     try {
-        $stmt = $conn->prepare("SELECT otpCode, createdAt FROM email_otp WHERE email = ? ORDER BY createdAt DESC LIMIT 1");
+        $stmt = $conn->prepare("SELECT otpCode, createdAt FROM emailotp WHERE email = ? ORDER BY createdAt DESC LIMIT 1");
         $stmt->execute([$email]);
         $record = $stmt->fetch(PDO::FETCH_ASSOC);
         
@@ -65,7 +65,7 @@ try {
     // If not valid, check if there's any OTP in the table
     if (!$isValid) {
         try {
-            $stmt = $conn->prepare("SELECT * FROM email_otp WHERE email = ? ORDER BY emailOtpID DESC LIMIT 1");
+            $stmt = $conn->prepare("SELECT * FROM emailotp WHERE email = ? ORDER BY emailOtpID DESC LIMIT 1");
             $stmt->execute([$email]);
             $record = $stmt->fetch(PDO::FETCH_ASSOC);
             
@@ -138,7 +138,7 @@ try {
     // Clear session
     unset($_SESSION['pending_registration']);
     unset($_SESSION['otp_email']);
-    unset($_SESSION['sms_otp']);
+    unset($_SESSION['smsotp']);
     unset($_SESSION['otp_phone']);
 
     $_SESSION['success'] = $successMessage;

@@ -63,7 +63,7 @@ if ($enrollment) {
         echo "<p style='color: orange;'>⚠️ Course is COMPLETED - Showing locked view (lessons at completion time)</p>";
         $stmt = $conn->prepare("
             SELECT l.*, 
-                   EXISTS(SELECT 1 FROM lesson_completions WHERE lessonID = l.lessonID AND userID = ?) as isCompleted
+                   EXISTS(SELECT 1 FROM lessoncompletion WHERE lessonID = l.lessonID AND userID = ?) as isCompleted
             FROM lessons l
             WHERE l.courseID = ?
               AND l.uploadedAt <= ?
@@ -74,7 +74,7 @@ if ($enrollment) {
         echo "<p style='color: green;'>✓ Course is ACTIVE - Showing all current lessons</p>";
         $stmt = $conn->prepare("
             SELECT l.*, 
-                   EXISTS(SELECT 1 FROM lesson_completions WHERE lessonID = l.lessonID AND userID = ?) as isCompleted
+                   EXISTS(SELECT 1 FROM lessoncompletion WHERE lessonID = l.lessonID AND userID = ?) as isCompleted
             FROM lessons l
             WHERE l.courseID = ?
             ORDER BY l.lessonID ASC
@@ -104,7 +104,7 @@ if ($enrollment) {
 echo "<h3>5. Lesson Completion Records</h3>";
 $stmt = $conn->prepare("
     SELECT lc.*, l.title 
-    FROM lesson_completions lc
+    FROM lessoncompletion lc
     JOIN lessons l ON lc.lessonID = l.lessonID
     WHERE lc.userID = ? AND l.courseID = ?
 ");

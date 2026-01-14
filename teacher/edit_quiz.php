@@ -49,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_question'])) {
     $correctOptionNumber = ord($correctOption) - ord('A'); // A=0, B=1, C=2, D=3
 
     $stmt = $conn->prepare("
-        INSERT INTO quiz_questions 
+        INSERT INTO quizquestions 
         (quizID, question, option1, option2, option3, option4, correct_option)
         VALUES (?, ?, ?, ?, ?, ?, ?)
     ");
@@ -70,14 +70,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_question'])) {
 // Handle deleting a question
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_question'])) {
     $questionID = intval($_POST['question_id']);
-    $stmt = $conn->prepare("DELETE FROM quiz_questions WHERE questionID = ? AND quizID = ?");
+    $stmt = $conn->prepare("DELETE FROM quizquestions WHERE questionID = ? AND quizID = ?");
     $stmt->execute([$questionID, $quizID]);
     header('Location: edit_quiz.php?id=' . $quizID);
     exit();
 }
 
 // Fetch all questions
-$stmt = $conn->prepare("SELECT * FROM quiz_questions WHERE quizID = ? ORDER BY questionID ASC");
+$stmt = $conn->prepare("SELECT * FROM quizquestions WHERE quizID = ? ORDER BY questionID ASC");
 $stmt->execute([$quizID]);
 $questions = $stmt->fetchAll(PDO::FETCH_ASSOC);
 

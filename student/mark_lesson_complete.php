@@ -60,10 +60,10 @@ if ($enrollment['status'] === 'completed') {
    3️⃣ Add or remove lesson completion
 -------------------------------------------- */
 if ($completed) {
-    $stmt = $conn->prepare("INSERT IGNORE INTO lesson_completions (userID, lessonID, completedAt) VALUES (?, ?, NOW())");
+    $stmt = $conn->prepare("INSERT IGNORE INTO lessoncompletion (userID, lessonID, completedAt) VALUES (?, ?, NOW())");
     $stmt->execute([$userID, $lessonID]);
 } else {
-    $stmt = $conn->prepare("DELETE FROM lesson_completions WHERE userID = ? AND lessonID = ?");
+    $stmt = $conn->prepare("DELETE FROM lessoncompletion WHERE userID = ? AND lessonID = ?");
     $stmt->execute([$userID, $lessonID]);
 }
 
@@ -76,7 +76,7 @@ $totalLessons = (int)$stmt->fetchColumn();
 
 $stmt = $conn->prepare("
     SELECT COUNT(*) 
-    FROM lesson_completions lc
+    FROM lessoncompletion lc
     JOIN lessons l ON lc.lessonID = l.lessonID
     WHERE lc.userID = ? AND l.courseID = ?
 ");

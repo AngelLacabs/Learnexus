@@ -89,7 +89,7 @@ $sql = "SELECT
         JOIN courses c ON e.courseID = c.courseID 
         JOIN users ct ON c.teacherID = ct.userID
         LEFT JOIN lessons l ON c.courseID = l.courseID
-        LEFT JOIN lesson_completions lc ON l.lessonID = lc.lessonID AND lc.userID = e.userID
+        LEFT JOIN lessoncompletion lc ON l.lessonID = lc.lessonID AND lc.userID = e.userID
         LEFT JOIN payments p ON e.paymentID = p.paymentID AND p.status = 'completed'
         $whereSQL 
         GROUP BY e.enrollmentID 

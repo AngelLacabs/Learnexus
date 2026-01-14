@@ -41,3 +41,7 @@
 [2026-01-13 17:22:54] SUCCESS: Voucher redeemed | {"code":"GETSOLE-37WK","order":"SO-20260113172258-7705","discount":1079.3999999999999}
 [2026-01-14 17:10:20] Webhook request received | {"method":"GET","ip":"::1","payload_size":0}
 [2026-01-14 17:10:20] ERROR: Invalid payload | {"raw":""}
+[2026-01-14 17:46:18] Webhook request received | {"method":"POST","ip":"::1","payload_size":217}
+[2026-01-14 17:46:18] Auth check | {"header":"Bearer learnexus_web..."}
+[2026-01-14 17:46:18] Processing redemption | {"code":"REWARD-TL6Y","order":"SO-20260114174622-7620","student":"learnexus-11"}
+[2026-01-14 17:46:18] SUCCESS: Voucher redeemed | {"code":"REWARD-TL6Y","order":"SO-20260114174622-7620","discount":539.4}

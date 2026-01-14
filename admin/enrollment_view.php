@@ -74,13 +74,13 @@ try {
     // Get lesson completions
     $stmt = $conn->prepare("
         SELECT lc.*, l.title as lessonTitle, l.uploadedAt
-        FROM lesson_completions lc 
+        FROM lessoncompletion lc 
         JOIN lessons l ON lc.lessonID = l.lessonID
         WHERE lc.userID = ? AND l.courseID = ?
         ORDER BY lc.completedAt DESC
     ");
     $stmt->execute([$enrollment['userID'], $enrollment['courseID']]);
-    $lessonCompletions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $lessoncompletion = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     // Get all lessons in course
     $stmt = $conn->prepare("SELECT COUNT(*) as totalLessons FROM lessons WHERE courseID = ?");
@@ -93,7 +93,7 @@ try {
     $totalQuizzes = $stmt->fetchColumn();
     
     // Calculate progress metrics
-    $completedLessons = count($lessonCompletions);
+    $completedLessons = count($lessoncompletion);
     $lessonProgress = $totalLessons > 0 ? round(($completedLessons / $totalLessons) * 100, 1) : 0;
     
     // Get average quiz score
@@ -315,7 +315,7 @@ include 'includes/sidebar.php';
                             <?php endif; ?>
                             
                             <!-- Lesson Completions -->
-                            <?php foreach ($lessonCompletions as $index => $completion): ?>
+                            <?php foreach ($lessoncompletion as $index => $completion): ?>
                                 <?php if ($index < 3): // Show only last 3 ?>
                                     <div class="timeline-item">
                                         <div class="timeline-icon bg-info">
@@ -374,7 +374,7 @@ include 'includes/sidebar.php';
                             <?php endif; ?>
                         </div>
                         
-                        <?php if (count($lessonCompletions) > 3 || count($quizResults) > 3): ?>
+                        <?php if (count($lessoncompletion) > 3 || count($quizResults) > 3): ?>
                             <div class="text-center mt-3">
                                 <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="collapse" data-bs-target="#fullTimeline">
                                     Show All Activities
@@ -383,7 +383,7 @@ include 'includes/sidebar.php';
                             
                             <div class="collapse" id="fullTimeline">
                                 <!-- Additional lesson completions -->
-                                <?php foreach ($lessonCompletions as $index => $completion): ?>
+                                <?php foreach ($lessoncompletion as $index => $completion): ?>
                                     <?php if ($index >= 3): ?>
                                         <div class="timeline-item">
                                             <div class="timeline-icon bg-info">

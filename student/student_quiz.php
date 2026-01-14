@@ -38,7 +38,7 @@ $stmt->execute([$enrollmentID, $quizID]);
 $existingResult = $stmt->fetch(PDO::FETCH_ASSOC);
 
 // 4️⃣ Fetch quiz questions
-$stmt = $conn->prepare("SELECT * FROM quiz_questions WHERE quizID = ? ORDER BY questionID ASC");
+$stmt = $conn->prepare("SELECT * FROM quizquestions WHERE quizID = ? ORDER BY questionID ASC");
 $stmt->execute([$quizID]);
 $questions = $stmt->fetchAll(PDO::FETCH_ASSOC);
 

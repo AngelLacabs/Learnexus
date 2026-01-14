@@ -42,8 +42,8 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `reset_all_tables` ()   BEGIN
     TRUNCATE TABLE `enrollments`;
     TRUNCATE TABLE `courses`;
     TRUNCATE TABLE `sms_feedback`;
-    TRUNCATE TABLE `sms_otp`;
-    TRUNCATE TABLE `email_otp`;
+    TRUNCATE TABLE `smsotp`;
+    TRUNCATE TABLE `emailotp`;
     TRUNCATE TABLE `users`;
     
     SET FOREIGN_KEY_CHECKS = _foreign_key_checks;

@@ -48,7 +48,7 @@ try {
     try {
         // Delete lesson completions for this enrollment
         $stmt = $conn->prepare("
-            DELETE lc FROM lesson_completions lc
+            DELETE lc FROM lessoncompletion lc
             JOIN lessons l ON lc.lessonID = l.lessonID
             WHERE l.courseID = ? AND lc.userID = ?
         ");

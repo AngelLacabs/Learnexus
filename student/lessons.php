@@ -36,7 +36,7 @@ try {
     }
 
     // Check if already completed
-    $stmt = $conn->prepare("SELECT id FROM lesson_completions WHERE userID = ? AND lessonID = ?");
+    $stmt = $conn->prepare("SELECT id FROM lessoncompletion WHERE userID = ? AND lessonID = ?");
     $stmt->execute([$userID, $lessonID]);
     
     if ($stmt->fetch()) {
@@ -45,14 +45,14 @@ try {
     }
 
     // Mark as complete
-    $stmt = $conn->prepare("INSERT INTO lesson_completions (userID, lessonID, completedAt) VALUES (?, ?, NOW())");
+    $stmt = $conn->prepare("INSERT INTO lessoncompletion (userID, lessonID, completedAt) VALUES (?, ?, NOW())");
     $stmt->execute([$userID, $lessonID]);
 
     // Update enrollment progress
     $stmt = $conn->prepare("
         SELECT 
             (SELECT COUNT(*) FROM lessons WHERE courseID = ?) as totalLessons,
-            (SELECT COUNT(*) FROM lesson_completions lc 
+            (SELECT COUNT(*) FROM lessoncompletion lc 
              JOIN lessons l ON lc.lessonID = l.lessonID 
              WHERE l.courseID = ? AND lc.userID = ?) as completedLessons,
             (SELECT COUNT(*) FROM quizzes WHERE courseID = ?) as totalQuizzes,

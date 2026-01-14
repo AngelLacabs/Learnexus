@@ -36,7 +36,7 @@ if ($enrollment['status'] === 'completed' && !empty($enrollment['completedAt']))
     // LOCKED VIEW: Show only lessons that existed at completion time
     $stmt = $conn->prepare("
         SELECT l.*, 
-               EXISTS(SELECT 1 FROM lesson_completions WHERE lessonID = l.lessonID AND userID = ?) as isCompleted
+               EXISTS(SELECT 1 FROM lessoncompletion WHERE lessonID = l.lessonID AND userID = ?) as isCompleted
         FROM lessons l
         WHERE l.courseID = ?
           AND l.uploadedAt <= ?
@@ -47,7 +47,7 @@ if ($enrollment['status'] === 'completed' && !empty($enrollment['completedAt']))
     // ACTIVE VIEW: Show all current lessons
     $stmt = $conn->prepare("
         SELECT l.*, 
-               EXISTS(SELECT 1 FROM lesson_completions WHERE lessonID = l.lessonID AND userID = ?) as isCompleted
+               EXISTS(SELECT 1 FROM lessoncompletion WHERE lessonID = l.lessonID AND userID = ?) as isCompleted
         FROM lessons l
         WHERE l.courseID = ?
         ORDER BY l.lessonID ASC
@@ -61,7 +61,7 @@ if ($enrollment['status'] === 'completed' && !empty($enrollment['completedAt']))
     // LOCKED VIEW: Show only quizzes that existed at completion time
     $stmt = $conn->prepare("
         SELECT q.*,
-               (SELECT COUNT(*) FROM quiz_questions WHERE quizID = q.quizID) as questionCount,
+               (SELECT COUNT(*) FROM quizquestions WHERE quizID = q.quizID) as questionCount,
                (SELECT MAX(takenAt) FROM quizresults WHERE quizID = q.quizID AND userID = ?) as lastAttempt,
                (SELECT passed FROM quizresults WHERE quizID = q.quizID AND userID = ? ORDER BY takenAt DESC LIMIT 1) as hasPassed,
                (SELECT score FROM quizresults WHERE quizID = q.quizID AND userID = ? ORDER BY takenAt DESC LIMIT 1) as lastScore
@@ -75,7 +75,7 @@ if ($enrollment['status'] === 'completed' && !empty($enrollment['completedAt']))
     // ACTIVE VIEW: Show all current quizzes
     $stmt = $conn->prepare("
         SELECT q.*,
-               (SELECT COUNT(*) FROM quiz_questions WHERE quizID = q.quizID) as questionCount,
+               (SELECT COUNT(*) FROM quizquestions WHERE quizID = q.quizID) as questionCount,
                (SELECT MAX(takenAt) FROM quizresults WHERE quizID = q.quizID AND userID = ?) as lastAttempt,
                (SELECT passed FROM quizresults WHERE quizID = q.quizID AND userID = ? ORDER BY takenAt DESC LIMIT 1) as hasPassed,
                (SELECT score FROM quizresults WHERE quizID = q.quizID AND userID = ? ORDER BY takenAt DESC LIMIT 1) as lastScore

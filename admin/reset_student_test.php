@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $vouchersDeleted = $stmt->rowCount();
         
         // 3. Delete lesson completions
-        $stmt = $conn->prepare("DELETE FROM lesson_completions WHERE enrollmentID = ?");
+        $stmt = $conn->prepare("DELETE FROM lessoncompletion WHERE enrollmentID = ?");
         $stmt->execute([$enrollment['enrollmentID']]);
         $lessonsDeleted = $stmt->rowCount();
         

@@ -55,7 +55,7 @@ $totalLessons = (int)$stmt->fetchColumn();
 
 $stmt = $conn->prepare("
     SELECT COUNT(*) 
-    FROM lesson_completions 
+    FROM lessoncompletion 
     WHERE userID = ?
       AND lessonID IN (
         SELECT lessonID FROM lessons WHERE courseID = ?

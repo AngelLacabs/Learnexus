@@ -91,7 +91,7 @@ $lessons = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ===================== */
 $stmt = $conn->prepare("
     SELECT lessonID 
-    FROM lesson_completions
+    FROM lessoncompletion
     WHERE userID = ?
       AND lessonID IN (
         SELECT lessonID FROM lessons WHERE courseID = ?

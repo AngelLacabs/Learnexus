@@ -126,7 +126,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_course'])) {
             $stmt->execute($quizIDs);
             
             // 5. Delete quiz questions
-            $stmt = $conn->prepare("DELETE FROM quiz_questions WHERE quizID IN ($placeholders)");
+            $stmt = $conn->prepare("DELETE FROM quizquestions WHERE quizID IN ($placeholders)");
             $stmt->execute($quizIDs);
             
             // 6. Delete quizzes

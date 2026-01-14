@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $enrollmentID = $enrollment['enrollmentID'];
 
     // 2️⃣ Fetch correct answers
-    $stmt = $conn->prepare("SELECT questionID, correct_option FROM quiz_questions WHERE quizID = ?");
+    $stmt = $conn->prepare("SELECT questionID, correct_option FROM quizquestions WHERE quizID = ?");
     $stmt->execute([$quizID]);
     $questions = $stmt->fetchAll(PDO::FETCH_ASSOC);
 

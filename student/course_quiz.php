@@ -66,7 +66,7 @@ if (!$quiz) {
 $quizID = $quiz['quizID'];
 
 // Fetch quiz questions
-$stmt = $conn->prepare("SELECT * FROM quiz_questions WHERE quizID = ? ORDER BY questionID ASC");
+$stmt = $conn->prepare("SELECT * FROM quizquestions WHERE quizID = ? ORDER BY questionID ASC");
 $stmt->execute([$quizID]);
 $questions = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -114,8 +114,8 @@ if ($existingResult) {
         // Get the stored answers if available
         $stmt = $conn->prepare("
             SELECT qa.questionID, qa.selectedOption, qq.correct_option
-            FROM quiz_answers qa
-            JOIN quiz_questions qq ON qa.questionID = qq.questionID
+            FROM quizanswers qa
+            JOIN quizquestions qq ON qa.questionID = qq.questionID
             WHERE qa.quizResultID = ?
         ");
         $stmt->execute([$existingResult['resultID']]);
@@ -196,7 +196,7 @@ if (!$submitted && $_SERVER['REQUEST_METHOD'] === 'POST') {
     // Save individual answers for review
     foreach ($answers as $questionID => $selectedOption) {
         $stmt = $conn->prepare("
-            INSERT INTO quiz_answers (quizResultID, questionID, selectedOption)
+            INSERT INTO quizanswers (quizResultID, questionID, selectedOption)
             VALUES (?, ?, ?)
         ");
         $stmt->execute([$resultID, (int)$questionID, (int)$selectedOption]);
@@ -208,7 +208,7 @@ if (!$submitted && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt->execute([$courseID]);
     $totalLessons = (int)$stmt->fetchColumn();
 
-    $stmt = $conn->prepare("SELECT COUNT(*) FROM lesson_completions WHERE userID = ? AND lessonID IN (SELECT lessonID FROM lessons WHERE courseID = ?)");
+    $stmt = $conn->prepare("SELECT COUNT(*) FROM lessoncompletion WHERE userID = ? AND lessonID IN (SELECT lessonID FROM lessons WHERE courseID = ?)");
     $stmt->execute([$userID, $courseID]);
     $completedLessons = (int)$stmt->fetchColumn();
 

@@ -16,7 +16,7 @@ class OTPHelper
             $expiresAt = date('Y-m-d H:i:s', strtotime('+10 minutes'));
 
             $stmt = $this->conn->prepare("
-                INSERT INTO email_otp (email, otpCode, userID, expiresAt, verified, createdAt) 
+                INSERT INTO emailotp (email, otpCode, userID, expiresAt, verified, createdAt) 
                 VALUES (?, ?, ?, ?, 0, NOW())
             ");
             $stmt->execute([$email, $otpCode, $userID, $expiresAt]);
@@ -33,7 +33,7 @@ class OTPHelper
     {
         try {
             $stmt = $this->conn->prepare("
-                SELECT * FROM email_otp 
+                SELECT * FROM emailotp 
                 WHERE email = ? AND otpCode = ? AND verified = 0 AND expiresAt > NOW() 
                 ORDER BY createdAt DESC LIMIT 1
             ");
@@ -41,7 +41,7 @@ class OTPHelper
             $record = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if ($record) {
-                $updateStmt = $this->conn->prepare("UPDATE email_otp SET verified = 1 WHERE emailOtpID = ?");
+                $updateStmt = $this->conn->prepare("UPDATE emailotp SET verified = 1 WHERE emailOtpID = ?");
                 $updateStmt->execute([$record['emailOtpID']]);
 
                 return ['success' => true, 'message' => 'Email verified successfully'];
@@ -57,7 +57,7 @@ class OTPHelper
     public function resendEmailOTP($email)
     {
         try {
-            $stmt = $this->conn->prepare("UPDATE email_otp SET verified = 1 WHERE email = ? AND verified = 0");
+            $stmt = $this->conn->prepare("UPDATE emailotp SET verified = 1 WHERE email = ? AND verified = 0");
             $stmt->execute([$email]);
 
             return $this->createEmailOTP($email);
@@ -72,14 +72,14 @@ class OTPHelper
     {
         try {
             // Invalidate any existing OTPs for this phone
-            $stmt = $this->conn->prepare("UPDATE sms_otp SET verified = 1 WHERE phone = ? AND verified = 0");
+            $stmt = $this->conn->prepare("UPDATE smsotp SET verified = 1 WHERE phone = ? AND verified = 0");
             $stmt->execute([$phone]);
 
             $otpCode = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
             $expiresAt = date('Y-m-d H:i:s', strtotime('+10 minutes'));
 
             $stmt = $this->conn->prepare("
-                INSERT INTO sms_otp (phone, otpCode, expiresAt, verified, createdAt) 
+                INSERT INTO smsotp (phone, otpCode, expiresAt, verified, createdAt) 
                 VALUES (?, ?, ?, 0, NOW())
             ");
             $stmt->execute([$phone, $otpCode, $expiresAt]);
@@ -105,7 +105,7 @@ class OTPHelper
             $stmt = $this->conn->prepare("
                 SELECT *, 
                        CASE WHEN expiresAt > ? THEN 'valid' ELSE 'expired' END as timeStatus
-                FROM sms_otp 
+                FROM smsotp 
                 WHERE phone = ? AND verified = 0
                 ORDER BY createdAt DESC 
                 LIMIT 1
@@ -131,7 +131,7 @@ class OTPHelper
                     }
                     
                     // Mark as verified
-                    $updateStmt = $this->conn->prepare("UPDATE sms_otp SET verified = 1 WHERE otpID = ?");
+                    $updateStmt = $this->conn->prepare("UPDATE smsotp SET verified = 1 WHERE otpID = ?");
                     $updateStmt->execute([$record['otpID']]);
 
                     error_log("✅ SMS OTP Verified Successfully!");
