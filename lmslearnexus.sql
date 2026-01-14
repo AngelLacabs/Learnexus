@@ -32,7 +32,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `reset_all_tables` ()   BEGIN
     
     TRUNCATE TABLE `vouchers`;
     TRUNCATE TABLE `certificates`;
-    TRUNCATE TABLE `quiz_results`;
+    TRUNCATE TABLE `quizresults`;
     TRUNCATE TABLE `choices`;
     TRUNCATE TABLE `questions`;
     TRUNCATE TABLE `quizzes`;
@@ -629,7 +629,7 @@ ALTER TABLE `quizresults`
   ADD PRIMARY KEY (`resultID`),
   ADD KEY `enrollmentID` (`enrollmentID`),
   ADD KEY `quizID` (`quizID`),
-  ADD KEY `idx_quiz_results_user_quiz` (`userID`,`quizID`);
+  ADD KEY `idx_quizresults_user_quiz` (`userID`,`quizID`);
 
 --
 -- Indexes for table `quizzes`

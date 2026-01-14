@@ -9,6 +9,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'instructor') {
 
 $teacherID = $_SESSION['user_id'];
 $courseID = $_GET['id'] ?? 0;
+$activeTab = $_GET['tab'] ?? 'details'; // Get active tab from URL
 
 // Get course details and verify ownership
 $stmt = $conn->prepare("
@@ -25,7 +26,7 @@ if (!$course) {
     die("Course not found or you don't have permission to manage it.");
 }
 
-// Get course statistics
+// Get course statistics for all tabs
 $stmt = $conn->prepare("SELECT COUNT(*) as count FROM enrollments WHERE courseID = ?");
 $stmt->execute([$courseID]);
 $enrolledStudents = $stmt->fetch()['count'];
@@ -34,7 +35,6 @@ $stmt = $conn->prepare("SELECT COUNT(*) as count FROM lessons WHERE courseID = ?
 $stmt->execute([$courseID]);
 $totalLessons = $stmt->fetch()['count'];
 
-// Count quizzes (should be at most 1) and count completed students
 $stmt = $conn->prepare("SELECT COUNT(*) as count FROM quizzes WHERE courseID = ?");
 $stmt->execute([$courseID]);
 $totalQuizCount = (int)$stmt->fetch()['count'];
@@ -43,17 +43,8 @@ $stmt = $conn->prepare("SELECT COUNT(*) as count FROM enrollments WHERE courseID
 $stmt->execute([$courseID]);
 $completedStudents = (int)$stmt->fetch()['count'];
 
-// Get all lessons
-$stmt = $conn->prepare("SELECT * FROM lessons WHERE courseID = ? ORDER BY uploadedAt DESC");
-$stmt->execute([$courseID]);
-$lessons = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-// Get all quizzes
-$stmt = $conn->prepare("SELECT * FROM quizzes WHERE courseID = ? ORDER BY createdAt DESC");
-$stmt->execute([$courseID]);
-$quizzes = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-// Get enrolled students
+// ============= FIX: ALWAYS GET STUDENTS FOR DASHBOARD =============
+// Get enrolled students data for dashboard display
 $stmt = $conn->prepare("
     SELECT u.*, e.enrolledAt, e.progressPercentage, e.status
     FROM enrollments e
@@ -62,14 +53,39 @@ $stmt = $conn->prepare("
     ORDER BY e.enrolledAt DESC
 ");
 $stmt->execute([$courseID]);
-$students = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$allStudents = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$studentsCount = count($allStudents);
+// ============= END FIX =============
+
+// Get data for specific tabs only when needed
+$lessons = [];
+$quizzes = [];
+$students = [];
+
+if ($activeTab === 'lessons' || $activeTab === 'details') {
+    $stmt = $conn->prepare("SELECT * FROM lessons WHERE courseID = ? ORDER BY uploadedAt DESC");
+    $stmt->execute([$courseID]);
+    $lessons = $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+if ($activeTab === 'quizzes' || $activeTab === 'details') {
+    $stmt = $conn->prepare("SELECT * FROM quizzes WHERE courseID = ? ORDER BY createdAt DESC");
+    $stmt->execute([$courseID]);
+    $quizzes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+// ============= FIX: USE ALREADY FETCHED STUDENTS FOR STUDENTS TAB =============
+if ($activeTab === 'students') {
+    $students = $allStudents; // Use the already fetched students
+}
+// ============= END FIX =============
 
 // Get instructor data including avatar
 $stmt = $conn->prepare("SELECT * FROM users WHERE userID = ?");
 $stmt->execute([$teacherID]);
 $user = $stmt->fetch();
 
-// Handle course update
+// Handle course update (for details tab)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_course'])) {
     $title = trim($_POST['title']);
     $description = trim($_POST['description']);
@@ -86,6 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_course'])) {
     $stmt->execute([$title, $description, $price, $category, $status, $passingScore, $courseID, $teacherID]);
     
     $success = "Course updated successfully!";
+    $activeTab = 'details'; // Stay on details tab after update
     
     // Refresh course data
     $stmt = $conn->prepare("SELECT * FROM courses WHERE courseID = ?");
@@ -93,7 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_course'])) {
     $course = $stmt->fetch(PDO::FETCH_ASSOC);
 }
 
-// Handle course deletion
+// Handle course deletion (for details tab)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_course'])) {
     try {
         $conn->beginTransaction();
@@ -152,10 +169,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_course'])) {
     } catch (Exception $e) {
         $conn->rollBack();
         $error = "Failed to delete course: " . $e->getMessage();
+        $activeTab = 'details'; // Stay on details tab if error
     }
 }
 
-// Handle lesson upload
+// Handle lesson upload (for lessons tab)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['upload_lesson']) && isset($_FILES['lesson_file'])) {
     $lessonTitle = trim($_POST['lesson_title']);
     $file = $_FILES['lesson_file'];
@@ -226,6 +244,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['upload_lesson']) && i
                 
                 if ($stmt->execute([$courseID, $lessonTitle, $dbPath])) {
                     $success = "Lesson uploaded successfully! File: $newFileName";
+                    $activeTab = 'lessons'; // Stay on lessons tab
                     
                     // Refresh lessons
                     $stmt = $conn->prepare("SELECT * FROM lessons WHERE courseID = ? ORDER BY uploadedAt DESC");
@@ -235,216 +254,482 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['upload_lesson']) && i
                     // Database insert failed - delete uploaded file
                     unlink($uploadPath);
                     $error = "Database error: Failed to save lesson record";
+                    $activeTab = 'lessons'; // Stay on lessons tab
                 }
             } else {
                 $error = "File uploaded but cannot be found on disk!";
+                $activeTab = 'lessons'; // Stay on lessons tab
             }
         } else {
             $error = "Failed to move uploaded file! Check directory permissions.";
+            $activeTab = 'lessons'; // Stay on lessons tab
         }
     } else {
         // Show first error
         $error = $uploadErrors[0];
+        $activeTab = 'lessons'; // Stay on lessons tab
     }
 }
+
+$page_title = "Manage Course - {$course['title']} - Learnexus";
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage Course - <?php echo htmlspecialchars($course['title']); ?> - Learnexus</title>
+    <title><?php echo $page_title; ?></title>
     <link rel="icon" type="image/png" href="../images/Learnexus.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --sidebar-width: 260px;
         }
 
         body {
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             min-height: 100vh;
         }
 
-        /* Main Container */
-        .dashboard-container {
-            display: flex;
-            min-height: 100vh;
-        }
-
-        /* Sidebar - Left side */
+        /* Sidebar - Matching courses.php design */
         .sidebar {
-            width: 250px;
-            background: white;
-            padding: 30px 0;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-            position: fixed;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            z-index: 1000;
+            background: linear-gradient(180deg, #e8f0fe 0%, #f0f4ff 50%, #f8f9fa 100%);
+            box-shadow: 4px 0 20px rgba(0,0,0,0.08);
         }
 
-        .sidebar-header {
-            padding: 0 25px 30px;
-            border-bottom: 1px solid #eaeaea;
+        .sidebar-brand {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #1a73e8 0%, #4285f4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Navigation - Matching courses.php design */
+        .nav-link {
+            border-radius: 12px;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .nav-link::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 0;
+            background: #1a73e8;
+            border-radius: 0 4px 4px 0;
+            transition: height 0.25s ease;
+        }
+
+        .nav-link:hover::before {
+            height: 60%;
+        }
+
+        .nav-link.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white !important;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .nav-link.active::before {
+            display: none;
+        }
+
+        /* Hamburger - Matching courses.php design */
+        .hamburger-btn {
+            width: 50px;
+            height: 50px;
+            background: white;
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+
+        .hamburger-icon span {
+            display: block;
+            width: 24px;
+            height: 3px;
+            background: #1a73e8;
+            border-radius: 3px;
+            transition: all 0.3s ease;
+            margin: 5px 0;
+        }
+
+        .hamburger-btn.active .hamburger-icon span:nth-child(1) {
+            transform: translateY(8px) rotate(45deg);
+        }
+
+        .hamburger-btn.active .hamburger-icon span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger-btn.active .hamburger-icon span:nth-child(3) {
+            transform: translateY(-8px) rotate(-45deg);
+        }
+
+        /* Main Content Margin */
+        @media (min-width: 992px) {
+            .main-content {
+                margin-left: var(--sidebar-width);
+            }
+        }
+
+        /* Stats Cards - Matching courses.php design */
+        .stat-card {
+            border-radius: 16px;
+            border: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transition: transform 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        }
+
+        /* Course Header - New design matching courses.php */
+        .course-header-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 16px;
+            border: none;
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
             margin-bottom: 30px;
         }
 
-        .sidebar-title {
-            font-size: 24px;
-            font-weight: 700;
+        .course-badge {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            color: white;
+            font-weight: 500;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.875rem;
+        }
+
+        /* Tabs Section - Matching courses.php design */
+        .tabs-section {
+            background: white;
+            border-radius: 16px;
+            border: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .status-tab {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 500;
+            transition: all 0.2s;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            text-decoration: none;
+            color: inherit;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-tab:hover {
+            background-color: rgba(102, 126, 234, 0.1);
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .status-tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        /* Tab Content */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Form Cards - Matching courses.php design */
+        .form-card {
+            border-radius: 16px;
+            border: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transition: transform 0.2s;
+        }
+
+        .form-card:hover {
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        }
+
+        /* Section Cards */
+        .section-card {
+            background: #f8f9fa;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            border: 1px solid #eaeaea;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
             color: #2d3436;
-            letter-spacing: 0.5px;
-        }
-
-        .sidebar-menu {
-            padding: 0 20px;
-        }
-
-        .menu-item {
+            margin-bottom: 20px;
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 14px 16px;
-            color: #636e72;
-            text-decoration: none;
-            border-radius: 8px;
-            margin-bottom: 8px;
-            transition: all 0.3s;
-            font-size: 15px;
+            gap: 10px;
+        }
+
+        /* Form Styles */
+        .form-label {
             font-weight: 500;
+            color: #374151;
+            margin-bottom: 8px;
         }
 
-        .menu-item:hover {
-            background: linear-gradient(135deg, #7fb3cd 0%, #7d4fab 100%);
-            color: white;
-            transform: translateX(5px);
-        }
-
-        .menu-item.active {
-            background: linear-gradient(135deg, #7fb3cd 0%, #7d4fab 100%);
-            color: white;
-            font-weight: 600;
-            box-shadow: 0 4px 12px rgba(125, 79, 171, 0.2);
-        }
-
-        .menu-item i {
-            font-size: 18px;
-            width: 24px;
-        }
-
-        .sidebar-footer {
-            position: absolute;
-            bottom: 30px;
-            left: 0;
-            right: 0;
-            padding: 0 25px;
-        }
-
-        /* UPDATED: Sidebar Logout Button - Simple Red Hover */
-        .menu-item.logout-item {
-            background: transparent;
-            color: #666;
-            border: 2px solid #ddd;
-            margin: 10px 16px;
-            border-radius: 20px;
+        .form-control {
             padding: 12px 16px;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            transition: border-color 0.2s;
+            width: 100%;
         }
 
-        .menu-item.logout-item:hover {
-            background: #dc3545;
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        /* Buttons - Matching courses.php design */
+        .btn-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
             color: white;
-            border-color: #dc3545;
-            transform: translateX(5px);
+            border-radius: 12px;
+            padding: 10px 24px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-gradient:hover {
+            background: linear-gradient(135deg, #5a6fd8 0%, #6a4098 100%);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border: none;
+            color: white;
+            border-radius: 12px;
+            padding: 10px 24px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-success:hover {
+            background: linear-gradient(135deg, #0da271 0%, #047857 100%);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            border: none;
+            color: white;
+            border-radius: 12px;
+            padding: 10px 24px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #c82333 0%, #bd2130 100%);
+            color: white;
+            transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
         }
 
-        /* Main Content */
-        .main-content {
-            flex: 1;
-            margin-left: 250px;
-            padding: 30px;
-        }
-
-        /* Top Header */
-        .top-header {
+        /* Lesson Items */
+        .lesson-item {
+            background: white;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 12px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 30px;
-            padding: 20px 0;
+            transition: all 0.2s;
+            border: 1px solid #eaeaea;
         }
 
-        .header-left h1 {
-            font-size: 32px;
-            font-weight: 700;
-            color: #2d3436;
-            margin-bottom: 8px;
+        .lesson-item:hover {
+            background: #f8f9fa;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
         }
 
-        .header-left p {
-            color: #636e72;
-            font-size: 16px;
-        }
-
-        /* User Profile */
-        .user-profile {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            background: white;
+        /* Action Buttons */
+        .btn-action {
             padding: 8px 16px;
             border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            cursor: pointer;
-            transition: transform 0.2s;
-            border: 1px solid #f0f0f0;
-        }
-
-        .user-profile:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #7fb3cd 0%, #7d4fab 100%);
-            display: flex;
+            font-size: 14px;
+            font-weight: 500;
+            display: inline-flex;
             align-items: center;
-            justify-content: center;
+            gap: 5px;
+            text-decoration: none;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .btn-outline-primary {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .btn-outline-primary:hover {
+            background: #667eea;
             color: white;
-            font-weight: 700;
-            font-size: 16px;
+            transform: translateY(-1px);
+        }
+
+        .btn-outline-danger {
+            border-color: #dc3545;
+            color: #dc3545;
+        }
+
+        .btn-outline-danger:hover {
+            background: #dc3545;
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        .btn-outline-info {
+            border-color: #17a2b8;
+            color: #17a2b8;
+        }
+
+        .btn-outline-info:hover {
+            background: #17a2b8;
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        /* Student Rows */
+        .student-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            border: 1px solid #eaeaea;
+            transition: all 0.2s;
+        }
+
+        .student-row:hover {
+            background: #f8f9fa;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .progress-bar-custom {
+            height: 8px;
+            border-radius: 4px;
+            background: #e0e0e0;
+            width: 200px;
             overflow: hidden;
         }
 
-        .user-avatar img {
-            width: 100%;
+        .progress-bar-custom .fill {
             height: 100%;
-            object-fit: cover;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 4px;
         }
 
-        .user-info h4 {
-            font-size: 14px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 2px;
-        }
-
-        .user-info p {
+        /* Badges */
+        .badge {
+            padding: 6px 12px;
+            border-radius: 20px;
             font-size: 12px;
-            color: #666;
+            font-weight: 600;
+        }
+
+        .bg-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .bg-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        /* Danger Zone */
+        .danger-zone {
+            border-top: 2px solid #fee;
+            padding-top: 30px;
+            margin-top: 40px;
+        }
+
+        .danger-zone-title {
+            color: #dc3545;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            background: white;
+            border-radius: 16px;
+            border: 1px solid #eaeaea;
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 16px;
+        }
+
+        /* Search Input - Matching courses.php */
+        .search-input {
+            border: 1px solid #dee2e6;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .search-input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25);
+        }
+
+        .search-icon {
+            color: #6c757d;
+        }
+
+        /* User Avatar - Matching courses.php */
+        .user-avatar {
+            width: 45px;
+            height: 45px;
+            min-width: 45px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
         }
 
         /* Back Button */
@@ -470,882 +755,548 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['upload_lesson']) && i
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
-
-        /* Course Header */
-        .course-header {
-            background: linear-gradient(135deg, #7fb3cd 0%, #7d4fab 100%);
-            color: white;
-            padding: 40px;
-            border-radius: 16px;
-            margin-bottom: 30px;
-            box-shadow: 0 8px 24px rgba(125, 79, 171, 0.2);
-        }
-
-        .course-header h1 {
-            font-size: 36px;
-            font-weight: 700;
-            margin-bottom: 8px;
-        }
-
-        .course-header p {
-            color: rgba(255, 255, 255, 0.9);
-            font-size: 16px;
-            margin: 0;
-        }
-
-        /* Stats Grid */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .stat-card {
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            transition: transform 0.3s, box-shadow 0.3s;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-        }
-
-        .stat-icon {
-            width: 60px;
-            height: 60px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-        }
-
-        .stat-card:nth-child(1) .stat-icon {
-            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
-            color: #1976d2;
-        }
-
-        .stat-card:nth-child(2) .stat-icon {
-            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
-            color: #388e3c;
-        }
-
-        .stat-card:nth-child(3) .stat-icon {
-            background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
-            color: #f57c00;
-        }
-
-        .stat-content h3 {
-            font-size: 12px;
-            color: #636e72;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 5px;
-            font-weight: 600;
-        }
-
-        .stat-content .number {
-            font-size: 32px;
-            font-weight: 700;
-            color: #2d3436;
-        }
-
-        /* Tabs */
-        .tabs-section {
-            background: white;
-            border-radius: 12px;
-            padding: 30px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            margin-bottom: 30px;
-        }
-
-        .tabs {
-            display: flex;
-            gap: 20px;
-            border-bottom: 2px solid #e0e0e0;
-            margin-bottom: 30px;
-            padding: 0 0 15px 0;
-        }
-
-        .tab {
-            padding: 12px 24px;
-            color: #666;
-            font-weight: 500;
-            cursor: pointer;
-            border-bottom: 2px solid transparent;
-            margin-bottom: -2px;
-            transition: all 0.2s;
-            border-radius: 6px 6px 0 0;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .tab.active {
-            color: #7d4fab;
-            border-bottom-color: #7d4fab;
-            background: rgba(125, 79, 171, 0.05);
-        }
-
-        .tab:hover:not(.active) {
-            color: #7d4fab;
-            background: rgba(125, 79, 171, 0.05);
-        }
-
-        /* Tab Content */
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        /* Section Cards */
-        .section-card {
-            background: #f8f9fa;
-            border-radius: 12px;
-            padding: 30px;
-            margin-bottom: 20px;
-            border: 1px solid #eaeaea;
-        }
-
-        .section-title {
-            font-size: 20px;
-            font-weight: 600;
-            color: #2d3436;
-            margin-bottom: 25px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        /* Form Styles */
-        .form-label {
-            font-weight: 500;
-            color: #374151;
-            margin-bottom: 8px;
-        }
-
-        .form-control {
-            padding: 12px 16px;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            transition: border-color 0.2s;
-            width: 100%;
-        }
-
-        .form-control:focus {
-            outline: none;
-            border-color: #7d4fab;
-            box-shadow: 0 0 0 3px rgba(125, 79, 171, 0.1);
-        }
-
-        /* Buttons */
-        .btn-save {
-            background: linear-gradient(135deg, #7fb3cd 0%, #7d4fab 100%);
-            color: white;
-            border: none;
-            padding: 12px 32px;
-            border-radius: 8px;
-            font-weight: 600;
-            transition: all 0.2s;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .btn-save:hover {
-            background: linear-gradient(135deg, #6fa3bd 0%, #6d3f9b 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(125, 79, 171, 0.3);
-        }
-
-        .btn-success {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-weight: 600;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            text-decoration: none;
-        }
-
-        .btn-success:hover {
-            background: linear-gradient(135deg, #0da271 0%, #047857 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-        }
-
-        .btn-danger {
-            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-weight: 600;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .btn-danger:hover {
-            background: linear-gradient(135deg, #c82333 0%, #bd2130 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
-        }
-
-        /* Lesson Items */
-        .lesson-item {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: all 0.2s;
-            border: 1px solid #eaeaea;
-        }
-
-        .lesson-item:hover {
-            background: #f8f9fa;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-        }
-
-        .btn-action {
-            padding: 8px 16px;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 500;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            text-decoration: none;
-            border: 1px solid transparent;
-        }
-
-        .btn-outline-primary {
-            border-color: #7d4fab;
-            color: #7d4fab;
-        }
-
-        .btn-outline-primary:hover {
-            background: #7d4fab;
-            color: white;
-        }
-
-        .btn-outline-danger {
-            border-color: #dc3545;
-            color: #dc3545;
-        }
-
-        .btn-outline-danger:hover {
-            background: #dc3545;
-            color: white;
-        }
-
-        .btn-outline-info {
-            border-color: #17a2b8;
-            color: #17a2b8;
-        }
-
-        .btn-outline-info:hover {
-            background: #17a2b8;
-            color: white;
-        }
-
-        /* Student Rows */
-        .student-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px;
-            background: white;
-            border-radius: 10px;
-            margin-bottom: 10px;
-            border: 1px solid #eaeaea;
-            transition: all 0.2s;
-        }
-
-        .student-row:hover {
-            background: #f8f9fa;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-        }
-
-        .progress-bar-custom {
-            height: 8px;
-            border-radius: 4px;
-            background: #e0e0e0;
-            width: 200px;
-            overflow: hidden;
-        }
-
-        .progress-bar-custom .fill {
-            height: 100%;
-            background: linear-gradient(90deg, #7fb3cd 0%, #7d4fab 100%);
-            border-radius: 4px;
-        }
-
-        /* Badges */
-        .badge {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        .bg-success {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        }
-
-        .bg-primary {
-            background: linear-gradient(135deg, #7fb3cd 0%, #7d4fab 100%);
-        }
-
-        /* Danger Zone */
-        .danger-zone {
-            border-top: 2px solid #fee;
-            padding-top: 30px;
-            margin-top: 40px;
-        }
-
-        .danger-zone-title {
-            color: #dc3545;
-            font-weight: 600;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        /* Empty State */
-        .empty-state {
-            text-align: center;
-            padding: 40px;
-            background: white;
-            border-radius: 12px;
-            border: 1px solid #eaeaea;
-        }
-
-        .empty-state i {
-            font-size: 48px;
-            color: #ddd;
-            margin-bottom: 20px;
-        }
-
-        .empty-state h3 {
-            font-size: 20px;
-            color: #636e72;
-            margin-bottom: 12px;
-        }
-
-        .empty-state p {
-            color: #9ca3af;
-            margin: 0;
-        }
-
-        /* Responsive */
-        @media (max-width: 1024px) {
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        @media (max-width: 768px) {
-            .sidebar {
-                width: 70px;
-                padding: 20px 0;
-            }
-            
-            .sidebar-title, .menu-item span, .user-info h4, .user-info p {
-                display: none;
-            }
-            
-            .main-content {
-                margin-left: 70px;
-                padding: 20px;
-            }
-            
-            .top-header {
-                flex-direction: column;
-                gap: 15px;
-                align-items: flex-start;
-            }
-            
-            .user-profile {
-                align-self: flex-start;
-            }
-            
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .tabs {
-                overflow-x: auto;
-                flex-wrap: nowrap;
-            }
-            
-            .student-row {
-                flex-direction: column;
-                gap: 15px;
-                align-items: flex-start;
-            }
-            
-            .progress-bar-custom {
-                width: 100%;
-            }
-        }
     </style>
 </head>
 <body>
-    <div class="dashboard-container">
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <div class="sidebar-header">
-                <div class="sidebar-title">LEARNEXUS</div>
+    <!-- Hamburger Button (Mobile) -->
+    <div class="position-fixed top-0 start-0 p-3 d-lg-none" style="z-index: 1100;">
+        <button class="hamburger-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" id="hamburgerBtn">
+            <div class="hamburger-icon d-flex flex-column align-items-center justify-content-center">
+                <span></span>
+                <span></span>
+                <span></span>
             </div>
-            
-            <div class="sidebar-menu">
-                <a href="dashboard.php" class="menu-item">
-                    <i class="bi bi-speedometer2"></i>
-                    <span>Dashboard</span>
-                </a>
-                <a href="courses.php" class="menu-item active">
-                    <i class="bi bi-book"></i>
-                    <span>Courses</span>
-                </a>
-                <a href="quizzes.php" class="menu-item">
-                    <i class="bi bi-patch-question"></i>
-                    <span>Quizzes</span>
-                </a>
-                <a href="enrollees.php" class="menu-item">
-                    <i class="bi bi-people"></i>
-                    <span>Enrollees</span>
-                </a>
-                <a href="settings.php" class="menu-item">
-                    <i class="bi bi-gear"></i>
-                    <span>Settings</span>
-                </a>
-            </div>
-            
-            <div class="sidebar-footer">
-                <!-- UPDATED: Simple Red Hover Logout Button -->
-                <a href="../logout.php" class="menu-item logout-item">
-                    <i class="bi bi-box-arrow-left"></i>
-                    <span>Logout</span>
-                </a>
-            </div>
+        </button>
+    </div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar offcanvas-lg offcanvas-start position-fixed top-0 start-0 h-100" style="width: var(--sidebar-width);" id="sidebar">
+        <div class="offcanvas-header d-lg-none border-bottom">
+            <h5 class="offcanvas-title sidebar-brand">LEARNEXUS</h5>
         </div>
 
-        <!-- Main Content -->
-        <div class="main-content">
-            <!-- Top Header -->
-            <div class="top-header">
-                <div class="header-left">
-                    <h1>Manage Course</h1>
-                    <p>Manage your course content, students, and settings</p>
-                </div>
-                
-                <!-- User Profile -->
-                <div class="user-profile" onclick="window.location.href='settings.php'">
-                    <div class="user-avatar">
-                        <?php if (!empty($user['avatar']) && file_exists($user['avatar'])): ?>
-                            <img src="<?php echo htmlspecialchars($user['avatar']); ?>" alt="Avatar">
-                        <?php else: ?>
-                            <?php echo strtoupper(substr($_SESSION['first_name'], 0, 1)); ?>
-                        <?php endif; ?>
-                    </div>
-                    <div class="user-info">
-                        <h4><?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?></h4>
-                        <p>Teacher</p>
+        <div class="offcanvas-body p-0 d-flex flex-column h-100">
+            <div class="sidebar-brand px-4 py-4 mb-4 d-none d-lg-block">LEARNEXUS</div>
+            
+            <nav class="flex-grow-1 px-3">
+                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium" href="dashboard.php">
+                    <i class="bi bi-grid fs-5"></i><span>Dashboard</span>
+                </a>
+                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium" href="courses.php">
+                    <i class="bi bi-book fs-5"></i><span>My Courses</span>
+                </a>
+                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium" href="quizzes.php">
+                    <i class="bi bi-patch-question fs-5"></i><span>Quizzes</span>
+                </a>
+                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium" href="enrollees.php">
+                    <i class="bi bi-people fs-5"></i><span>Enrollees</span>
+                </a>
+                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium" href="settings.php">
+                    <i class="bi bi-gear fs-5"></i><span>Settings</span>
+                </a>
+            </nav>
+            
+            <div class="p-3 mt-auto">
+                <button class="btn btn-outline-danger w-100 rounded-pill fw-semibold" onclick="window.location.href='../logout.php'">
+                    <i class="bi bi-box-arrow-left me-2"></i>Logout
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content p-3 p-lg-4">
+        <div class="container-fluid">
+            <!-- Header with Search and Profile -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card border-0 rounded-4 shadow-sm">
+                        <div class="card-body p-3 d-flex justify-content-between align-items-center gap-3">
+                            <a href="courses.php" class="btn-back d-flex align-items-center gap-2 text-decoration-none">
+                                <i class="bi bi-arrow-left"></i> Back to Courses
+                            </a>
+                            
+                            <div class="d-flex align-items-center gap-3" onclick="window.location.href='settings.php'" role="button" style="flex-shrink: 0;">
+                                <span class="fw-semibold d-none d-sm-inline text-nowrap">
+                                    <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>
+                                </span>
+                                <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold user-avatar">
+                                    <?php if (!empty($user['avatar']) && file_exists($user['avatar'])): ?>
+                                        <img src="<?php echo htmlspecialchars($user['avatar']); ?>" alt="Avatar" 
+                                             class="w-100 h-100 rounded-circle object-fit-cover">
+                                    <?php else: ?>
+                                        <?php echo strtoupper(substr($_SESSION['first_name'], 0, 1)); ?>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Back Button -->
-            <a href="courses.php" class="btn-back">
-                <i class="bi bi-arrow-left"></i> Back to Courses
-            </a>
+            <!-- Page Title -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h1 class="h3 fw-bold"><i class="bi bi-gear me-2"></i>Manage Course</h1>
+                    <p class="text-muted">Manage your course content, students, and settings</p>
+                </div>
+            </div>
 
             <!-- Course Header -->
-            <div class="course-header">
-                <h1><?php echo htmlspecialchars($course['title']); ?></h1>
-                <p><?php echo htmlspecialchars($course['description']); ?></p>
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card course-header-card">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <h1 class="h2 fw-bold mb-2"><?php echo htmlspecialchars($course['title']); ?></h1>
+                                    <p class="mb-0 opacity-75"><?php echo htmlspecialchars($course['description']); ?></p>
+                                </div>
+                                <span class="course-badge">
+                                    <?php echo ucfirst($course['status']); ?>
+                                </span>
+                            </div>
+                            <div class="d-flex gap-4 text-white opacity-75">
+                                <div>
+                                    <i class="bi bi-person-fill me-1"></i>
+                                    <?php echo htmlspecialchars($course['instructorName']); ?>
+                                </div>
+                                <div>
+                                    <i class="bi bi-tag-fill me-1"></i>
+                                    <?php echo htmlspecialchars($course['category']); ?>
+                                </div>
+                                <div>
+                                    <i class="bi bi-currency-exchange me-1"></i>
+                                    ₱<?php echo number_format($course['price'], 2); ?>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Statistics -->
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="bi bi-people-fill"></i>
-                    </div>
-                    <div class="stat-content">
-                        <h3>Enrolled Students</h3>
-                        <div class="number"><?php echo $enrolledStudents; ?></div>
-                    </div>
-                </div>
-                
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="bi bi-file-earmark-pdf-fill"></i>
-                    </div>
-                    <div class="stat-content">
-                        <h3>Total Lessons</h3>
-                        <div class="number"><?php echo $totalLessons; ?></div>
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <div class="card stat-card">
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center" 
+                                     style="width: 60px; height: 60px; background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);">
+                                    <i class="bi bi-people-fill fs-4 text-primary"></i>
+                                </div>
+                                <div>
+                                    <h6 class="text-muted mb-1">Enrolled Students</h6>
+                                    <h3 class="fw-bold mb-0"><?php echo $enrolledStudents; ?></h3>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="bi bi-check-circle-fill"></i>
+                <div class="col-md-4">
+                    <div class="card stat-card">
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center" 
+                                     style="width: 60px; height: 60px; background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);">
+                                    <i class="bi bi-file-earmark-pdf-fill fs-4 text-success"></i>
+                                </div>
+                                <div>
+                                    <h6 class="text-muted mb-1">Total Lessons</h6>
+                                    <h3 class="fw-bold mb-0"><?php echo $totalLessons; ?></h3>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="stat-content">
-                        <h3>Students Completed</h3>
-                        <div class="number"><?php echo $completedStudents; ?></div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card stat-card">
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center" 
+                                     style="width: 60px; height: 60px; background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);">
+                                    <i class="bi bi-check-circle-fill fs-4 text-warning"></i>
+                                </div>
+                                <div>
+                                    <h6 class="text-muted mb-1">Students Completed</h6>
+                                    <h3 class="fw-bold mb-0"><?php echo $completedStudents; ?></h3>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- Tabs Section -->
-            <div class="tabs-section">
-                <div class="tabs">
-                    <div class="tab active" data-tab="details">
-                        <i class="bi bi-info-circle"></i> Course Details
-                    </div>
-                    <div class="tab" data-tab="lessons">
-                        <i class="bi bi-file-earmark-pdf"></i> Lessons
-                    </div>
-                    <div class="tab" data-tab="quizzes">
-                        <i class="bi bi-patch-question"></i> Quizzes
-                    </div>
-                    <div class="tab" data-tab="students">
-                        <i class="bi bi-people"></i> Students
+            <div class="tabs-section p-0 mb-4">
+                <!-- Tabs Header -->
+                <div class="card-body p-4 border-bottom">
+                    <div class="d-flex flex-wrap gap-2">
+                        <button class="status-tab <?php echo $activeTab === 'details' ? 'active' : ''; ?>" data-tab="details">
+                            <i class="bi bi-info-circle me-2"></i>Course Details
+                        </button>
+                        <button class="status-tab <?php echo $activeTab === 'lessons' ? 'active' : ''; ?>" data-tab="lessons">
+                            <i class="bi bi-file-earmark-pdf me-2"></i>Lessons (<?php echo $totalLessons; ?>)
+                        </button>
+                        <button class="status-tab <?php echo $activeTab === 'quizzes' ? 'active' : ''; ?>" data-tab="quizzes">
+                            <i class="bi bi-patch-question me-2"></i>Quizzes (<?php echo $totalQuizCount; ?>)
+                        </button>
+                        <button class="status-tab <?php echo $activeTab === 'students' ? 'active' : ''; ?>" data-tab="students">
+                            <i class="bi bi-people me-2"></i>Students (<?php echo $enrolledStudents; ?>)
+                        </button>
                     </div>
                 </div>
 
-                <!-- Course Details Tab -->
-                <div id="details-tab" class="tab-content active">
-                    <div class="section-card">
-                        <div class="section-title">
-                            <i class="bi bi-pencil"></i> Edit Course Information
-                        </div>
-                        
-                        <form method="POST">
-                            <input type="hidden" name="update_course" value="1">
-                            
-                            <div class="mb-4">
-                                <label class="form-label">Course Title</label>
-                                <input type="text" name="title" class="form-control" value="<?php echo htmlspecialchars($course['title']); ?>" required>
+                <!-- Tab Content -->
+                <div class="card-body p-4">
+                    <!-- Course Details Tab -->
+                    <div id="details-tab" class="tab-content <?php echo $activeTab === 'details' ? 'active' : ''; ?>">
+                        <div class="form-card p-4 mb-4">
+                            <div class="section-title">
+                                <i class="bi bi-pencil"></i> Edit Course Information
                             </div>
                             
-                            <div class="mb-4">
-                                <label class="form-label">Description</label>
-                                <textarea name="description" class="form-control" rows="4"><?php echo htmlspecialchars($course['description']); ?></textarea>
-                            </div>
-                            
-                            <div class="row mb-4">
-                                <div class="col-md-4">
-                                    <label class="form-label">Price (PHP)</label>
-                                    <input type="number" name="price" class="form-control" step="0.01" value="<?php echo $course['price']; ?>" required>
+                            <form method="POST">
+                                <input type="hidden" name="update_course" value="1">
+                                
+                                <div class="mb-4">
+                                    <label class="form-label">Course Title</label>
+                                    <input type="text" name="title" class="form-control" value="<?php echo htmlspecialchars($course['title']); ?>" required>
                                 </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Category</label>
-                                    <select name="category" class="form-control">
-                                        <option value="Programming" <?php echo $course['category'] == 'Programming' ? 'selected' : ''; ?>>Programming</option>
-                                        <option value="Design" <?php echo $course['category'] == 'Design' ? 'selected' : ''; ?>>Design</option>
-                                        <option value="Business" <?php echo $course['category'] == 'Business' ? 'selected' : ''; ?>>Business</option>
-                                        <option value="Marketing" <?php echo $course['category'] == 'Marketing' ? 'selected' : ''; ?>>Marketing</option>
-                                    </select>
+                                
+                                <div class="mb-4">
+                                    <label class="form-label">Description</label>
+                                    <textarea name="description" class="form-control" rows="4"><?php echo htmlspecialchars($course['description']); ?></textarea>
                                 </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Status</label>
-                                    <select name="status" class="form-control">
-                                        <option value="draft" <?php echo $course['status'] == 'draft' ? 'selected' : ''; ?>>Draft</option>
-                                        <option value="published" <?php echo $course['status'] == 'published' ? 'selected' : ''; ?>>Published</option>
-                                        <option value="archived" <?php echo $course['status'] == 'archived' ? 'selected' : ''; ?>>Archived</option>
-                                    </select>
+                                
+                                <div class="row mb-4">
+                                    <div class="col-md-4">
+                                        <label class="form-label">Price (PHP)</label>
+                                        <input type="number" name="price" class="form-control" step="0.01" value="<?php echo $course['price']; ?>" required>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Category</label>
+                                        <select name="category" class="form-control">
+                                            <option value="Programming" <?php echo $course['category'] == 'Programming' ? 'selected' : ''; ?>>Programming</option>
+                                            <option value="Design" <?php echo $course['category'] == 'Design' ? 'selected' : ''; ?>>Design</option>
+                                            <option value="Business" <?php echo $course['category'] == 'Business' ? 'selected' : ''; ?>>Business</option>
+                                            <option value="Marketing" <?php echo $course['category'] == 'Marketing' ? 'selected' : ''; ?>>Marketing</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Status</label>
+                                        <select name="status" class="form-control">
+                                            <option value="draft" <?php echo $course['status'] == 'draft' ? 'selected' : ''; ?>>Draft</option>
+                                            <option value="published" <?php echo $course['status'] == 'published' ? 'selected' : ''; ?>>Published</option>
+                                            <option value="archived" <?php echo $course['status'] == 'archived' ? 'selected' : ''; ?>>Archived</option>
+                                        </select>
+                                    </div>
                                 </div>
-                            </div>
-                            
-                            <div class="mb-4">
-                                <label class="form-label">Passing Score (%)</label>
-                                <input type="number" name="passingScore" class="form-control" min="0" max="100" value="<?php echo $course['passingScore']; ?>">
-                            </div>
-                            
-                            <button type="submit" class="btn-save">
-                                <i class="bi bi-save"></i> Save Changes
-                            </button>
-                        </form>
-
-                        <!-- Danger Zone - Delete Course -->
-                        <div class="danger-zone">
-                            <div class="danger-zone-title">
-                                <i class="bi bi-exclamation-triangle"></i> Danger Zone
-                            </div>
-                            <p class="text-muted mb-3">This action cannot be undone! All course data, lessons, quizzes, and student enrollments will be permanently deleted.</p>
-                            
-                            <form method="POST" id="deleteCourseForm">
-                                <input type="hidden" name="delete_course" value="1">
-                                <button type="button" class="btn-danger" onclick="confirmDeleteCourse()">
-                                    <i class="bi bi-trash"></i> Delete Course
+                                
+                                <div class="mb-4">
+                                    <label class="form-label">Passing Score (%)</label>
+                                    <input type="number" name="passingScore" class="form-control" min="0" max="100" value="<?php echo $course['passingScore']; ?>">
+                                </div>
+                                
+                                <button type="submit" class="btn-gradient">
+                                    <i class="bi bi-save me-2"></i> Save Changes
                                 </button>
                             </form>
                         </div>
-                    </div>
-                </div>
 
-                <!-- Lessons Tab -->
-                <div id="lessons-tab" class="tab-content">
-                    <div class="section-card">
-                        <div class="section-title">
-                            <i class="bi bi-upload"></i> Upload New Lesson
-                        </div>
-                        
-                        <form method="POST" enctype="multipart/form-data">
-                            <input type="hidden" name="upload_lesson" value="1">
-                            <div class="row">
-                                <div class="col-md-6 mb-4">
-                                    <label class="form-label">Lesson Title</label>
-                                    <input type="text" name="lesson_title" class="form-control" placeholder="e.g., Introduction to PHP" required>
+                        <!-- Danger Zone -->
+                        <div class="form-card p-4">
+                            <div class="danger-zone">
+                                <div class="danger-zone-title">
+                                    <i class="bi bi-exclamation-triangle"></i> Danger Zone
                                 </div>
-                                <div class="col-md-6 mb-4">
-                                    <label class="form-label">Upload PDF</label>
-                                    <input type="file" name="lesson_file" class="form-control" accept=".pdf" required>
-                                </div>
+                                <p class="text-muted mb-3">This action cannot be undone! All course data, lessons, quizzes, and student enrollments will be permanently deleted.</p>
+                                
+                                <form method="POST" id="deleteCourseForm">
+                                    <input type="hidden" name="delete_course" value="1">
+                                    <button type="button" class="btn-danger" onclick="confirmDeleteCourse()">
+                                        <i class="bi bi-trash me-2"></i> Delete Course
+                                    </button>
+                                </form>
                             </div>
-                            <button type="submit" class="btn-success">
-                                <i class="bi bi-cloud-upload"></i> Upload Lesson
-                            </button>
-                        </form>
+                        </div>
                     </div>
 
-                    <div class="section-card">
-                        <div class="section-title">
-                            <i class="bi bi-list"></i> All Lessons (<?php echo count($lessons); ?>)
-                        </div>
-                        
-                        <?php if (count($lessons) > 0): ?>
-                            <?php foreach ($lessons as $lesson): ?>
-                                <div class="lesson-item">
-                                    <div>
-                                        <i class="bi bi-file-earmark-pdf text-danger"></i>
-                                        <strong><?php echo htmlspecialchars($lesson['title']); ?></strong>
-                                        <small class="text-muted ms-2">Uploaded: <?php echo date('M d, Y', strtotime($lesson['uploadedAt'])); ?></small>
+                    <!-- Lessons Tab -->
+                    <div id="lessons-tab" class="tab-content <?php echo $activeTab === 'lessons' ? 'active' : ''; ?>">
+                        <div class="form-card p-4 mb-4">
+                            <div class="section-title">
+                                <i class="bi bi-upload"></i> Upload New Lesson
+                            </div>
+                            
+                            <form method="POST" enctype="multipart/form-data">
+                                <input type="hidden" name="upload_lesson" value="1">
+                                <div class="row">
+                                    <div class="col-md-6 mb-4">
+                                        <label class="form-label">Lesson Title</label>
+                                        <input type="text" name="lesson_title" class="form-control" placeholder="e.g., Introduction to PHP" required>
                                     </div>
-                                    <div>
-                                        <a href="../<?php echo $lesson['filename']; ?>" target="_blank" class="btn-action btn-outline-primary">
-                                            <i class="bi bi-eye"></i> View
-                                        </a>
-                                        <button class="btn-action btn-outline-danger" onclick="deleteLesson(<?php echo $lesson['lessonID']; ?>)">
-                                            <i class="bi bi-trash"></i> Delete
-                                        </button>
+                                    <div class="col-md-6 mb-4">
+                                        <label class="form-label">Upload PDF</label>
+                                        <input type="file" name="lesson_file" class="form-control" accept=".pdf" required>
                                     </div>
                                 </div>
-                            <?php endforeach; ?>
-                        <?php else: ?>
-                            <div class="empty-state">
-                                <i class="bi bi-file-earmark-pdf"></i>
-                                <h3>No Lessons Yet</h3>
-                                <p>No lessons uploaded yet. Upload your first lesson to get started!</p>
+                                <button type="submit" class="btn-success">
+                                    <i class="bi bi-cloud-upload me-2"></i> Upload Lesson
+                                </button>
+                            </form>
+                        </div>
+
+                        <div class="form-card p-4">
+                            <div class="section-title">
+                                <i class="bi bi-list"></i> All Lessons (<?php echo count($lessons); ?>)
                             </div>
-                        <?php endif; ?>
-                    </div>
-                </div>
-
-                <!-- Quizzes Tab -->
-                <div id="quizzes-tab" class="tab-content">
-                    <div class="section-card">
-                                <div class="section-title">
-                            <i class="bi bi-plus-circle"></i> Create New Quiz
-                        </div>
-                        
-                        <?php if (count($quizzes) > 0): ?>
-                            <button class="btn-success" disabled title="Only one quiz is allowed per course"> <i class="bi bi-plus-lg"></i> Create Quiz</button>
-                            <div class="text-muted" style="margin-top:8px;">Only one quiz is allowed per course. Edit the existing quiz below.</div>
-                        <?php else: ?>
-                            <a href="create_quiz.php?course_id=<?php echo $courseID; ?>" class="btn-success">
-                                <i class="bi bi-plus-lg"></i> Create Quiz
-                            </a>
-                        <?php endif; ?>
-                    </div>
-
-                    <div class="section-card">
-                        <div class="section-title">
-                            <i class="bi bi-list"></i> Quiz <?php echo count($quizzes) > 0 ? '(1)' : '(0)'; ?>
-                        </div>
-                        
-                        <?php if (count($quizzes) > 0): ?>
-                            <?php foreach ($quizzes as $quiz): ?>
-                                <div class="lesson-item">
-                                    <div>
-                                        <i class="bi bi-patch-question text-primary"></i>
-                                        <strong><?php echo htmlspecialchars($quiz['title']); ?></strong>
-                                        <small class="text-muted ms-2">Passing: <?php echo $quiz['passingScore']; ?>%</small>
-                                    </div>
-                                    <div>
-                                        <a href="edit_quiz.php?id=<?php echo $quiz['quizID']; ?>" class="btn-action btn-outline-primary">
-                                            <i class="bi bi-pencil"></i> Edit
-                                        </a>
-                                        <a href="quizresults.php?id=<?php echo $quiz['quizID']; ?>" class="btn-action btn-outline-info">
-                                            <i class="bi bi-graph-up"></i> Results
-                                        </a>
-                                    </div>
-                                </div>
-                            <?php endforeach; ?>
-                        <?php else: ?>
-                            <div class="empty-state">
-                                <i class="bi bi-patch-question"></i>
-                                <h3>No Quizzes Yet</h3>
-                                <p>No quizzes created yet. Create your first quiz to get started!</p>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-                </div>
-
-                <!-- Students Tab -->
-                <div id="students-tab" class="tab-content">
-                    <div class="section-card">
-                        <div class="section-title">
-                            <i class="bi bi-people"></i> Enrolled Students (<?php echo count($students); ?>)
-                        </div>
-                        
-                        <?php if (count($students) > 0): ?>
-                            <?php foreach ($students as $student): ?>
-                                <div class="student-row">
-                                    <div>
-                                        <strong><?php echo htmlspecialchars($student['firstName'] . ' ' . $student['lastName']); ?></strong>
-                                        <br>
-                                        <small class="text-muted"><?php echo htmlspecialchars($student['email']); ?></small>
-                                    </div>
-                                    <div class="text-center">
-                                        <div class="progress-bar-custom">
-                                            <div class="fill" style="width: <?php echo $student['progressPercentage']; ?>%"></div>
+                            
+                            <?php if (count($lessons) > 0): ?>
+                                <?php foreach ($lessons as $lesson): ?>
+                                    <div class="lesson-item">
+                                        <div>
+                                            <i class="bi bi-file-earmark-pdf text-danger me-2"></i>
+                                            <strong><?php echo htmlspecialchars($lesson['title']); ?></strong>
+                                            <small class="text-muted ms-2">Uploaded: <?php echo date('M d, Y', strtotime($lesson['uploadedAt'])); ?></small>
                                         </div>
-                                        <small class="text-muted"><?php echo round($student['progressPercentage']); ?>% Complete</small>
+                                        <div>
+                                            <a href="../<?php echo $lesson['filename']; ?>" target="_blank" class="btn-action btn-outline-primary">
+                                                <i class="bi bi-eye"></i> View
+                                            </a>
+                                            <button class="btn-action btn-outline-danger" onclick="deleteLesson(<?php echo $lesson['lessonID']; ?>)">
+                                                <i class="bi bi-trash"></i> Delete
+                                            </button>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <span class="badge <?php echo $student['status'] == 'completed' ? 'bg-success' : 'bg-primary'; ?>">
-                                            <?php echo ucfirst($student['status']); ?>
-                                        </span>
-                                    </div>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <div class="empty-state">
+                                    <i class="bi bi-file-earmark-pdf empty-state-icon"></i>
+                                    <h3 class="h5 fw-bold mb-3">No Lessons Yet</h3>
+                                    <p class="text-muted mb-4">No lessons uploaded yet. Upload your first lesson to get started!</p>
                                 </div>
-                            <?php endforeach; ?>
-                        <?php else: ?>
-                            <div class="empty-state">
-                                <i class="bi bi-people"></i>
-                                <h3>No Students Yet</h3>
-                                <p>No students have enrolled in this course yet.</p>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+
+                    <!-- Quizzes Tab -->
+                    <div id="quizzes-tab" class="tab-content <?php echo $activeTab === 'quizzes' ? 'active' : ''; ?>">
+                        <div class="form-card p-4 mb-4">
+                            <div class="section-title">
+                                <i class="bi bi-plus-circle"></i> Create New Quiz
                             </div>
-                        <?php endif; ?>
+                            
+                            <?php if (count($quizzes) > 0): ?>
+                                <button class="btn-success" disabled>
+                                    <i class="bi bi-plus-lg me-2"></i> Create Quiz
+                                </button>
+                                <div class="text-muted mt-2">Only one quiz is allowed per course. Edit the existing quiz below.</div>
+                            <?php else: ?>
+                                <a href="create_quiz.php?course_id=<?php echo $courseID; ?>" class="btn-success">
+                                    <i class="bi bi-plus-lg me-2"></i> Create Quiz
+                                </a>
+                            <?php endif; ?>
+                        </div>
+
+                        <div class="form-card p-4">
+                            <div class="section-title">
+                                <i class="bi bi-list"></i> Quiz <?php echo count($quizzes) > 0 ? '(1)' : '(0)'; ?>
+                            </div>
+                            
+                            <?php if (count($quizzes) > 0): ?>
+                                <?php foreach ($quizzes as $quiz): ?>
+                                    <div class="lesson-item">
+                                        <div>
+                                            <i class="bi bi-patch-question text-primary me-2"></i>
+                                            <strong><?php echo htmlspecialchars($quiz['title']); ?></strong>
+                                            <small class="text-muted ms-2">Passing: <?php echo $quiz['passingScore']; ?>%</small>
+                                        </div>
+                                        <div>
+                                            <a href="edit_quiz.php?id=<?php echo $quiz['quizID']; ?>" class="btn-action btn-outline-primary">
+                                                <i class="bi bi-pencil"></i> Edit
+                                            </a>
+                                            <a href="quizresults.php?id=<?php echo $quiz['quizID']; ?>" class="btn-action btn-outline-info">
+                                                <i class="bi bi-graph-up"></i> Results
+                                            </a>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <div class="empty-state">
+                                    <i class="bi bi-patch-question empty-state-icon"></i>
+                                    <h3 class="h5 fw-bold mb-3">No Quizzes Yet</h3>
+                                    <p class="text-muted mb-4">No quizzes created yet. Create your first quiz to get started!</p>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+
+                    <!-- Students Tab -->
+                    <div id="students-tab" class="tab-content <?php echo $activeTab === 'students' ? 'active' : ''; ?>">
+                        <div class="form-card p-4">
+                            <div class="section-title">
+                                <i class="bi bi-people"></i> Enrolled Students (<?php echo $studentsCount; ?>)
+                            </div>
+                            
+                            <?php if ($studentsCount > 0): ?>
+                                <?php foreach ($allStudents as $student): ?>
+                                    <div class="student-row">
+                                        <div>
+                                            <strong><?php echo htmlspecialchars($student['firstName'] . ' ' . $student['lastName']); ?></strong>
+                                            <br>
+                                            <small class="text-muted"><?php echo htmlspecialchars($student['email']); ?></small>
+                                        </div>
+                                        <div class="text-center">
+                                            <div class="progress-bar-custom">
+                                                <div class="fill" style="width: <?php echo $student['progressPercentage']; ?>%"></div>
+                                            </div>
+                                            <small class="text-muted"><?php echo round($student['progressPercentage']); ?>% Complete</small>
+                                        </div>
+                                        <div>
+                                            <span class="badge <?php echo $student['status'] == 'completed' ? 'bg-success' : 'bg-primary'; ?>">
+                                                <?php echo ucfirst($student['status']); ?>
+                                            </span>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <div class="empty-state">
+                                    <i class="bi bi-people empty-state-icon"></i>
+                                    <h3 class="h5 fw-bold mb-3">No Students Yet</h3>
+                                    <p class="text-muted mb-4">No students have enrolled in this course yet.</p>
+                                </div>
+                            <?php endif; ?>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    </main>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    // Tab functionality
-    document.querySelectorAll('.tab').forEach(tab => {
-        tab.addEventListener('click', function() {
-            // Update active tab
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            this.classList.add('active');
-            
-            // Show corresponding content
-            const tabId = this.dataset.tab;
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-            document.getElementById(tabId + '-tab').classList.add('active');
-        });
-    });
+// Hamburger animation
+const hamburgerBtn = document.getElementById('hamburgerBtn');
+const sidebar = document.getElementById('sidebar');
 
-    <?php if (isset($success)): ?>
-    Swal.fire({
-        icon: 'success',
-        title: 'Success!',
-        text: '<?php echo addslashes($success); ?>',
-        timer: 3000,
-        showConfirmButton: true
-    });
-    <?php endif; ?>
+if (hamburgerBtn && sidebar) {
+    sidebar.addEventListener('show.bs.offcanvas', () => hamburgerBtn.classList.add('active'));
+    sidebar.addEventListener('hide.bs.offcanvas', () => hamburgerBtn.classList.remove('active'));
+}
 
-    <?php if (isset($error)): ?>
-    Swal.fire({
-        icon: 'error',
-        title: 'Error!',
-        text: '<?php echo addslashes($error); ?>',
-        showConfirmButton: true
-    });
-    <?php endif; ?>
+// Active nav state
+const navLinks = document.querySelectorAll('.sidebar .nav-link');
+const currentPage = window.location.pathname.split('/').pop();
 
-    function deleteLesson(lessonID) {
-        Swal.fire({
-            title: 'Delete Lesson?',
-            text: "This action cannot be undone!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Yes, delete it!'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                window.location.href = 'delete_lesson.php?id=' + lessonID + '&course_id=<?php echo $courseID; ?>';
-            }
-        });
+navLinks.forEach(link => {
+    if (link.getAttribute('href') === currentPage) {
+        navLinks.forEach(l => l.classList.remove('active'));
+        link.classList.add('active');
     }
+    
+    // Close sidebar on mobile after click
+    link.addEventListener('click', () => {
+        if (window.innerWidth <= 992) {
+            const offcanvas = bootstrap.Offcanvas.getInstance(sidebar);
+            if (offcanvas) offcanvas.hide();
+        }
+    });
+});
 
-    function confirmDeleteCourse() {
-        Swal.fire({
-            title: 'Delete Course?',
-            html: `
-                <div style="text-align: left;">
-                    <p>This action will permanently delete:</p>
-                    <ul>
-                        <li>The course: <strong><?php echo htmlspecialchars($course['title']); ?></strong></li>
-                        <li>All lessons (<?php echo $totalLessons; ?> files)</li>
-                        <li>Quiz (<?php echo $totalQuizCount > 0 ? 1 : 0; ?>)</li>
-                        <li>All student enrollments (<?php echo $enrolledStudents; ?> students)</li>
-                    </ul>
-                    <p class="text-danger"><strong>This action cannot be undone!</strong></p>
-                    <p>Type <strong>"DELETE"</strong> to confirm:</p>
-                    <input type="text" id="confirmDeleteInput" class="swal2-input" placeholder="Type DELETE here">
-                </div>
-            `,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Yes, delete everything',
-            cancelButtonText: 'Cancel',
-            preConfirm: () => {
-                const confirmValue = document.getElementById('confirmDeleteInput').value;
-                if (confirmValue !== 'DELETE') {
-                    Swal.showValidationMessage('You must type "DELETE" to confirm');
-                }
-                return confirmValue === 'DELETE';
+// Tab functionality - JavaScript only, no page reload
+document.querySelectorAll('.status-tab').forEach(tab => {
+    tab.addEventListener('click', function() {
+        const tabId = this.dataset.tab;
+        
+        // Update URL without reloading page
+        const url = new URL(window.location);
+        url.searchParams.set('tab', tabId);
+        window.history.pushState({}, '', url);
+        
+        // Update active tab
+        document.querySelectorAll('.status-tab').forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+        
+        // Show corresponding content
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+        document.getElementById(tabId + '-tab').classList.add('active');
+    });
+});
+
+<?php if (isset($success)): ?>
+Swal.fire({
+    icon: 'success',
+    title: 'Success!',
+    text: '<?php echo addslashes($success); ?>',
+    timer: 3000,
+    showConfirmButton: true
+});
+<?php endif; ?>
+
+<?php if (isset($error)): ?>
+Swal.fire({
+    icon: 'error',
+    title: 'Error!',
+    text: '<?php echo addslashes($error); ?>',
+    showConfirmButton: true
+});
+<?php endif; ?>
+
+function deleteLesson(lessonID) {
+    Swal.fire({
+        title: 'Delete Lesson?',
+        text: "This action cannot be undone!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location.href = 'delete_lesson.php?id=' + lessonID + '&course_id=<?php echo $courseID; ?>&tab=lessons';
+        }
+    });
+}
+
+function confirmDeleteCourse() {
+    Swal.fire({
+        title: 'Delete Course?',
+        html: `
+            <div style="text-align: left;">
+                <p>This action will permanently delete:</p>
+                <ul>
+                    <li>The course: <strong><?php echo htmlspecialchars($course['title']); ?></strong></li>
+                    <li>All lessons (<?php echo $totalLessons; ?> files)</li>
+                    <li>Quiz (<?php echo $totalQuizCount; ?>)</li>
+                    <li>All student enrollments (<?php echo $enrolledStudents; ?> students)</li>
+                </ul>
+                <p class="text-danger"><strong>This action cannot be undone!</strong></p>
+                <p>Type <strong>"DELETE"</strong> to confirm:</p>
+                <input type="text" id="confirmDeleteInput" class="swal2-input" placeholder="Type DELETE here">
+            </div>
+        `,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete everything',
+        cancelButtonText: 'Cancel',
+        preConfirm: () => {
+            const confirmValue = document.getElementById('confirmDeleteInput').value;
+            if (confirmValue !== 'DELETE') {
+                Swal.showValidationMessage('You must type "DELETE" to confirm');
             }
-        }).then((result) => {
-            if (result.isConfirmed) {
-                document.getElementById('deleteCourseForm').submit();
-            }
-        });
-    }
+            return confirmValue === 'DELETE';
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('deleteCourseForm').submit();
+        }
+    });
+}
 </script>
 </body>
 </html>

@@ -42,698 +42,674 @@ $courses = $stmt->fetchAll();
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --sidebar-width: 260px;
         }
 
         body {
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             min-height: 100vh;
         }
 
-        /* Main Container */
-        .dashboard-container {
-            display: flex;
-            min-height: 100vh;
-        }
-
-        /* Sidebar - Left side like the image */
+        /* Sidebar - Matching student design */
         .sidebar {
-            width: 250px;
-            background: white;
-            padding: 30px 0;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-            position: fixed;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            z-index: 1000;
+            background: linear-gradient(180deg, #e8f0fe 0%, #f0f4ff 50%, #f8f9fa 100%);
+            box-shadow: 4px 0 20px rgba(0,0,0,0.08);
         }
 
-        .sidebar-header {
-            padding: 0 25px 30px;
-            border-bottom: 1px solid #eaeaea;
-            margin-bottom: 30px;
+        .sidebar-brand {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #1a73e8 0%, #4285f4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
-        .sidebar-title {
-            font-size: 24px;
-            font-weight: 700;
-            color: #2d3436;
-            letter-spacing: 0.5px;
-        }
-
-        .sidebar-menu {
-            padding: 0 20px;
-        }
-
-        .menu-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 14px 16px;
-            color: #636e72;
-            text-decoration: none;
-            border-radius: 8px;
-            margin-bottom: 8px;
-            transition: all 0.3s;
-            font-size: 15px;
-            font-weight: 500;
-        }
-
-        .menu-item:hover {
-            background: linear-gradient(135deg, #7fb3cd 0%, #7d4fab 100%);
-            color: white;
-            transform: translateX(5px);
-        }
-
-        .menu-item.active {
-            background: linear-gradient(135deg, #7fb3cd 0%, #7d4fab 100%);
-            color: white;
-            font-weight: 600;
-            box-shadow: 0 4px 12px rgba(125, 79, 171, 0.2);
-        }
-
-        .menu-item i {
-            font-size: 18px;
-            width: 24px;
-        }
-
-        .sidebar-footer {
-            position: absolute;
-            bottom: 30px;
-            left: 0;
-            right: 0;
-            padding: 0 25px;
-        }
-
-        /* UPDATED: Sidebar Logout Button - Simple Red Hover */
-        .menu-item.logout-item {
-            background: transparent;
-            color: #666;
-            border: 2px solid #ddd;
-            margin: 10px 16px;
-            border-radius: 20px;
-            padding: 12px 16px;
-            transition: all 0.3s ease;
+        /* Navigation - Matching student design */
+        .nav-link {
+            border-radius: 12px;
+            transition: all 0.2s ease;
             position: relative;
-            overflow: hidden;
         }
 
-        .menu-item.logout-item:hover {
-            background: #dc3545;
-            color: white;
-            border-color: #dc3545;
-            transform: translateX(5px);
-            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
-        }
-
-        /* Main Content */
-        .main-content {
-            flex: 1;
-            margin-left: 250px;
-            padding: 30px;
-        }
-
-        /* Top Header */
-        .top-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            padding: 20px 0;
-        }
-
-        .header-left h1 {
-            font-size: 32px;
-            font-weight: 700;
-            color: #2d3436;
-            margin-bottom: 8px;
-        }
-
-        .header-left p {
-            color: #636e72;
-            font-size: 16px;
-        }
-
-        /* User Profile */
-        .user-profile {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            background: white;
-            padding: 8px 16px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            cursor: pointer;
-            transition: transform 0.2s;
-            border: 1px solid #f0f0f0;
-        }
-
-        .user-profile:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #7fb3cd 0%, #7d4fab 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 700;
-            font-size: 16px;
-            overflow: hidden;
-        }
-
-        .user-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .user-info h4 {
-            font-size: 14px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 2px;
-        }
-
-        .user-info p {
-            font-size: 12px;
-            color: #666;
-        }
-
-        /* Filter Section */
-        .filter-section {
-            background: white;
-            padding: 12px 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            width: 220px;
-        }
-
-        .course-filter {
-            position: relative;
-            width: 100%;
-        }
-
-        .filter-dropdown {
-            width: 100%;
-            padding: 10px 35px 10px 15px;
-            border: 1px solid #e0e0e0;
-            border-radius: 6px;
-            background: #f9fafb;
-            color: #374151;
-            font-size: 14px;
-            cursor: pointer;
-            appearance: none;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            font-weight: 500;
-        }
-
-        .course-filter::after {
-            content: "▾";
+        .nav-link::before {
+            content: '';
             position: absolute;
-            right: 12px;
+            left: 0;
             top: 50%;
             transform: translateY(-50%);
-            color: #7d4fab;
-            font-size: 18px;
-            pointer-events: none;
-            font-weight: bold;
+            width: 4px;
+            height: 0;
+            background: #1a73e8;
+            border-radius: 0 4px 4px 0;
+            transition: height 0.25s ease;
         }
 
-        /* Tabs Section */
-        .tabs-section {
+        .nav-link:hover::before {
+            height: 60%;
+        }
+
+        .nav-link.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white !important;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .nav-link.active::before {
+            display: none;
+        }
+
+        /* Hamburger - Matching student design */
+        .hamburger-btn {
+            width: 50px;
+            height: 50px;
             background: white;
+            border: none;
             border-radius: 12px;
-            padding: 30px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+
+        .hamburger-icon span {
+            display: block;
+            width: 24px;
+            height: 3px;
+            background: #1a73e8;
+            border-radius: 3px;
+            transition: all 0.3s ease;
+            margin: 5px 0;
+        }
+
+        .hamburger-btn.active .hamburger-icon span:nth-child(1) {
+            transform: translateY(8px) rotate(45deg);
+        }
+
+        .hamburger-btn.active .hamburger-icon span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger-btn.active .hamburger-icon span:nth-child(3) {
+            transform: translateY(-8px) rotate(-45deg);
+        }
+
+        /* Main Content Margin */
+        @media (min-width: 992px) {
+            .main-content {
+                margin-left: var(--sidebar-width);
+            }
+        }
+
+        /* Stats Cards - Updated to match student design */
+        .stat-card {
+            border-radius: 16px;
+            border: none;
             box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            margin-bottom: 30px;
+            transition: transform 0.2s;
         }
 
-        .tabs {
-            display: flex;
-            gap: 20px;
-            border-bottom: 2px solid #e0e0e0;
-            margin-bottom: 30px;
-            padding: 0 0 15px 0;
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
         }
 
-        .tab {
-            padding: 12px 24px;
-            color: #666;
-            font-weight: 500;
-            cursor: pointer;
-            border-bottom: 2px solid transparent;
-            margin-bottom: -2px;
-            transition: all 0.2s;
-            border-radius: 6px 6px 0 0;
-        }
-
-        .tab.active {
-            color: #7d4fab;
-            border-bottom-color: #7d4fab;
-            background: rgba(125, 79, 171, 0.05);
-        }
-
-        .tab:hover:not(.active) {
-            color: #7d4fab;
-            background: rgba(125, 79, 171, 0.05);
-        }
-
-        /* Quiz Grid */
-        .quiz-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-        }
-
+        /* Quiz Cards - Matching student design */
         .quiz-card {
-            background: white;
-            border-radius: 12px;
-            overflow: hidden;
+            border-radius: 16px;
+            border: none;
             box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            transition: transform 0.3s, box-shadow 0.3s;
+            transition: transform 0.2s;
+            height: 100%;
         }
 
         .quiz-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 28px rgba(0,0,0,0.15);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
         }
 
-        .quiz-image {
-            width: 100%;
+        /* Status Badges */
+                /* Status Badges */
+        .badge-draft {
+            background: linear-gradient(135deg, #ff9800 0%, #ffb74d 100%);
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.35em 0.65em;
+        }
+
+        .badge-finished {
+            background: linear-gradient(135deg, #43a047 0%, #66bb6a 100%);
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.35em 0.65em;
+        }
+
+        /* Search Input */
+        .search-input {
+            border: 1px solid #dee2e6;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .search-input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25);
+        }
+
+        .search-icon {
+            color: #6c757d;
+        }
+
+        /* User Avatar */
+        .user-avatar {
+            width: 45px;
+            height: 45px;
+            min-width: 45px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        /* Status Tabs */
+        .status-tab {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 500;
+            transition: all 0.2s;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+        }
+
+        .status-tab:hover {
+            background-color: rgba(102, 126, 234, 0.1);
+        }
+
+        .status-tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        /* Quiz Image Placeholder */
+        .quiz-img-placeholder {
             height: 160px;
-            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #999;
-            font-size: 14px;
+            color: white;
+            font-size: 48px;
+            border-radius: 16px 16px 0 0;
             position: relative;
         }
 
-        .status-badge {
-            position: absolute;
-            top: 12px;
-            left: 12px;
-            padding: 6px 14px;
+        /* Action Buttons */
+        .btn-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+        }
+
+        .btn-gradient:hover {
+            background: linear-gradient(135deg, #5a6fd8 0%, #6a4098 100%);
+            color: white;
+        }
+
+        /* Course Filter */
+        .filter-dropdown {
+            border: 1px solid #dee2e6;
+            background: white;
+            padding: 8px 16px;
             border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: capitalize;
-            backdrop-filter: blur(10px);
+            font-weight: 500;
+            transition: all 0.2s;
         }
 
-        .status-badge.finished {
-            background: rgba(67, 160, 71, 0.9);
+        .filter-dropdown:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25);
+        }
+
+        /* Add Quiz Button */
+        .add-quiz-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-        }
-
-        .status-badge.draft {
-            background: rgba(251, 140, 0, 0.9);
-            color: white;
-        }
-
-        .quiz-body {
-            padding: 24px;
-        }
-
-        .quiz-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: #2d3436;
-            margin-bottom: 12px;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            min-height: 48px;
-        }
-
-        .quiz-meta {
-            font-size: 13px;
-            color: #666;
-            margin-bottom: 20px;
+            border: none;
+            font-size: 24px;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
             display: flex;
             align-items: center;
-            gap: 8px;
+            justify-content: center;
+            transition: all 0.2s;
+            z-index: 1000;
         }
 
-        .quiz-info {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 20px;
-            padding: 12px;
+        .add-quiz-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        /* Empty State */
+        .empty-state-icon {
+            font-size: 64px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Quiz Stats */
+        .quiz-stat-card {
             background: #f8f9fa;
-            border-radius: 8px;
-        }
-
-        .quiz-stat {
+            border-radius: 12px;
+            padding: 12px;
             text-align: center;
         }
 
-        .quiz-stat .number {
+        .quiz-stat-number {
             font-size: 20px;
             font-weight: 700;
             color: #2d3436;
             display: block;
         }
 
-        .quiz-stat .label {
-            font-size: 11px;
+        .quiz-stat-label {
+            font-size: 12px;
             color: #636e72;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-
-        .btn-quiz-action {
-            background: linear-gradient(135deg, #7fb3cd 0%, #7d4fab 100%);
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 8px;
-            font-weight: 600;
-            width: 100%;
-            transition: all 0.2s;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .btn-quiz-action:hover {
-            background: linear-gradient(135deg, #6fa3bd 0%, #6d3f9b 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(125, 79, 171, 0.3);
-        }
-
-        /* Empty State */
-        .empty-state {
-            text-align: center;
-            padding: 80px 40px;
-            background: white;
-            border-radius: 12px;
-            grid-column: 1 / -1;
-        }
-
-        .empty-state i {
-            font-size: 64px;
-            color: #ddd;
-            margin-bottom: 20px;
-        }
-
-        .empty-state h3 {
-            font-size: 24px;
-            color: #636e72;
-            margin-bottom: 12px;
-        }
-
-        .empty-state p {
-            color: #9ca3af;
-            margin: 0;
-        }
-
-        /* Add Quiz Button */
-        .add-quiz-btn {
-            position: fixed;
-            bottom: 40px;
-            right: 40px;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #7fb3cd 0%, #7d4fab 100%);
-            color: white;
-            border: none;
-            font-size: 28px;
-            box-shadow: 0 4px 12px rgba(125, 79, 171, 0.4);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-            z-index: 998;
-        }
-
-        .add-quiz-btn:hover {
-            background: linear-gradient(135deg, #6fa3bd 0%, #6d3f9b 100%);
-            transform: scale(1.05) translateY(-2px);
-            box-shadow: 0 8px 20px rgba(125, 79, 171, 0.5);
-        }
-
-        /* Responsive */
-        @media (max-width: 1024px) {
-            .quiz-grid {
-                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            }
-        }
-
-        @media (max-width: 768px) {
-            .sidebar {
-                width: 70px;
-                padding: 20px 0;
-            }
-            
-            .sidebar-title, .menu-item span, .user-info h4, .user-info p {
-                display: none;
-            }
-            
-            .main-content {
-                margin-left: 70px;
-            }
-            
-            .top-header {
-                flex-direction: column;
-                gap: 15px;
-                align-items: flex-start;
-            }
-            
-            .user-profile {
-                align-self: flex-start;
-            }
-            
-            .filter-section {
-                width: 100%;
-                margin-top: 15px;
-            }
-            
-            .tabs {
-                overflow-x: auto;
-                flex-wrap: nowrap;
-            }
-        }
     </style>
 </head>
 <body>
-    <div class="dashboard-container">
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <div class="sidebar-header">
-                <div class="sidebar-title">LEARNEXUS</div>
+    <!-- Hamburger Button (Mobile) -->
+    <div class="position-fixed top-0 start-0 p-3 d-lg-none" style="z-index: 1100;">
+        <button class="hamburger-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" id="hamburgerBtn">
+            <div class="hamburger-icon d-flex flex-column align-items-center justify-content-center">
+                <span></span>
+                <span></span>
+                <span></span>
             </div>
-            
-            <div class="sidebar-menu">
-                <a href="dashboard.php" class="menu-item">
-                    <i class="bi bi-speedometer2"></i>
-                    <span>Dashboard</span>
-                </a>
-                <a href="courses.php" class="menu-item">
-                    <i class="bi bi-book"></i>
-                    <span>Courses</span>
-                </a>
-                <a href="quizzes.php" class="menu-item active">
-                    <i class="bi bi-patch-question"></i>
-                    <span>Quizzes</span>
-                </a>
-                <a href="enrollees.php" class="menu-item">
-                    <i class="bi bi-people"></i>
-                    <span>Enrollees</span>
-                </a>
-                <a href="settings.php" class="menu-item">
-                    <i class="bi bi-gear"></i>
-                    <span>Settings</span>
-                </a>
-            </div>
-            
-            <div class="sidebar-footer">
-                <!-- UPDATED: Simple Red Hover Logout Button -->
-                <a href="../logout.php" class="menu-item logout-item">
-                    <i class="bi bi-box-arrow-left"></i>
-                    <span>Logout</span>
-                </a>
-            </div>
+        </button>
+    </div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar offcanvas-lg offcanvas-start position-fixed top-0 start-0 h-100" style="width: var(--sidebar-width);" id="sidebar">
+        <div class="offcanvas-header d-lg-none border-bottom">
+            <h5 class="offcanvas-title sidebar-brand">LEARNEXUS</h5>
         </div>
 
-        <!-- Main Content -->
-        <div class="main-content">
-            <!-- Top Header -->
-            <div class="top-header">
-                <div class="header-left">
-                    <h1>Quizzes</h1>
-                    <p>Manage and spread your knowledge</p>
-                </div>
-                
-                <!-- User Profile -->
-                <div class="user-profile" onclick="window.location.href='settings.php'">
-                    <div class="user-avatar">
-                        <?php if (!empty($user['avatar']) && file_exists($user['avatar'])): ?>
-                            <img src="<?php echo htmlspecialchars($user['avatar']); ?>" alt="Avatar">
-                        <?php else: ?>
-                            <?php echo strtoupper(substr($_SESSION['first_name'], 0, 1)); ?>
-                        <?php endif; ?>
-                    </div>
-                    <div class="user-info">
-                        <h4><?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?></h4>
-                        <p>Teacher</p>
-                    </div>
-                </div>
+        <div class="offcanvas-body p-0 d-flex flex-column h-100">
+            <div class="sidebar-brand px-4 py-4 mb-4 d-none d-lg-block">LEARNEXUS</div>
+            
+            <nav class="flex-grow-1 px-3">
+                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium" href="dashboard.php">
+                    <i class="bi bi-grid fs-5"></i><span>Dashboard</span>
+                </a>
+                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium" href="courses.php">
+                    <i class="bi bi-book fs-5"></i><span>My Courses</span>
+                </a>
+                <a class="nav-link active d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium" href="quizzes.php">
+                    <i class="bi bi-patch-question fs-5"></i><span>Quizzes</span>
+                </a>
+                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium" href="enrollees.php">
+                    <i class="bi bi-people fs-5"></i><span>Enrollees</span>
+                </a>
+                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium" href="settings.php">
+                    <i class="bi bi-gear fs-5"></i><span>Settings</span>
+                </a>
+            </nav>
+            
+            <div class="p-3 mt-auto">
+                <button class="btn btn-outline-danger w-100 rounded-pill fw-semibold" onclick="window.location.href='../logout.php'">
+                    <i class="bi bi-box-arrow-left me-2"></i>Logout
+                </button>
             </div>
+        </div>
+    </aside>
 
-            <!-- Tabs Section -->
-            <div class="tabs-section">
-                <!-- Filter -->
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-                    <div class="tabs">
-                        <div class="tab active" data-tab="all">All Quizzes</div>
-                        <div class="tab" data-tab="draft">Draft</div>
-                        <div class="tab" data-tab="finished">Finished</div>
-                    </div>
-                    
-                    <div class="filter-section">
-                        <div class="course-filter">
-                            <select class="filter-dropdown" id="courseFilter">
-                                <option value="">Per Courses</option>
-                                <?php foreach ($courses as $course): ?>
-                                    <option value="<?php echo $course['courseID']; ?>"><?php echo htmlspecialchars($course['title']); ?></option>
-                                <?php endforeach; ?>
-                            </select>
+    <!-- Main Content -->
+    <main class="main-content p-3 p-lg-4">
+        <div class="container-fluid">
+            <!-- Header with Search and Profile -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card border-0 rounded-4 shadow-sm">
+                        <div class="card-body p-3 d-flex justify-content-between align-items-center gap-3">
+                            <div class="position-relative" style="flex: 1; max-width: 500px;">
+                                <i class="bi bi-search search-icon position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                                <input type="text" id="quizSearch" class="form-control search-input rounded-pill ps-5" 
+                                       placeholder="Search your quizzes..." autocomplete="off">
+                            </div>
+                            
+                            <div class="d-flex align-items-center gap-3" onclick="window.location.href='settings.php'" role="button" style="flex-shrink: 0;">
+                                <span class="fw-semibold d-none d-sm-inline text-nowrap">
+                                    <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>
+                                </span>
+                                <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold user-avatar">
+                                    <?php if (!empty($user['avatar']) && file_exists($user['avatar'])): ?>
+                                        <img src="<?php echo htmlspecialchars($user['avatar']); ?>" alt="Avatar" 
+                                             class="w-100 h-100 rounded-circle object-fit-cover">
+                                    <?php else: ?>
+                                        <?php echo strtoupper(substr($_SESSION['first_name'], 0, 1)); ?>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Quiz Grid -->
-                <div class="quiz-grid" id="quizGrid">
-                    <?php if (count($quizzes) > 0): ?>
-                        <?php foreach ($quizzes as $quiz): ?>
-                            <div class="quiz-card" data-course="<?php echo $quiz['courseID']; ?>" data-status="<?php echo $quiz['questionCount'] > 0 ? 'finished' : 'draft'; ?>">
-                                <div class="quiz-image">
-                                    <span class="status-badge <?php echo $quiz['questionCount'] > 0 ? 'finished' : 'draft'; ?>">
-                                        <?php echo $quiz['questionCount'] > 0 ? 'Finished' : 'Draft'; ?>
-                                    </span>
-                                    <i class="bi bi-patch-question" style="font-size: 48px;"></i>
+            <!-- Page Title -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h1 class="h3 fw-bold"><i class="bi bi-patch-question me-2"></i>Quizzes</h1>
+                    <p class="text-muted">Manage and organize your quizzes</p>
+                </div>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="row g-3 mb-4">
+                <?php
+                // Calculate quiz counts
+                $totalQuizzes = count($quizzes);
+                $draftQuizzes = count(array_filter($quizzes, fn($q) => $q['questionCount'] == 0));
+                $finishedQuizzes = count(array_filter($quizzes, fn($q) => $q['questionCount'] > 0));
+                ?>
+                <div class="col-md-4">
+                    <div class="card stat-card">
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center" 
+                                     style="width: 60px; height: 60px; background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);">
+                                    <i class="bi bi-list-check fs-4 text-primary"></i>
                                 </div>
-                                <div class="quiz-body">
-                                    <div class="quiz-title"><?php echo htmlspecialchars($quiz['title']); ?></div>
-                                    <div class="quiz-meta">
-                                        <i class="bi bi-book"></i> <?php echo htmlspecialchars($quiz['courseTitle']); ?>
+                                <div>
+                                    <h6 class="text-muted mb-1">Total Quizzes</h6>
+                                    <h3 class="fw-bold mb-0"><?php echo $totalQuizzes; ?></h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card stat-card">
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center" 
+                                     style="width: 60px; height: 60px; background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);">
+                                    <i class="bi bi-clock-history fs-4 text-warning"></i>
+                                </div>
+                                <div>
+                                    <h6 class="text-muted mb-1">Draft</h6>
+                                    <h3 class="fw-bold mb-0"><?php echo $draftQuizzes; ?></h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card stat-card">
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center" 
+                                     style="width: 60px; height: 60px; background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);">
+                                    <i class="bi bi-check-circle fs-4 text-success"></i>
+                                </div>
+                                <div>
+                                    <h6 class="text-muted mb-1">Finished</h6>
+                                    <h3 class="fw-bold mb-0"><?php echo $finishedQuizzes; ?></h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Tabs and Filter -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card border-0 rounded-4 shadow-sm">
+                        <div class="card-body p-3">
+                            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                                <div class="d-flex flex-wrap gap-2">
+                                    <button class="status-tab active" data-status="all">All Quizzes</button>
+                                    <button class="status-tab" data-status="draft">Draft (<?php echo $draftQuizzes; ?>)</button>
+                                    <button class="status-tab" data-status="finished">Finished (<?php echo $finishedQuizzes; ?>)</button>
+                                </div>
+                                
+                                <div>
+                                    <select class="form-select filter-dropdown" id="courseFilter">
+                                        <option value="">All Courses</option>
+                                        <?php foreach ($courses as $course): ?>
+                                            <option value="<?php echo $course['courseID']; ?>"><?php echo htmlspecialchars($course['title']); ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quiz Grid -->
+            <div class="row g-4" id="quizzesContainer">
+                <?php if (count($quizzes) > 0): ?>
+                    <?php foreach ($quizzes as $quiz): ?>
+                        <?php 
+                            $statusClass = $quiz['questionCount'] > 0 ? 'finished' : 'draft';
+                            $statusText = $quiz['questionCount'] > 0 ? 'Finished' : 'Draft';
+                        ?>
+                        <div class="col-12 col-md-6 col-lg-4 quiz-column" data-quiz-status="<?php echo $statusClass; ?>" data-course-id="<?php echo $quiz['courseID']; ?>">
+                            <div class="card quiz-card">
+                                <div class="quiz-img-placeholder">
+                                    <span class="position-absolute top-0 start-0 m-3 badge badge-<?php echo $statusClass; ?> rounded-pill px-3 py-1">
+                                        <?php echo $statusText; ?>
+                                    </span>
+                                    <i class="bi bi-patch-question"></i>
+                                </div>
+                                <div class="card-body p-4">
+                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <div class="flex-grow-1">
+                                            <h5 class="fw-bold mb-2 text-truncate"><?php echo htmlspecialchars($quiz['title']); ?></h5>
+                                            <p class="text-muted small mb-0">
+                                                <i class="bi bi-book"></i> <?php echo htmlspecialchars($quiz['courseTitle']); ?>
+                                            </p>
+                                        </div>
+                                        
                                     </div>
                                     
-                                    <div class="quiz-info">
-                                        <div class="quiz-stat">
-                                            <span class="number"><?php echo $quiz['questionCount']; ?></span>
-                                            <span class="label">Questions</span>
+                                    <!-- Quiz Stats -->
+                                    <div class="row g-2 mb-3">
+                                        <div class="col-4">
+                                            <div class="quiz-stat-card">
+                                                <span class="quiz-stat-number"><?php echo $quiz['questionCount']; ?></span>
+                                                <span class="quiz-stat-label">Questions</span>
+                                            </div>
                                         </div>
-                                        <div class="quiz-stat">
-                                            <span class="number">
-                                                <?php 
-                                                // Safe check for timeLimitMinutes
-                                                if (isset($quiz['timeLimitMinutes']) && $quiz['timeLimitMinutes'] > 0) {
-                                                    echo $quiz['timeLimitMinutes'] . 'm';
-                                                } else {
-                                                    echo '∞';
-                                                }
-                                                ?>
-                                            </span>
-                                            <span class="label">Time Limit</span>
+                                        <div class="col-4">
+                                            <div class="quiz-stat-card">
+                                                <span class="quiz-stat-number">
+                                                    <?php 
+                                                    if (isset($quiz['timeLimitMinutes']) && $quiz['timeLimitMinutes'] > 0) {
+                                                        echo $quiz['timeLimitMinutes'] . 'm';
+                                                    } else {
+                                                        echo '∞';
+                                                    }
+                                                    ?>
+                                                </span>
+                                                <span class="quiz-stat-label">Time</span>
+                                            </div>
                                         </div>
-                                        <div class="quiz-stat">
-                                            <span class="number">
-                                                <?php 
-                                                // Safe check for passingScore
-                                                if (isset($quiz['passingScore']) && $quiz['passingScore'] > 0) {
-                                                    echo $quiz['passingScore'] . '%';
-                                                } else {
-                                                    echo '0%';
-                                                }
-                                                ?>
-                                            </span>
-                                            <span class="label">Passing Score</span>
+                                        <div class="col-4">
+                                            <div class="quiz-stat-card">
+                                                <span class="quiz-stat-number">
+                                                    <?php 
+                                                    if (isset($quiz['passingScore']) && $quiz['passingScore'] > 0) {
+                                                        echo $quiz['passingScore'] . '%';
+                                                    } else {
+                                                        echo '0%';
+                                                    }
+                                                    ?>
+                                                </span>
+                                                <span class="quiz-stat-label">Passing</span>
+                                            </div>
                                         </div>
                                     </div>
                                     
-                                    <button class="btn-quiz-action" 
+                                    <button class="btn btn-gradient w-100 rounded-pill fw-semibold" 
                                             onclick="window.location.href='edit_quiz.php?id=<?php echo $quiz['quizID']; ?>'">
-                                        <i class="bi bi-pencil"></i>
+                                        <i class="bi bi-pencil me-2"></i>
                                         <?php echo $quiz['questionCount'] > 0 ? 'Edit Quiz' : 'Continue Creating'; ?>
                                     </button>
                                 </div>
                             </div>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <div class="empty-state">
-                            <i class="bi bi-patch-question"></i>
-                            <h3>No Quizzes Yet</h3>
-                            <p>You haven't created any quizzes yet. Click the + button to create your first quiz!</p>
                         </div>
-                    <?php endif; ?>
-                </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <div class="col-12">
+                        <div class="card border-0 rounded-4 shadow-sm">
+                            <div class="card-body text-center py-5">
+                                <i class="bi bi-patch-question empty-state-icon mb-3"></i>
+                                <h3 class="h5 fw-bold mb-3">No Quizzes Yet</h3>
+                                <p class="text-muted mb-4">You haven't created any quizzes yet. Create your first quiz to get started!</p>
+                                <button class="btn btn-gradient rounded-pill px-4 fw-semibold" onclick="window.location.href='create_quiz.php'">
+                                    <i class="bi bi-plus me-2"></i>Create Quiz
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
-    </div>
+    </main>
 
     <!-- Add Quiz Button -->
     <button class="add-quiz-btn" onclick="window.location.href='create_quiz.php'">
         <i class="bi bi-plus"></i>
     </button>
 
-    <script>
-        // Tab filtering
-        document.querySelectorAll('.tab').forEach(tab => {
-            tab.addEventListener('click', function() {
-                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                this.classList.add('active');
-                
-                const filter = this.dataset.tab;
-                filterQuizzes();
-            });
-        });
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// Hamburger animation
+const hamburgerBtn = document.getElementById('hamburgerBtn');
+const sidebar = document.getElementById('sidebar');
 
-        // Course filter
-        document.getElementById('courseFilter').addEventListener('change', filterQuizzes);
+if (hamburgerBtn && sidebar) {
+    sidebar.addEventListener('show.bs.offcanvas', () => hamburgerBtn.classList.add('active'));
+    sidebar.addEventListener('hide.bs.offcanvas', () => hamburgerBtn.classList.remove('active'));
+}
 
-        function filterQuizzes() {
-            const tabFilter = document.querySelector('.tab.active').dataset.tab;
-            const courseFilter = document.getElementById('courseFilter').value;
-            const cards = document.querySelectorAll('.quiz-card');
-            
-            cards.forEach(card => {
-                let showCard = true;
-                
-                // Tab filter
-                if (tabFilter !== 'all') {
-                    showCard = card.dataset.status === tabFilter;
-                }
-                
-                // Course filter
-                if (courseFilter && showCard) {
-                    showCard = card.dataset.course === courseFilter;
-                }
-                
-                card.style.display = showCard ? 'block' : 'none';
-            });
-        }
-    </script>
+// Active nav state
+const navLinks = document.querySelectorAll('.sidebar .nav-link');
+const currentPage = window.location.pathname.split('/').pop();
+
+navLinks.forEach(link => {
+    if (link.getAttribute('href') === currentPage) {
+        navLinks.forEach(l => l.classList.remove('active'));
+        link.classList.add('active');
+    }
     
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    // Close sidebar on mobile after click
+    link.addEventListener('click', () => {
+        if (window.innerWidth <= 992) {
+            const offcanvas = bootstrap.Offcanvas.getInstance(sidebar);
+            if (offcanvas) offcanvas.hide();
+        }
+    });
+});
+
+// Search functionality
+document.getElementById('quizSearch').addEventListener('input', function() {
+    const term = this.value.toLowerCase();
+    document.querySelectorAll('.quiz-card').forEach(card => {
+        const title = card.querySelector('.fw-bold').textContent.toLowerCase();
+        const container = card.closest('.quiz-column');
+        if (title.includes(term)) {
+            container.style.display = '';
+        } else {
+            container.style.display = 'none';
+        }
+    });
+});
+
+// Status tab filtering
+document.querySelectorAll('.status-tab').forEach(tab => {
+    tab.addEventListener('click', function() {
+        // Update active tab
+        document.querySelectorAll('.status-tab').forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+        
+        filterQuizzes();
+    });
+});
+
+// Course filter
+document.getElementById('courseFilter').addEventListener('change', filterQuizzes);
+
+function filterQuizzes() {
+    const statusFilter = document.querySelector('.status-tab.active').dataset.status;
+    const courseFilter = document.getElementById('courseFilter').value;
+    const quizColumns = document.querySelectorAll('.quiz-column');
+    
+    quizColumns.forEach(column => {
+        const quizStatus = column.dataset.quizStatus;
+        const courseId = column.dataset.courseId;
+        
+        let showColumn = true;
+        
+        // Status filter
+        if (statusFilter !== 'all') {
+            showColumn = quizStatus === statusFilter;
+        }
+        
+        // Course filter
+        if (courseFilter && showColumn) {
+            showColumn = courseId === courseFilter;
+        }
+        
+        column.style.display = showColumn ? '' : 'none';
+    });
+    
+    // Show empty state if no quizzes match the filter
+    const visibleQuizzes = document.querySelectorAll('.quiz-column[style=""]').length;
+    const noQuizzesElement = document.querySelector('.col-12 .card.text-center');
+    
+    if (visibleQuizzes === 0 && noQuizzesElement) {
+        noQuizzesElement.closest('.col-12').style.display = '';
+    } else if (noQuizzesElement) {
+        noQuizzesElement.closest('.col-12').style.display = 'none';
+    }
+}
+
+// Delete confirmation
+function confirmDelete(quizID, quizTitle) {
+    if (confirm(`Are you sure you want to delete "${quizTitle}"? This action cannot be undone.`)) {
+        // Add your delete API call here
+        fetch('ajax_delete_quiz.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                quizID: quizID
+            })
+        })
+        .then(res => res.json())
+        .then(res => {
+            if (res.success) {
+                alert('Quiz deleted successfully!');
+                location.reload();
+            } else {
+                alert(res.message || 'Failed to delete quiz');
+            }
+        })
+        .catch(() => alert('Server error'));
+    }
+}
+</script>
 </body>
 </html>

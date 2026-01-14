@@ -39,7 +39,7 @@ $stmt = $conn->prepare("
 $stmt->execute([$teacherID]);
 $totalRevenue = $stmt->fetch()['total'];
 
-// Get recent courses (last 3)
+// Get recent courses (last 6)
 $stmt = $conn->prepare("
     SELECT c.*,
            (SELECT COUNT(*) FROM enrollments WHERE courseID = c.courseID) as enrollmentCount,
@@ -48,15 +48,10 @@ $stmt = $conn->prepare("
     FROM courses c
     WHERE c.teacherID = ?
     ORDER BY c.createdAt DESC
-    LIMIT 3
+    LIMIT 6
 ");
 $stmt->execute([$teacherID]);
 $recentCourses = $stmt->fetchAll();
-
-// Get all courses for search (if needed)
-$stmt = $conn->prepare("SELECT courseID, title FROM courses WHERE teacherID = ? ORDER BY title ASC");
-$stmt->execute([$teacherID]);
-$allCourses = $stmt->fetchAll();
 
 // Motivational phrases for teachers
 $teacherMotivations = [
@@ -85,699 +80,526 @@ $dailyMotivationTeacher = $teacherMotivations[$dayOfYear % count($teacherMotivat
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --sidebar-width: 260px;
         }
 
         body {
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             min-height: 100vh;
         }
 
-        /* Main Container */
-        .dashboard-container {
-            display: flex;
-            min-height: 100vh;
-        }
-
-        /* Sidebar - Left side like the image */
+        /* Sidebar */
         .sidebar {
-            width: 250px;
-            background: white;
-            padding: 30px 0;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-            position: fixed;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            z-index: 1000;
+            background: linear-gradient(180deg, #e8f0fe 0%, #f0f4ff 50%, #f8f9fa 100%);
+            box-shadow: 4px 0 20px rgba(0,0,0,0.08);
         }
 
-        .sidebar-header {
-            padding: 0 25px 30px;
-            border-bottom: 1px solid #eaeaea;
-            margin-bottom: 30px;
+        .sidebar-brand {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #1a73e8 0%, #4285f4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
-        .sidebar-title {
-            font-size: 24px;
-            font-weight: 700;
-            color: #2d3436;
-            letter-spacing: 0.5px;
+        /* Navigation */
+        .nav-link {
+            border-radius: 12px;
+            transition: all 0.2s ease;
+            position: relative;
         }
 
-        .sidebar-menu {
-            padding: 0 20px;
-        }
-
-        .menu-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 14px 16px;
-            color: #636e72;
-            text-decoration: none;
-            border-radius: 8px;
-            margin-bottom: 8px;
-            transition: all 0.3s;
-            font-size: 15px;
-            font-weight: 500;
-        }
-
-        .menu-item:hover {
-            background: linear-gradient(135deg, #7fb3cd 0%, #7d4fab 100%);
-            color: white;
-            transform: translateX(5px);
-        }
-
-        .menu-item.active {
-            background: linear-gradient(135deg, #7fb3cd 0%, #7d4fab 100%);
-            color: white;
-            font-weight: 600;
-            box-shadow: 0 4px 12px rgba(125, 79, 171, 0.2);
-        }
-
-        .menu-item i {
-            font-size: 18px;
-            width: 24px;
-        }
-
-        .sidebar-footer {
+        .nav-link::before {
+            content: '';
             position: absolute;
-            bottom: 30px;
             left: 0;
-            right: 0;
-            padding: 0 25px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 0;
+            background: #1a73e8;
+            border-radius: 0 4px 4px 0;
+            transition: height 0.25s ease;
         }
 
-        /* UPDATED: Sidebar Logout Button - Simple Red Hover */
-        .menu-item.logout-item {
-            background: transparent;
-            color: #666;
-            border: 2px solid #ddd;
-            margin: 10px 16px;
-            border-radius: 20px;
-            padding: 12px 16px;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
+        .nav-link:hover::before {
+            height: 60%;
         }
 
-        .menu-item.logout-item:hover {
-            background: #dc3545;
-            color: white;
-            border-color: #dc3545;
-            transform: translateX(5px);
-            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+        .nav-link.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white !important;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
         }
 
-        /* Main Content */
-        .main-content {
-            flex: 1;
-            margin-left: 250px;
-            padding: 30px;
+        .nav-link.active::before {
+            display: none;
         }
 
-        /* Top Header - LIKE THE IMAGE */
-        .top-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            padding: 20px 0;
-        }
-
-        /* Search Bar - Like the image */
-        .search-container {
-            flex: 1;
-            max-width: 400px;
-        }
-
-        .search-box {
-            position: relative;
-            width: 100%;
-        }
-
-        .search-box input {
-            width: 100%;
-            padding: 12px 45px 12px 15px;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
+        /* Hamburger */
+        .hamburger-btn {
+            width: 50px;
+            height: 50px;
             background: white;
-            font-size: 14px;
-            color: #333;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-            transition: all 0.3s;
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
         }
 
-        .search-box input:focus {
-            outline: none;
-            border-color: #7d4fab;
-            box-shadow: 0 0 0 3px rgba(125, 79, 171, 0.1);
+        .hamburger-icon span {
+            display: block;
+            width: 24px;
+            height: 3px;
+            background: #1a73e8;
+            border-radius: 3px;
+            transition: all 0.3s ease;
+            margin: 5px 0;
         }
 
-        .search-box input::placeholder {
-            color: #999;
+        .hamburger-btn.active .hamburger-icon span:nth-child(1) {
+            transform: translateY(8px) rotate(45deg);
+        }
+
+        .hamburger-btn.active .hamburger-icon span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger-btn.active .hamburger-icon span:nth-child(3) {
+            transform: translateY(-8px) rotate(-45deg);
+        }
+
+        /* Main Content Margin */
+        @media (min-width: 992px) {
+            .main-content {
+                margin-left: var(--sidebar-width);
+            }
+        }
+
+        /* Search */
+        .search-input {
+            padding-left: 2.5rem;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.15);
         }
 
         .search-icon {
             position: absolute;
-            right: 15px;
+            left: 1rem;
             top: 50%;
             transform: translateY(-50%);
-            color: #7d4fab;
-            font-size: 18px;
-            pointer-events: none;
+            color: #999;
         }
 
-        /* User Profile - Like the image */
-        .user-profile {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            background: white;
-            padding: 8px 16px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            cursor: pointer;
-            transition: transform 0.2s;
-            border: 1px solid #f0f0f0;
+        .search-input:focus ~ .search-icon {
+            color: #667eea;
         }
 
-        .user-profile:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-
-        .user-avatar {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #7fb3cd 0%, #7d4fab 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 700;
-            font-size: 14px;
-            overflow: hidden;
-        }
-
-        .user-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .user-info h4 {
-            font-size: 14px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 2px;
-        }
-
-        .user-info p {
-            font-size: 12px;
-            color: #666;
-        }
-
-        /* Welcome Section */
-        .welcome-section {
-            margin-bottom: 30px;
-        }
-
-        .welcome-section h1 {
-            font-size: 32px;
-            font-weight: 700;
-            color: #2d3436;
-            margin-bottom: 8px;
-        }
-
-        .welcome-section p {
-            color: #636e72;
-            font-size: 16px;
-        }
-
-        /* Stats Cards */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .stat-card {
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            transition: transform 0.3s, box-shadow 0.3s;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-        }
-
-        .stat-icon {
-            width: 60px;
-            height: 60px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-        }
-
-        .stat-card:nth-child(1) .stat-icon {
-            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
-            color: #1976d2;
-        }
-
-        .stat-card:nth-child(2) .stat-icon {
-            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
-            color: #388e3c;
-        }
-
-        .stat-card:nth-child(3) .stat-icon {
-            background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
-            color: #f57c00;
-        }
-
-        .stat-content h3 {
-            font-size: 12px;
-            color: #636e72;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 5px;
-            font-weight: 600;
-        }
-
-        .stat-content .number {
-            font-size: 32px;
-            font-weight: 700;
-            color: #2d3436;
-        }
-
-        /* Courses Section */
-        .courses-section {
-            background: white;
-            border-radius: 12px;
-            padding: 30px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-        }
-
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-        }
-
-        .section-header h2 {
-            font-size: 22px;
-            font-weight: 700;
-            color: #2d3436;
-        }
-
-        .courses-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-        }
-
-        .course-card {
-            background: #f8f9fa;
-            border-radius: 10px;
-            overflow: hidden;
-            transition: transform 0.3s, box-shadow 0.3s;
-        }
-
-        .course-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-        }
-
-        .course-header {
-            padding: 20px;
-            background: linear-gradient(135deg, #7fb3cd 0%, #7d4fab 100%);
-            color: white;
-            position: relative;
-        }
-
-        .course-status {
+        .clear-search {
             position: absolute;
-            top: 15px;
-            right: 15px;
-            padding: 5px 12px;
-            background: rgba(255,255,255,0.2);
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            backdrop-filter: blur(10px);
-        }
-
-        .course-title {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 10px;
-        }
-
-        .course-meta {
-            display: flex;
-            gap: 15px;
-            font-size: 12px;
-            opacity: 0.9;
-        }
-
-        .course-body {
-            padding: 20px;
-        }
-
-        .course-stats {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        .course-stat {
-            text-align: center;
-            padding: 10px;
-            background: white;
-            border-radius: 8px;
-        }
-
-        .course-stat .number {
-            font-size: 18px;
-            font-weight: 700;
-            color: #2d3436;
-            display: block;
-            margin-bottom: 3px;
-        }
-
-        .course-stat .label {
-            font-size: 11px;
-            color: #636e72;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .btn-manage {
-            width: 100%;
-            padding: 12px;
-            background: linear-gradient(135deg, #7fb3cd 0%, #7d4fab 100%);
-            color: white;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
             border: none;
-            border-radius: 8px;
-            font-weight: 600;
+            color: #999;
             cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
+            display: none;
         }
 
-        .btn-manage:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(125, 79, 171, 0.3);
+        .clear-search.show {
+            display: block;
         }
 
-        /* Empty State */
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            grid-column: 1 / -1;
+        /* Course Cards */
+        .course-header {
+            height: 160px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
 
-        .empty-state i {
-            font-size: 64px;
-            color: #ddd;
-            margin-bottom: 20px;
+        .card-hover {
+            transition: transform 0.2s, box-shadow 0.2s;
         }
 
-        .empty-state h3 {
-            font-size: 20px;
-            color: #636e72;
-            margin-bottom: 10px;
+        .card-hover:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 12px 28px rgba(0,0,0,0.15) !important;
         }
 
-        .empty-state p {
-            color: #b2bec3;
-            margin-bottom: 20px;
+        /* Hide/Show Animations */
+        .course-card-wrapper {
+            transition: opacity 0.3s ease, transform 0.3s ease;
         }
 
-        /* Responsive */
-        @media (max-width: 1024px) {
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
-            .courses-grid {
-                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            }
+        .course-card-wrapper.hidden {
+            opacity: 0;
+            transform: scale(0.95);
+            height: 0;
+            overflow: hidden;
+            margin: 0 !important;
+            padding: 0 !important;
         }
 
-        @media (max-width: 768px) {
-            .sidebar {
-                width: 70px;
-                padding: 20px 0;
-            }
-            
-            .sidebar-title, .menu-item span, .user-info h4, .user-info p {
-                display: none;
-            }
-            
-            .main-content {
-                margin-left: 70px;
-            }
-            
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .top-header {
-                flex-direction: column;
-                gap: 15px;
-                align-items: stretch;
-            }
-            
-            .search-container {
-                max-width: 100%;
-            }
-            
-            .user-profile {
-                justify-content: center;
-            }
+        /* Status badges */
+        .status-active {
+            background: #d4edda !important;
+            color: #155724 !important;
+        }
+
+        .status-draft {
+            background: #fff3cd !important;
+            color: #856404 !important;
+        }
+
+        .status-archived {
+            background: #f8d7da !important;
+            color: #721c24 !important;
         }
     </style>
 </head>
 <body>
-    <div class="dashboard-container">
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <div class="sidebar-header">
-                <div class="sidebar-title">LEARNEXUS</div>
+    <!-- Hamburger Button (Mobile) -->
+    <div class="position-fixed top-0 start-0 p-3 d-lg-none" style="z-index: 1100;">
+        <button class="hamburger-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" id="hamburgerBtn">
+            <div class="hamburger-icon d-flex flex-column align-items-center justify-content-center">
+                <span></span>
+                <span></span>
+                <span></span>
             </div>
-            
-            <div class="sidebar-menu">
-                <a href="dashboard.php" class="menu-item active">
-                    <i class="bi bi-speedometer2"></i>
-                    <span>Dashboard</span>
-                </a>
-                <a href="courses.php" class="menu-item">
-                    <i class="bi bi-book"></i>
-                    <span>Courses</span>
-                </a>
-                <a href="quizzes.php" class="menu-item">
-                    <i class="bi bi-patch-question"></i>
-                    <span>Quizzes</span>
-                </a>
-                <a href="enrollees.php" class="menu-item">
-                    <i class="bi bi-people"></i>
-                    <span>Enrollees</span>
-                </a>
-                <a href="settings.php" class="menu-item">
-                    <i class="bi bi-gear"></i>
-                    <span>Settings</span>
-                </a>
-            </div>
-            
-            <div class="sidebar-footer">
-                <!-- UPDATED: Simple Red Hover Logout Button -->
-                <a href="../logout.php" class="menu-item logout-item">
-                    <i class="bi bi-box-arrow-left"></i>
-                    <span>Logout</span>
-                </a>
-            </div>
+        </button>
+    </div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar offcanvas-lg offcanvas-start position-fixed top-0 start-0 h-100" style="width: var(--sidebar-width);" id="sidebar">
+        <div class="offcanvas-header d-lg-none border-bottom">
+            <h5 class="offcanvas-title sidebar-brand">LEARNEXUS</h5>
         </div>
 
-        <!-- Main Content -->
-        <div class="main-content">
-            <!-- Top Header - LIKE THE IMAGE -->
-            <div class="top-header">
-                <!-- Search Bar on the left -->
-                <div class="search-container">
-                    <div class="search-box">
-                        <input type="text" placeholder="Search your courses..." id="courseSearch">
-                        <div class="search-icon">
-                            <i class="bi bi-search"></i>
+        <div class="offcanvas-body p-0 d-flex flex-column h-100">
+            <div class="sidebar-brand px-4 py-4 mb-4 d-none d-lg-block">LEARNEXUS</div>
+            
+            <nav class="flex-grow-1 px-3">
+                <a class="nav-link active d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium" href="dashboard.php">
+                    <i class="bi bi-speedometer2 fs-5"></i><span>Dashboard</span>
+                </a>
+                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium" href="courses.php">
+                    <i class="bi bi-book fs-5"></i><span>Courses</span>
+                </a>
+                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium" href="quizzes.php">
+                    <i class="bi bi-patch-question fs-5"></i><span>Quizzes</span>
+                </a>
+                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium" href="enrollees.php">
+                    <i class="bi bi-people fs-5"></i><span>Enrollees</span>
+                </a>
+                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium" href="settings.php">
+                    <i class="bi bi-gear fs-5"></i><span>Settings</span>
+                </a>
+            </nav>
+            
+            <div class="p-3 mt-auto">
+                <button class="btn btn-outline-danger w-100 rounded-pill fw-semibold" onclick="window.location.href='../logout.php'">
+                    <i class="bi bi-box-arrow-left me-2"></i>Logout
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content p-3 p-lg-4">
+        <div class="container-fluid">
+            <!-- Header -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card border-0 rounded-4 shadow-sm">
+                        <div class="card-body p-3 d-flex justify-content-between align-items-center gap-3">
+                            <div class="position-relative" style="flex: 1; max-width: 500px;">
+                                <i class="bi bi-search search-icon position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                                <input type="text" id="courseSearch" class="form-control search-input rounded-pill ps-5" 
+                                       placeholder="Search your courses..." autocomplete="off">
+                                <button class="clear-search" id="clearSearch">
+                                    <i class="bi bi-x-circle-fill"></i>
+                                </button>
+                            </div>
+                            
+                            <div class="d-flex align-items-center gap-3" onclick="window.location.href='settings.php'" role="button" style="flex-shrink: 0;">
+                                <span class="fw-semibold d-none d-sm-inline text-nowrap">
+                                    <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>
+                                </span>
+                                <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold" 
+                                     style="width: 45px; height: 45px; min-width: 45px; background: linear-gradient(135deg, #667eea, #764ba2);">
+                                    <?php if (!empty($userAvatar) && file_exists($userAvatar)): ?>
+                                        <img src="<?php echo htmlspecialchars($userAvatar); ?>" alt="Avatar" 
+                                             class="w-100 h-100 rounded-circle object-fit-cover">
+                                    <?php else: ?>
+                                        <?php echo strtoupper(substr($_SESSION['first_name'], 0, 1)); ?>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-                
-                <!-- User Profile on the right -->
-                <div class="user-profile" onclick="window.location.href='settings.php'">
-                    <div class="user-avatar">
-                        <?php if (!empty($userAvatar) && file_exists($userAvatar)): ?>
-                            <img src="<?php echo htmlspecialchars($userAvatar); ?>" alt="Avatar">
-                        <?php else: ?>
-                            <?php echo strtoupper(substr($_SESSION['first_name'], 0, 1)); ?>
-                        <?php endif; ?>
-                    </div>
-                    <div class="user-info">
-                        <h4><?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?></h4>
-                        <p>Teacher</p>
-                    </div>
-                </div>
             </div>
 
-            <!-- Welcome Section -->
-            <div class="welcome-section">
-                <h1>Welcome, <?php echo htmlspecialchars($_SESSION['first_name']); ?>!</h1>
-                <p><?php echo htmlspecialchars($dailyMotivationTeacher); ?></p>
+            <!-- Welcome Banner -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card border-0 rounded-4 shadow text-white" 
+                         style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        <div class="card-body p-4 p-lg-5">
+                            <h2 class="h3 fw-bold mb-0"><?php echo htmlspecialchars($dailyMotivationTeacher); ?></h2>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Stats Cards -->
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="bi bi-book-fill"></i>
-                    </div>
-                    <div class="stat-content">
-                        <h3>Total Courses</h3>
-                        <div class="number"><?php echo $totalCourses; ?></div>
-                    </div>
-                </div>
-                
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="bi bi-people-fill"></i>
-                    </div>
-                    <div class="stat-content">
-                        <h3>Total Students</h3>
-                        <div class="number"><?php echo $totalStudents; ?></div>
+            <div class="row g-4 mb-4">
+                <div class="col-12 col-md-4">
+                    <div class="card border-0 rounded-4 shadow-sm card-hover h-100">
+                        <div class="card-body text-center p-4">
+                            <div class="bg-primary bg-opacity-10 text-primary rounded-3 d-flex align-items-center justify-content-center mx-auto mb-3" 
+                                 style="width: 56px; height: 56px; font-size: 1.5rem;">
+                                <i class="bi bi-book-fill"></i>
+                            </div>
+                            <p class="text-muted small mb-2">Total Courses</p>
+                            <h3 class="display-5 fw-bold mb-0"><?php echo $totalCourses; ?></h3>
+                        </div>
                     </div>
                 </div>
-                
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="bi bi-currency-dollar"></i>
+                <div class="col-12 col-md-4">
+                    <div class="card border-0 rounded-4 shadow-sm card-hover h-100">
+                        <div class="card-body text-center p-4">
+                            <div class="bg-success bg-opacity-10 text-success rounded-3 d-flex align-items-center justify-content-center mx-auto mb-3" 
+                                 style="width: 56px; height: 56px; font-size: 1.5rem;">
+                                <i class="bi bi-people-fill"></i>
+                            </div>
+                            <p class="text-muted small mb-2">Total Students</p>
+                            <h3 class="display-5 fw-bold mb-0"><?php echo $totalStudents; ?></h3>
+                        </div>
                     </div>
-                    <div class="stat-content">
-                        <h3>Total Revenue</h3>
-                        <div class="number">₱<?php echo number_format($totalRevenue, 2); ?></div>
+                </div>
+                <div class="col-12 col-md-4">
+                    <div class="card border-0 rounded-4 shadow-sm card-hover h-100">
+                        <div class="card-body text-center p-4">
+                            <div class="bg-warning bg-opacity-10 text-warning rounded-3 d-flex align-items-center justify-content-center mx-auto mb-3" 
+                                 style="width: 56px; height: 56px; font-size: 1.5rem;">
+                                <i class="bi bi-currency-dollar"></i>
+                            </div>
+                            <p class="text-muted small mb-2">Total Revenue</p>
+                            <h3 class="display-5 fw-bold mb-0">₱<?php echo number_format($totalRevenue, 2); ?></h3>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Recent Courses -->
-            <div class="courses-section">
-                <div class="section-header">
-                    <h2>Recent Courses</h2>
-                </div>
-                
-                <div class="courses-grid">
-                    <?php if (count($recentCourses) > 0): ?>
-                        <?php foreach ($recentCourses as $course): ?>
-                            <div class="course-card">
-                                <div class="course-header">
-                                    <div class="course-status <?php echo strtolower($course['status']); ?>">
-                                        <?php echo ucfirst($course['status']); ?>
-                                    </div>
-                                    <div class="course-title"><?php echo htmlspecialchars($course['title']); ?></div>
-                                    <div class="course-meta">
-                                        <span><i class="bi bi-calendar"></i> <?php echo date('M d, Y', strtotime($course['createdAt'])); ?></span>
-                                    </div>
-                                </div>
-                                <div class="course-body">
-                                    <div class="course-stats">
-                                        <div class="course-stat">
-                                            <span class="number"><?php echo $course['enrollmentCount']; ?></span>
-                                            <span class="label">Students</span>
-                                        </div>
-                                        <div class="course-stat">
-                                            <span class="number"><?php echo $course['lessonCount']; ?></span>
-                                            <span class="label">Lessons</span>
-                                        </div>
-                                        <div class="course-stat">
-                                            <span class="number"><?php echo $course['quizCount']; ?></span>
-                                            <span class="label">Quizzes</span>
-                                        </div>
-                                    </div>
-                                    <button class="btn-manage" onclick="window.location.href='manage_course.php?id=<?php echo $course['courseID']; ?>'">
-                                        <i class="bi bi-gear-fill"></i>
-                                        Manage Course
-                                    </button>
-                                </div>
+            <!-- Search Results Info -->
+            <div class="row mb-3 d-none" id="searchResultsInfo">
+                <div class="col-12">
+                    <div class="card border-0 rounded-4 shadow-sm">
+                        <div class="card-body p-3 d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="bi bi-search me-2"></i>
+                                Found <strong id="resultCount">0</strong> course(s) matching 
+                                "<span id="searchTerm" class="badge bg-warning text-dark"></span>"
                             </div>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <div class="empty-state">
-                            <i class="bi bi-book"></i>
-                            <h3>No Courses Yet</h3>
-                            <p>You haven't created any courses yet. Go to "Courses" section to get started!</p>
-                            <button class="btn-manage" onclick="window.location.href='courses.php'">
-                                <i class="bi bi-plus-circle"></i>
-                                Create First Course
+                            <button class="btn btn-sm btn-outline-secondary rounded-pill" onclick="clearSearch()">
+                                <i class="bi bi-x"></i> Clear
                             </button>
                         </div>
-                    <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section Title -->
+            <div class="row mb-3">
+                <div class="col-12">
+                    <h2 class="h4 fw-bold">Recent Courses</h2>
+                </div>
+            </div>
+
+            <!-- Course Cards -->
+            <div class="row g-4 mb-5" id="coursesContainer">
+                <?php if (count($recentCourses) > 0): ?>
+                    <?php foreach ($recentCourses as $course): ?>
+                        <div class="col-12 col-md-6 col-lg-4 course-card-wrapper" 
+                             data-course-title="<?php echo strtolower(htmlspecialchars($course['title'])); ?>"
+                             data-course-status="<?php echo strtolower(htmlspecialchars($course['status'])); ?>">
+                            <div class="card border-0 rounded-4 shadow-sm card-hover h-100">
+                                <!-- Course Header -->
+                                <div class="course-header position-relative d-flex align-items-center justify-content-center">
+                                    <span class="badge status-<?php echo strtolower($course['status']); ?> position-absolute top-0 end-0 m-2 shadow-sm fw-bold">
+                                        <?php echo ucfirst($course['status']); ?>
+                                    </span>
+                                    <span class="fs-1">📚</span>
+                                </div>
+                                
+                                <div class="card-body p-4">
+                                    <p class="text-primary small text-uppercase fw-bold mb-2">
+                                        <?php echo htmlspecialchars($course['category'] ?? 'General'); ?>
+                                    </p>
+                                    <h5 class="fw-bold mb-3"><?php echo htmlspecialchars($course['title']); ?></h5>
+                                    
+                                    <div class="row g-2 mb-3">
+                                        <div class="col-4">
+                                            <div class="text-center p-2 bg-light rounded-3">
+                                                <div class="fw-bold text-primary"><?php echo $course['enrollmentCount']; ?></div>
+                                                <small class="text-muted">Students</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="text-center p-2 bg-light rounded-3">
+                                                <div class="fw-bold text-success"><?php echo $course['lessonCount']; ?></div>
+                                                <small class="text-muted">Lessons</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="text-center p-2 bg-light rounded-3">
+                                                <div class="fw-bold text-warning"><?php echo $course['quizCount']; ?></div>
+                                                <small class="text-muted">Quizzes</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <p class="text-muted small mb-3">
+                                        <i class="bi bi-calendar me-1"></i>
+                                        Created <?php echo date('M d, Y', strtotime($course['createdAt'])); ?>
+                                    </p>
+                                    
+                                </div>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <div class="col-12" id="emptyState">
+                        <div class="card border-0 rounded-4 shadow-sm">
+                            <div class="card-body text-center py-5">
+                                <i class="bi bi-book display-1 text-muted mb-3"></i>
+                                <h3 class="h5 fw-bold mb-3">No Courses Yet</h3>
+                                <p class="text-muted mb-4">You haven't created any courses yet. Start creating to inspire your students!</p>
+                                <a href="courses.php" class="btn btn-primary rounded-pill px-4 fw-semibold">
+                                    <i class="bi bi-plus-circle me-2"></i>Create First Course
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                <?php endif; ?>
+            </div>
+
+            <!-- No Results -->
+            <div class="row d-none" id="noResults">
+                <div class="col-12">
+                    <div class="card border-0 rounded-4 shadow-sm">
+                        <div class="card-body text-center py-5">
+                            <i class="bi bi-search display-1 text-muted mb-3"></i>
+                            <h3 class="h5 fw-bold mb-3">No Courses Found</h3>
+                            <p class="text-muted mb-4">We couldn't find any courses matching your search.</p>
+                            <button class="btn btn-primary rounded-pill px-4 fw-semibold" onclick="clearSearch()">
+                                <i class="bi bi-arrow-counterclockwise me-2"></i>Clear Search
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Search functionality
-        document.getElementById('courseSearch').addEventListener('input', function() {
-            const searchTerm = this.value.toLowerCase();
-            const courseCards = document.querySelectorAll('.course-card');
+        // Hamburger animation
+        const hamburgerBtn = document.getElementById('hamburgerBtn');
+        const sidebar = document.getElementById('sidebar');
+
+        if (hamburgerBtn && sidebar) {
+            sidebar.addEventListener('show.bs.offcanvas', () => hamburgerBtn.classList.add('active'));
+            sidebar.addEventListener('hide.bs.offcanvas', () => hamburgerBtn.classList.remove('active'));
+        }
+
+        // Active nav state
+        const navLinks = document.querySelectorAll('.sidebar .nav-link');
+        const currentPage = window.location.pathname.split('/').pop();
+        
+        navLinks.forEach(link => {
+            if (link.getAttribute('href') === currentPage) {
+                navLinks.forEach(l => l.classList.remove('active'));
+                link.classList.add('active');
+            }
             
-            courseCards.forEach(card => {
-                const courseTitle = card.querySelector('.course-title').textContent.toLowerCase();
-                if (courseTitle.includes(searchTerm) || searchTerm === '') {
-                    card.style.display = 'block';
-                } else {
-                    card.style.display = 'none';
+            link.addEventListener('click', () => {
+                if (window.innerWidth <= 992) {
+                    const offcanvas = bootstrap.Offcanvas.getInstance(sidebar);
+                    if (offcanvas) offcanvas.hide();
                 }
             });
         });
-        
-        // Add animation to cards on load
-        document.addEventListener('DOMContentLoaded', function() {
-            const cards = document.querySelectorAll('.stat-card, .course-card');
-            cards.forEach((card, index) => {
-                setTimeout(() => {
-                    card.style.opacity = '0';
-                    card.style.transform = 'translateY(20px)';
-                    card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-                    
-                    setTimeout(() => {
-                        card.style.opacity = '1';
-                        card.style.transform = 'translateY(0)';
-                    }, 50);
-                }, index * 100);
-            });
+
+        // Search Functionality
+        const searchInput = document.getElementById('courseSearch');
+        const clearSearchBtn = document.getElementById('clearSearch');
+        const searchResultsInfo = document.getElementById('searchResultsInfo');
+        const resultCount = document.getElementById('resultCount');
+        const searchTermSpan = document.getElementById('searchTerm');
+        const noResultsEl = document.getElementById('noResults');
+        const emptyState = document.getElementById('emptyState');
+        const courseCards = document.querySelectorAll('.course-card-wrapper');
+        const totalCourses = courseCards.length;
+
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase().trim();
+            clearSearchBtn.classList.toggle('show', searchTerm.length > 0);
+            filterCourses(searchTerm);
         });
+
+        clearSearchBtn.addEventListener('click', clearSearch);
+        searchInput.addEventListener('keydown', (e) => e.key === 'Escape' && clearSearch());
+
+        function filterCourses(searchTerm) {
+            let visibleCount = 0;
+            
+            if (!searchTerm) {
+                courseCards.forEach(card => card.classList.remove('hidden'));
+                searchResultsInfo.classList.add('d-none');
+                noResultsEl.classList.add('d-none');
+                if (emptyState) emptyState.style.display = totalCourses === 0 ? 'block' : 'none';
+                return;
+            }
+            
+            if (emptyState) emptyState.style.display = 'none';
+            
+            courseCards.forEach(card => {
+                const title = card.getAttribute('data-course-title') || '';
+                const status = card.getAttribute('data-course-status') || '';
+                const matches = title.includes(searchTerm) || status.includes(searchTerm);
+                
+                card.classList.toggle('hidden', !matches);
+                if (matches) visibleCount++;
+            });
+            
+            if (visibleCount > 0) {
+                searchResultsInfo.classList.remove('d-none');
+                noResultsEl.classList.add('d-none');
+                resultCount.textContent = visibleCount;
+                searchTermSpan.textContent = searchTerm;
+            } else {
+                searchResultsInfo.classList.add('d-none');
+                noResultsEl.classList.remove('d-none');
+            }
+        }
+
+        function clearSearch() {
+            searchInput.value = '';
+            clearSearchBtn.classList.remove('show');
+            searchResultsInfo.classList.add('d-none');
+            noResultsEl.classList.add('d-none');
+            courseCards.forEach(card => card.classList.remove('hidden'));
+            if (emptyState) emptyState.style.display = totalCourses === 0 ? 'block' : 'none';
+            searchInput.focus();
+        }
     </script>
 </body>
 </html>
