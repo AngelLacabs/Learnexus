@@ -19,7 +19,7 @@ $user = $userStmt->fetch();
 // Get search query
 $searchQuery = isset($_GET['search']) ? trim($_GET['search']) : '';
 
-// Get all certificates for this user with optional search
+// Get certificates with optional search
 if (!empty($searchQuery)) {
     $stmt = $conn->prepare("
         SELECT 
@@ -34,11 +34,7 @@ if (!empty($searchQuery)) {
         JOIN courses c ON cert.courseID = c.courseID
         JOIN users u ON c.teacherID = u.userID
         WHERE cert.userID = ? 
-        AND (
-            c.title LIKE ? OR 
-            c.description LIKE ? OR 
-            CONCAT(u.firstName, ' ', u.lastName) LIKE ?
-        )
+        AND (c.title LIKE ? OR c.description LIKE ? OR CONCAT(u.firstName, ' ', u.lastName) LIKE ?)
         ORDER BY cert.issuedAt DESC
     ");
     $searchParam = "%{$searchQuery}%";
@@ -74,378 +70,133 @@ $certificates = $stmt->fetchAll();
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
+        :root {
+            --sidebar-width: 260px;
+            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-accent: linear-gradient(135deg, #1a73e8 0%, #4285f4 100%);
+        }
+
         body {
-            background: #f8f9fa;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-
-        .sidebar {
-            width: 260px;
-            height: 100vh;
-            background: white;
-            position: fixed;
-            left: 0;
-            top: 0;
-            border-right: 1px solid #e0e0e0;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .sidebar-header {
-            padding: 24px 20px;
-            border-bottom: 1px solid #e0e0e0;
-        }
-
-        .brand {
-            font-size: 22px;
-            font-weight: 700;
-            color: #1e88e5;
-            text-decoration: none;
-        }
-
-        .sidebar-menu {
-            flex: 1;
-            padding: 20px 0;
-            overflow-y: auto;
-        }
-
-        .menu-item {
-            padding: 12px 20px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            color: #666;
-            text-decoration: none;
-            transition: all 0.2s;
-            border-left: 3px solid transparent;
-        }
-
-        .menu-item:hover {
-            background: #f8f9fa;
-            color: #1e88e5;
-        }
-
-        .menu-item.active {
-            background: #e3f2fd;
-            color: #1e88e5;
-            border-left-color: #1e88e5;
-            font-weight: 600;
-        }
-
-        .menu-item i {
-            font-size: 20px;
-            width: 24px;
-        }
-
-        .sidebar-footer {
-            padding: 20px;
-            border-top: 1px solid #e0e0e0;
-        }
-
-        .main-content {
-            margin-left: 260px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             min-height: 100vh;
         }
 
-        .top-bar {
-            background: white;
-            padding: 20px 40px;
-            border-bottom: 1px solid #e0e0e0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        .sidebar {
+            background: linear-gradient(180deg, #e8f0fe 0%, #f0f4ff 50%, #f8f9fa 100%);
+            width: var(--sidebar-width);
+            box-shadow: 4px 0 20px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease;
         }
 
-        .search-box {
+        .sidebar-brand {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: var(--gradient-accent);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 1px;
+        }
+
+        .nav-link {
+            border-radius: 12px;
+            transition: all 0.2s ease;
             position: relative;
-            width: 400px;
+            color: #444;
         }
 
-        .search-box input {
-            width: 100%;
-            padding: 10px 40px 10px 16px;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 14px;
-        }
-
-        .search-box input:focus {
-            outline: none;
-            border-color: #1e88e5;
-            box-shadow: 0 0 0 3px rgba(30, 136, 229, 0.1);
-        }
-
-        .search-box button {
+        .nav-link::before {
+            content: '';
             position: absolute;
-            right: 4px;
+            left: 0;
             top: 50%;
             transform: translateY(-50%);
-            background: #1e88e5;
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: background 0.2s;
+            width: 4px;
+            height: 0;
+            background: #1a73e8;
+            border-radius: 0 4px 4px 0;
+            transition: height 0.25s ease;
         }
 
-        .search-box button:hover {
-            background: #1976d2;
+        .nav-link:hover {
+            background: rgba(102, 126, 234, 0.1);
+            color: #1a73e8;
+            transform: translateX(4px);
         }
 
-        .search-box i {
-            font-size: 14px;
+        .nav-link:hover::before {
+            height: 60%;
         }
 
-        .user-section {
-            display: flex;
-            align-items: center;
-            gap: 20px;
+        .nav-link.active {
+            background: var(--gradient-primary);
+            color: white !important;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
         }
 
-        .notification-icon {
-            position: relative;
-            cursor: pointer;
+        .nav-link.active::before {
+            display: none;
         }
 
-        .notification-badge {
-            position: absolute;
-            top: -6px;
-            right: -6px;
-            background: #f44336;
-            color: white;
-            font-size: 10px;
-            padding: 2px 5px;
-            border-radius: 10px;
-            font-weight: 600;
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            cursor: pointer;
-            padding: 8px 12px;
-            border-radius: 8px;
-            transition: background 0.2s;
-        }
-
-        .user-info:hover {
-            background: #f5f5f5;
-        }
-
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: #1e88e5;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 600;
-            overflow: hidden;
-        }
-
-        .content-area {
-            padding: 40px;
-        }
-
-        .page-header {
-            margin-bottom: 32px;
-        }
-
-        .page-header h1 {
-            font-size: 32px;
-            font-weight: 700;
-            margin-bottom: 8px;
-        }
-
-        .search-results-info {
-            background: #e3f2fd;
-            padding: 12px 20px;
-            border-radius: 8px;
-            margin-bottom: 24px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .search-results-info .clear-search {
+        .hamburger-btn {
+            width: 50px;
+            height: 50px;
             background: white;
             border: none;
-            padding: 6px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 500;
-            color: #1e88e5;
-        }
-
-        .search-results-info .clear-search:hover {
-            background: #f5f5f5;
-        }
-
-        .certificates-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-            gap: 24px;
-        }
-
-        .certificate-card {
-            background: white;
             border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+
+        .hamburger-icon span {
+            display: block;
+            width: 24px;
+            height: 3px;
+            background: #1a73e8;
+            border-radius: 3px;
+            transition: all 0.3s ease;
+            margin: 5px 0;
+        }
+
+        .hamburger-btn.active .hamburger-icon span:nth-child(1) {
+            transform: translateY(8px) rotate(45deg);
+        }
+
+        .hamburger-btn.active .hamburger-icon span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger-btn.active .hamburger-icon span:nth-child(3) {
+            transform: translateY(-8px) rotate(-45deg);
+        }
+
+        @media (min-width: 993px) {
+            .main-content {
+                margin-left: var(--sidebar-width);
+            }
+        }
+
+        @media (max-width: 992px) {
+            .sidebar {
+                transform: translateX(-100%);
+                z-index: 1050;
+            }
+            .sidebar.show {
+                transform: translateX(0);
+            }
+        }
+
+        .card-hover {
             transition: transform 0.2s, box-shadow 0.2s;
             cursor: pointer;
         }
 
-        .certificate-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+        .card-hover:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 12px 28px rgba(0,0,0,0.15) !important;
         }
 
-        .certificate-preview {
-            height: 220px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            padding: 32px;
-            color: white;
-        }
-
-        .certificate-preview-content {
-            text-align: center;
-            width: 100%;
-        }
-
-        .certificate-preview h3 {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 12px;
-        }
-
-        .certificate-badge {
-            width: 60px;
-            height: 60px;
-            background: rgba(255,255,255,0.2);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 16px;
-        }
-
-        .certificate-badge i {
-            font-size: 32px;
-        }
-
-        .certificate-body {
-            padding: 20px;
-        }
-
-        .certificate-title {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: #333;
-        }
-
-        .certificate-meta {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            margin-bottom: 16px;
-        }
-
-        .meta-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 14px;
-            color: #666;
-        }
-
-        .meta-item i {
-            color: #999;
-        }
-
-        .certificate-actions {
-            display: flex;
-            gap: 8px;
-        }
-
-        .btn-view {
-            flex: 1;
-            padding: 10px;
-            background: #1e88e5;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .btn-view:hover {
-            background: #1976d2;
-        }
-
-        .btn-download {
-            padding: 10px 16px;
-            background: transparent;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            color: #666;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .btn-download:hover {
-            background: #f8f9fa;
-            border-color: #ccc;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 80px 40px;
-            background: white;
-            border-radius: 12px;
-        }
-
-        .empty-state i {
-            font-size: 64px;
-            color: #ddd;
-            margin-bottom: 20px;
-        }
-
-        .empty-state h3 {
-            font-size: 24px;
-            color: #666;
-            margin-bottom: 12px;
-        }
-
-        .empty-state p {
-            color: #999;
-            margin-bottom: 24px;
-        }
-
-        .btn-browse {
-            padding: 12px 32px;
-            background: #1e88e5;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            text-decoration: none;
-            display: inline-block;
-        }
-
-        .btn-browse:hover {
-            background: #1976d2;
-            color: white;
+        .cert-header {
+            height: 200px;
         }
 
         mark {
@@ -456,109 +207,133 @@ $certificates = $stmt->fetchAll();
     </style>
 </head>
 <body>
-    <!-- Sidebar -->
-    <div class="sidebar">
-        <div class="sidebar-header">
-            <a href="dashboard.php" class="brand">LEARNEXUS</a>
-        </div>
-        
-        <div class="sidebar-menu">
-            <a href="dashboard.php" class="menu-item">
-                <i class="bi bi-grid"></i>
-                <span>Dashboard</span>
-            </a>
-            <a href="browse_courses.php" class="menu-item">
-                <i class="bi bi-book"></i>
-                <span>Course Catalog</span>
-            </a>
-            <a href="my_courses.php" class="menu-item">
-                <i class="bi bi-collection"></i>
-                <span>My Courses</span>
-            </a>
-            <a href="certificates.php" class="menu-item active">
-                <i class="bi bi-award"></i>
-                <span>Certificates</span>
-            </a>
-            <a href="vouchers.php" class="menu-item">
-                <i class="bi bi-ticket-perforated"></i>
-                <span>Vouchers</span>
-            </a>
-            <a href="settings.php" class="menu-item">
-                <i class="bi bi-gear"></i>
-                <span>Settings</span>
-            </a>
-        </div>
-        
-        <div class="sidebar-footer">
-            <a href="../logout.php" class="menu-item">
-                <i class="bi bi-box-arrow-left"></i>
-                <span>Logout</span>
-            </a>
-        </div>
+    <!-- Hamburger Button -->
+    <div class="position-fixed top-0 start-0 p-3 d-lg-none" style="z-index: 1100;">
+        <button class="hamburger-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" id="hamburgerBtn">
+            <div class="hamburger-icon d-flex flex-column align-items-center justify-content-center">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </button>
     </div>
 
-    <!-- Main Content -->
-    <div class="main-content">
-        <!-- Top Bar -->
-        <div class="top-bar">
-            <form class="search-box" method="GET" action="certificates.php">
-                <input type="text" name="search" placeholder="Search certificates by course or instructor..." 
-                       value="<?php echo htmlspecialchars($searchQuery); ?>">
-                <button type="submit">
-                    <i class="bi bi-search"></i>
-                </button>
-            </form>
+    <!-- Sidebar -->
+    <aside class="sidebar offcanvas-lg offcanvas-start position-fixed top-0 start-0 h-100" id="sidebar" tabindex="-1">
+        <div class="offcanvas-header d-lg-none border-bottom">
+            <h5 class="offcanvas-title sidebar-brand">LEARNEXUS</h5>
+        </div>
+
+        <div class="offcanvas-body p-0 d-flex flex-column h-100">
+            <div class="sidebar-brand px-4 py-4 mb-4 d-none d-lg-block">LEARNEXUS</div>
             
-            <div class="user-section">
-                <div class="user-info" onclick="window.location.href='settings.php'">
-                    <span style="font-weight: 600; color: #333;">
-                        <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>
-                    </span>
-                    <div class="user-avatar">
-                        <?php if (!empty($user['avatar']) && file_exists($user['avatar'])): ?>
-                            <img src="<?php echo htmlspecialchars($user['avatar']); ?>" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
-                        <?php else: ?>
-                            <?php echo strtoupper(substr($_SESSION['first_name'], 0, 1)); ?>
-                        <?php endif; ?>
+            <nav class="flex-grow-1 px-3">
+                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2" href="dashboard.php">
+                    <i class="bi bi-grid fs-5"></i><span>Dashboard</span>
+                </a>
+                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2" href="course_catalog.php">
+                    <i class="bi bi-book fs-5"></i><span>Course Catalog</span>
+                </a>
+                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2" href="my_courses.php">
+                    <i class="bi bi-journal-bookmark fs-5"></i><span>My Courses</span>
+                </a>
+                <a class="nav-link active d-flex align-items-center gap-3 px-3 py-3 mb-2" href="certificates.php">
+                    <i class="bi bi-award fs-5"></i><span>Certificates</span>
+                </a>
+                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2" href="vouchers.php">
+                    <i class="bi bi-ticket-perforated fs-5"></i><span>Vouchers</span>
+                </a>
+                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2" href="settings.php">
+                    <i class="bi bi-gear fs-5"></i><span>Settings</span>
+                </a>
+                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2" href="ai_tutor.php">
+                    <i class="bi bi-robot fs-5"></i><span>AI Tutor</span>
+                </a>
+            </nav>
+            
+            <div class="p-3 mt-auto">
+                <button class="btn btn-outline-danger w-100 rounded-pill py-2 fw-semibold" onclick="window.location.href='../logout.php'">
+                    <i class="bi bi-box-arrow-left me-2"></i>Logout
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content p-3 p-lg-4">
+        <div class="container-fluid">
+            <!-- Header -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card border-0 rounded-4 shadow-sm">
+                        <div class="card-body p-3 d-flex justify-content-between align-items-center">
+                            <form method="GET" class="d-flex gap-2 flex-grow-1" style="max-width: 500px;">
+                                <input type="text" name="search" class="form-control rounded-pill" 
+                                       placeholder="Search certificates..." 
+                                       value="<?php echo htmlspecialchars($searchQuery); ?>">
+                                <button type="submit" class="btn btn-primary rounded-pill px-4">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                            </form>
+                            
+                            <div class="d-flex align-items-center gap-3" onclick="window.location.href='settings.php'" role="button">
+                                <span class="fw-semibold d-none d-sm-inline">
+                                    <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>
+                                </span>
+                                <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold" 
+                                     style="width: 45px; height: 45px; background: var(--gradient-primary);">
+                                    <?php if (!empty($user['avatar']) && file_exists($user['avatar'])): ?>
+                                        <img src="<?php echo htmlspecialchars($user['avatar']); ?>" alt="Avatar" class="w-100 h-100 rounded-circle object-fit-cover">
+                                    <?php else: ?>
+                                        <?php echo strtoupper(substr($_SESSION['first_name'], 0, 1)); ?>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Content Area -->
-        <div class="content-area">
-            <div class="page-header">
-                <h1><i class="bi bi-award"></i> My Certificates</h1>
-                <p class="text-muted">View and download your earned certificates</p>
+            <!-- Page Title -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h1 class="h3 fw-bold"><i class="bi bi-award me-2"></i>My Certificates</h1>
+                    <p class="text-muted">View and download your earned certificates</p>
+                </div>
             </div>
 
+            <!-- Search Results Info -->
             <?php if (!empty($searchQuery)): ?>
-                <div class="search-results-info">
-                    <span>
-                        <i class="bi bi-search"></i>
-                        <strong><?php echo count($certificates); ?></strong> result(s) found for 
-                        "<strong><?php echo htmlspecialchars($searchQuery); ?></strong>"
-                    </span>
-                    <button class="clear-search" onclick="window.location.href='certificates.php'">
-                        <i class="bi bi-x"></i> Clear Search
-                    </button>
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="alert alert-info d-flex justify-content-between align-items-center">
+                            <span>
+                                <i class="bi bi-search me-2"></i>
+                                Found <strong><?php echo count($certificates); ?></strong> certificate(s) for 
+                                "<strong><?php echo htmlspecialchars($searchQuery); ?></strong>"
+                            </span>
+                            <button class="btn btn-sm btn-outline-secondary rounded-pill" onclick="window.location.href='certificates.php'">
+                                <i class="bi bi-x"></i> Clear
+                            </button>
+                        </div>
+                    </div>
                 </div>
             <?php endif; ?>
 
+            <!-- Certificates Grid -->
             <?php if (count($certificates) > 0): ?>
-                <div class="certificates-grid">
-                    <?php foreach ($certificates as $cert): 
-                        $gradients = [
-                            'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                            'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-                            'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-                            'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-                            'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
-                            'linear-gradient(135deg, #30cfd0 0%, #330867 100%)',
-                        ];
+                <div class="row g-4">
+                    <?php 
+                    $gradients = [
+                        'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                        'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                        'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+                        'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+                        'linear-gradient(135deg, #30cfd0 0%, #330867 100%)',
+                    ];
+                    foreach ($certificates as $cert): 
                         $gradient = $gradients[$cert['certificateID'] % count($gradients)];
-                        
-                        // Highlight search terms
                         $courseTitle = htmlspecialchars($cert['courseTitle']);
                         $instructorName = htmlspecialchars($cert['instructorName']);
                         if (!empty($searchQuery)) {
@@ -566,88 +341,96 @@ $certificates = $stmt->fetchAll();
                             $instructorName = preg_replace('/(' . preg_quote($searchQuery, '/') . ')/i', '<mark>$1</mark>', $instructorName);
                         }
                     ?>
-                        <div class="certificate-card" onclick="window.location.href='view_certificate.php?id=<?php echo $cert['certificateUUID']; ?>'">
-                            <div class="certificate-preview" style="background: <?php echo $gradient; ?>">
-                                <div class="certificate-preview-content">
-                                    <div class="certificate-badge">
-                                        <i class="bi bi-award-fill"></i>
+                        <div class="col-12 col-md-6 col-lg-4">
+                            <div class="card border-0 rounded-4 shadow-sm card-hover h-100" 
+                                 onclick="window.location.href='view_certificate.php?id=<?php echo $cert['certificateUUID']; ?>'">
+                                <div class="cert-header position-relative d-flex flex-column align-items-center justify-content-center text-white text-center p-4" 
+                                     style="background: <?php echo $gradient; ?>">
+                                    <div class="rounded-circle bg-white bg-opacity-25 d-flex align-items-center justify-content-center mb-3" 
+                                         style="width: 60px; height: 60px;">
+                                        <i class="bi bi-award-fill fs-1"></i>
                                     </div>
-                                    <h3>Certificate of Completion</h3>
-                                    <p style="font-size: 14px; opacity: 0.9; margin: 0;">
-                                        <?php echo htmlspecialchars($cert['courseTitle']); ?>
-                                    </p>
+                                    <h6 class="fw-bold mb-1">Certificate of Completion</h6>
+                                    <p class="small mb-0"><?php echo htmlspecialchars($cert['courseTitle']); ?></p>
                                 </div>
-                            </div>
-                            <div class="certificate-body">
-                                <div class="certificate-title"><?php echo $courseTitle; ?></div>
-                                <div class="certificate-meta">
-                                    <div class="meta-item">
-                                        <i class="bi bi-person"></i>
-                                        <span>Instructor: <?php echo $instructorName; ?></span>
+                                
+                                <div class="card-body p-4">
+                                    <h5 class="fw-bold mb-3"><?php echo $courseTitle; ?></h5>
+                                    
+                                    <div class="d-flex flex-column gap-2 small text-muted mb-3">
+                                        <div><i class="bi bi-person me-2"></i><?php echo $instructorName; ?></div>
+                                        <div><i class="bi bi-calendar-check me-2"></i><?php echo date('F d, Y', strtotime($cert['issuedAt'])); ?></div>
+                                        <div><i class="bi bi-hash me-2"></i><?php echo substr($cert['certificateUUID'], 0, 8); ?></div>
                                     </div>
-                                    <div class="meta-item">
-                                        <i class="bi bi-calendar-check"></i>
-                                        <span>Issued: <?php echo date('F d, Y', strtotime($cert['issuedAt'])); ?></span>
+                                    
+                                    <div class="d-flex gap-2">
+                                        <button class="btn btn-primary rounded-pill flex-grow-1" 
+                                                onclick="event.stopPropagation(); window.location.href='view_certificate.php?id=<?php echo $cert['certificateUUID']; ?>'">
+                                            <i class="bi bi-eye me-1"></i>View
+                                        </button>
+                                        <button class="btn btn-outline-secondary rounded-circle" 
+                                                onclick="event.stopPropagation(); downloadCertificate('<?php echo $cert['certificateUUID']; ?>')"
+                                                style="width: 42px; height: 42px;">
+                                            <i class="bi bi-download"></i>
+                                        </button>
                                     </div>
-                                    <div class="meta-item">
-                                        <i class="bi bi-hash"></i>
-                                        <span>ID: <?php echo htmlspecialchars(substr($cert['certificateUUID'], 0, 8)); ?></span>
-                                    </div>
-                                </div>
-                                <div class="certificate-actions">
-                                    <button class="btn-view" onclick="event.stopPropagation(); window.location.href='view_certificate.php?id=<?php echo $cert['certificateUUID']; ?>'">
-                                        <i class="bi bi-eye"></i> View Certificate
-                                    </button>
-                                    <button class="btn-download" onclick="event.stopPropagation(); downloadCertificate('<?php echo $cert['certificateUUID']; ?>')">
-                                        <i class="bi bi-download"></i>
-                                    </button>
                                 </div>
                             </div>
                         </div>
                     <?php endforeach; ?>
                 </div>
             <?php else: ?>
-                <div class="empty-state">
-                    <i class="bi bi-search"></i>
-                    <?php if (!empty($searchQuery)): ?>
-                        <h3>No Certificates Found</h3>
-                        <p>No certificates match your search for "<?php echo htmlspecialchars($searchQuery); ?>"</p>
-                        <button class="btn-browse" onclick="window.location.href='certificates.php'">
-                            <i class="bi bi-arrow-left"></i> View All Certificates
-                        </button>
-                    <?php else: ?>
-                        <h3>No Certificates Yet</h3>
-                        <p>Complete courses to earn certificates and showcase your achievements</p>
-                        <a href="browse_courses.php" class="btn-browse">Browse Courses</a>
-                    <?php endif; ?>
+                <!-- Empty State -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card border-0 rounded-4 shadow-sm">
+                            <div class="card-body text-center py-5">
+                                <i class="bi bi-award display-1 text-muted mb-3"></i>
+                                <?php if (!empty($searchQuery)): ?>
+                                    <h3 class="h5 fw-bold mb-3">No Certificates Found</h3>
+                                    <p class="text-muted mb-4">No certificates match "<?php echo htmlspecialchars($searchQuery); ?>"</p>
+                                    <button class="btn btn-primary rounded-pill px-4" onclick="window.location.href='certificates.php'">
+                                        <i class="bi bi-arrow-left me-2"></i>View All
+                                    </button>
+                                <?php else: ?>
+                                    <h3 class="h5 fw-bold mb-3">No Certificates Yet</h3>
+                                    <p class="text-muted mb-4">Complete courses to earn certificates</p>
+                                    <a href="course_catalog.php" class="btn btn-primary rounded-pill px-4">
+                                        <i class="bi bi-search me-2"></i>Browse Courses
+                                    </a>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             <?php endif; ?>
         </div>
-    </div>
+    </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        const hamburgerBtn = document.getElementById('hamburgerBtn');
+        const sidebar = document.getElementById('sidebar');
+
+        if (hamburgerBtn && sidebar) {
+            sidebar.addEventListener('show.bs.offcanvas', () => hamburgerBtn.classList.add('active'));
+            sidebar.addEventListener('hide.bs.offcanvas', () => hamburgerBtn.classList.remove('active'));
+        }
+
         function downloadCertificate(uuid) {
-            // Show loading
             Swal.fire({
                 title: 'Preparing Download',
                 text: 'Generating your certificate...',
                 allowOutsideClick: false,
-                allowEscapeKey: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
+                didOpen: () => Swal.showLoading()
             });
 
-            // Simulate download preparation
             setTimeout(() => {
                 window.open(`download_certificate.php?id=${uuid}`, '_blank');
                 Swal.close();
-                
                 Swal.fire({
                     icon: 'success',
                     title: 'Download Started',
-                    text: 'Your certificate is being downloaded',
                     timer: 2000,
                     showConfirmButton: false
                 });
