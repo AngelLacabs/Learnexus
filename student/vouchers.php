@@ -177,7 +177,6 @@ unset($_SESSION['new_voucher_code']);
     </style>
 </head>
 <body>
-    <!-- Hamburger Button -->
     <div class="position-fixed top-0 start-0 p-3 d-lg-none" style="z-index: 1100;">
         <button class="hamburger-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" id="hamburgerBtn">
             <div class="hamburger-icon d-flex flex-column align-items-center justify-content-center">
@@ -188,7 +187,6 @@ unset($_SESSION['new_voucher_code']);
         </button>
     </div>
 
-    <!-- Sidebar -->
     <aside class="sidebar offcanvas-lg offcanvas-start position-fixed top-0 start-0 h-100" style="width: var(--sidebar-width);" id="sidebar">
         <div class="offcanvas-header d-lg-none border-bottom">
             <h5 class="offcanvas-title sidebar-brand">LEARNEXUS</h5>
@@ -230,16 +228,14 @@ unset($_SESSION['new_voucher_code']);
         </div>
     </aside>
 
-    <!-- Main Content -->
     <main class="main-content p-3 p-lg-4">
         <div class="container-fluid">
-            <!-- Header -->
             <div class="row mb-4">
                 <div class="col-12">
                     <div class="card border-0 rounded-4 shadow-sm">
                         <div class="card-body p-3 d-flex justify-content-between align-items-center">
                             <div>
-                                <h5 class="mb-0 fw-bold">My Vouchers</h5>
+                                <h4 class="mb-0 fw-bold">My Vouchers</h4>
                             </div>
                             
                             <div class="d-flex align-items-center gap-3" onclick="window.location.href='settings.php'" role="button">
@@ -260,7 +256,6 @@ unset($_SESSION['new_voucher_code']);
                 </div>
             </div>
 
-            <!-- Page Title -->
             <div class="row mb-4">
                 <div class="col-12">
                     <h1 class="h3 fw-bold"><i class="bi bi-ticket-perforated me-2"></i>SoleSource Vouchers</h1>
@@ -268,7 +263,6 @@ unset($_SESSION['new_voucher_code']);
                 </div>
             </div>
 
-            <!-- New Voucher Alert -->
             <?php if ($newVoucherCode): ?>
                 <div class="row mb-4">
                     <div class="col-12">
@@ -281,14 +275,13 @@ unset($_SESSION['new_voucher_code']);
                 </div>
             <?php endif; ?>
 
-            <!-- Vouchers Grid -->
             <?php if (!empty($vouchers)): ?>
                 <div class="row g-4">
                     <?php foreach ($vouchers as $voucher): ?>
                         <div class="col-12 col-md-6 col-lg-4">
                             <div class="card border-0 rounded-4 shadow-sm card-hover h-100 voucher-border-<?= $voucher['voucherStatus'] ?>">
                                 <div class="card-body p-4">
-                                    <!-- Status Badge -->
+
                                     <div class="d-flex justify-content-between align-items-start mb-3">
                                         <span class="badge bg-<?= $voucher['voucherStatus'] === 'active' ? 'success' : ($voucher['voucherStatus'] === 'redeemed' ? 'secondary' : 'danger') ?>">
                                             <?= strtoupper($voucher['voucherStatus']) ?>
@@ -300,13 +293,11 @@ unset($_SESSION['new_voucher_code']);
                                         <?php endif; ?>
                                     </div>
 
-                                    <!-- Course Title -->
                                     <h5 class="fw-bold mb-3">
                                         <i class="bi bi-award-fill text-warning me-2"></i>
                                         <?= htmlspecialchars($voucher['courseTitle'] ?? 'Course Completion Reward') ?>
                                     </h5>
 
-                                    <!-- Voucher Code -->
                                     <div class="mb-3">
                                         <small class="text-muted d-block mb-2">Voucher Code:</small>
                                         <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded-3">
@@ -319,7 +310,6 @@ unset($_SESSION['new_voucher_code']);
                                         </div>
                                     </div>
 
-                                    <!-- Details -->
                                     <div class="row g-3 mb-3">
                                         <div class="col-6">
                                             <small class="text-muted d-block">Discount:</small>
@@ -332,8 +322,7 @@ unset($_SESSION['new_voucher_code']);
                                             <strong><?= date('M d, Y', strtotime($voucher['expiryDate'])) ?></strong>
                                         </div>
                                     </div>
-
-                                    <!-- Action / Status -->
+\
                                     <?php if ($voucher['voucherStatus'] === 'redeemed'): ?>
                                         <div class="alert alert-secondary small mb-0">
                                             <i class="bi bi-check-circle-fill"></i>
@@ -351,7 +340,6 @@ unset($_SESSION['new_voucher_code']);
                                         </div>
                                     <?php endif; ?>
 
-                                    <!-- Issued Date -->
                                     <hr class="my-3">
                                     <small class="text-muted">
                                         <i class="bi bi-calendar"></i> Issued: <?= date('M d, Y', strtotime($voucher['generatedAt'])) ?>
@@ -362,7 +350,6 @@ unset($_SESSION['new_voucher_code']);
                     <?php endforeach; ?>
                 </div>
             <?php else: ?>
-                <!-- Empty State -->
                 <div class="row">
                     <div class="col-12">
                         <div class="card border-0 rounded-4 shadow-sm">
@@ -383,7 +370,6 @@ unset($_SESSION['new_voucher_code']);
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Hamburger
         const hamburgerBtn = document.getElementById('hamburgerBtn');
         const sidebar = document.getElementById('sidebar');
 
@@ -392,10 +378,8 @@ unset($_SESSION['new_voucher_code']);
             sidebar.addEventListener('hide.bs.offcanvas', () => hamburgerBtn.classList.remove('active'));
         }
 
-        // Copy code function
         function copyCode(code) {
             navigator.clipboard.writeText(code).then(() => {
-                // Create toast notification
                 const toast = document.createElement('div');
                 toast.className = 'position-fixed top-0 end-0 p-3';
                 toast.style.zIndex = '9999';
