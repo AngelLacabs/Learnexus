@@ -348,7 +348,7 @@ include 'includes/sidebar.php';
                                                    title="View">
                                                     <i class="bi bi-eye"></i>
                                                 </a>
-                                                <a href="user_edit.php?id=<?php echo $user['userID']; ?>" 
+                                                <!-- <a href="user_edit.php?id=<?php echo $user['userID']; ?>" 
                                                    class="btn btn-outline-secondary" 
                                                    data-bs-toggle="tooltip" 
                                                    title="Edit">
@@ -377,7 +377,7 @@ include 'includes/sidebar.php';
                                                    data-bs-toggle="tooltip" 
                                                    title="Delete">
                                                     <i class="bi bi-trash"></i>
-                                                </a>
+                                                </a> -->
                                             </div>
                                         </td>
                                     </tr>
