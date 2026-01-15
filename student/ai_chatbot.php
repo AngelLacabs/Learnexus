@@ -173,14 +173,14 @@ function getDirectAnswerFromDatabase($question, $courses)
         }
 
         foreach ($categories as $category => $categoryCourses) {
-            $response .= "**{$category}**:\n";
+            $response .= "*{$category}*:\n";
             foreach ($categoryCourses as $course) {
                 $response .= "• {$course['title']} - ₱" . number_format($course['price'], 2) . " ({$course['enrollmentCount']} enrolled, {$course['lessonCount']} lessons)\n";
             }
             $response .= "\n";
         }
 
-        $response .= "**Total:** " . count($courses) . " courses available.";
+        $response .= "*Total:* " . count($courses) . " courses available.";
         return $response;
     }
 
@@ -214,7 +214,7 @@ function getDirectAnswerFromDatabase($question, $courses)
 
         $response = "💸 **CHEAPEST COURSES**\n\n";
         foreach ($cheapest_courses as $course) {
-            $response .= "• **{$course['title']}** - ₱" . number_format($min_price, 2) . "\n";
+            $response .= "• *{$course['title']}* - ₱" . number_format($min_price, 2) . "\n";
             $response .= "  Category: {$course['category']}\n";
             $response .= "  Instructor: {$course['instructorName']}\n";
             $response .= "  Lessons: {$course['lessonCount']}\n\n";
@@ -230,7 +230,7 @@ function getDirectAnswerFromDatabase($question, $courses)
 
         $response = "💎 **MOST EXPENSIVE COURSES**\n\n";
         foreach ($expensive_courses as $course) {
-            $response .= "• **{$course['title']}** - ₱" . number_format($max_price, 2) . "\n";
+            $response .= "• *{$course['title']}* - ₱" . number_format($max_price, 2) . "\n";
             $response .= "  Category: {$course['category']}\n";
             $response .= "  Instructor: {$course['instructorName']}\n";
             $response .= "  Lessons: {$course['lessonCount']}\n\n";
@@ -243,13 +243,13 @@ function getDirectAnswerFromDatabase($question, $courses)
         $course_name_lower = strtolower($course['title']);
         if (strpos($question_lower, $course_name_lower) !== false) {
             $response = "📖 **" . strtoupper($course['title']) . "**\n\n";
-            $response .= "• **Category:** {$course['category']}\n";
-            $response .= "• **Price:** ₱" . number_format($course['price'], 2) . "\n";
-            $response .= "• **Instructor:** {$course['instructorName']}\n";
-            $response .= "• **Enrollments:** {$course['enrollmentCount']}\n";
-            $response .= "• **Lessons:** {$course['lessonCount']}\n";
-            $response .= "• **Description:** {$course['description']}\n";
-            $response .= "• **Status:** {$course['status']}\n";
+            $response .= "• *Category:* {$course['category']}\n";
+            $response .= "• *Price:* ₱" . number_format($course['price'], 2) . "\n";
+            $response .= "• *Instructor:* {$course['instructorName']}\n";
+            $response .= "• *Enrollments:* {$course['enrollmentCount']}\n";
+            $response .= "• *Lessons:* {$course['lessonCount']}\n";
+            $response .= "• *Description:* {$course['description']}\n";
+            $response .= "• *Status:* {$course['status']}\n";
             return $response;
         }
     }
@@ -267,7 +267,7 @@ function getDirectAnswerFromDatabase($question, $courses)
 
         $response = "🏷️ **COURSES BY CATEGORY**\n\n";
         foreach ($categories as $category => $categoryCourses) {
-            $response .= "**{$category}** (" . count($categoryCourses) . " courses):\n";
+            $response .= "*{$category}* (" . count($categoryCourses) . " courses):\n";
             foreach ($categoryCourses as $course) {
                 $response .= "• {$course['title']} - ₱" . number_format($course['price'], 2) . "\n";
             }
@@ -289,7 +289,7 @@ function getDirectAnswerFromDatabase($question, $courses)
 
         $response = "👨‍🏫 **COURSES BY INSTRUCTOR**\n\n";
         foreach ($instructors as $instructor => $courseList) {
-            $response .= "**{$instructor}** (" . count($courseList) . " courses):\n";
+            $response .= "*{$instructor}* (" . count($courseList) . " courses):\n";
             $response .= "• " . implode(', ', $courseList) . "\n\n";
         }
         return $response;
