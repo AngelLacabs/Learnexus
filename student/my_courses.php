@@ -12,9 +12,8 @@ $stmt = $conn->prepare("SELECT avatar FROM users WHERE userID = ?");
 $stmt->execute([$userID]);
 $userAvatar = $stmt->fetchColumn();
 
-// Get all enrolled courses
+// Get ALL enrolled courses - show every enrollment
 // Get all enrolled courses with DYNAMIC PROGRESS CALCULATION
-// Use subquery to get only the most recent enrollment per course to prevent duplicates
 $stmt = $conn->prepare("
     SELECT 
         c.*,
@@ -67,12 +66,6 @@ $stmt = $conn->prepare("
         ) as quizStatus
         
     FROM enrollments e
-    INNER JOIN (
-        SELECT courseID, userID, MAX(enrollmentID) as maxEnrollmentID
-        FROM enrollments
-        WHERE userID = ? AND status IN ('active', 'completed')
-        GROUP BY courseID, userID
-    ) latest ON e.enrollmentID = latest.maxEnrollmentID AND e.courseID = latest.courseID AND e.userID = latest.userID
     JOIN courses c ON e.courseID = c.courseID
     JOIN users u ON c.teacherID = u.userID
     LEFT JOIN payments p ON e.paymentID = p.paymentID
@@ -81,11 +74,13 @@ $stmt = $conn->prepare("
         CASE WHEN e.status = 'completed' THEN 1 ELSE 0 END ASC,
         e.enrolledAt DESC
 ");
-$stmt->execute([$userID, $userID]);
+$stmt->execute([$userID]);
+$stmt->setFetchMode(PDO::FETCH_ASSOC);
 $enrolledCourses = $stmt->fetchAll();
 
 // Process each course to calculate progress USING SAME LOGIC
-foreach ($enrolledCourses as &$course) {
+// Use array index to avoid reference issues
+foreach ($enrolledCourses as $index => $course) {
     $totalSteps = $course['totalLessons'] + ($course['quizID'] ? 1 : 0);
     $completedSteps = $course['completedLessons'];
     
@@ -96,36 +91,49 @@ foreach ($enrolledCourses as &$course) {
     // Normalize quizStatus (avoid undefined index warnings)
     if (empty($course['quizID'])) {
         // No quiz exists for this course
-        $course['quizStatus'] = 'not_available';
+        $enrolledCourses[$index]['quizStatus'] = 'not_available';
     } else {
         // If database returned a status (e.g., 'passed' or 'failed'), keep it; otherwise mark as not_taken
         if (!isset($course['quizStatus']) || $course['quizStatus'] === null || $course['quizStatus'] === '') {
-            $course['quizStatus'] = 'not_taken';
+            $enrolledCourses[$index]['quizStatus'] = 'not_taken';
         } else {
             // keep as-is (likely 'passed' or 'failed')
-            $course['quizStatus'] = $course['quizStatus'];
+            $enrolledCourses[$index]['quizStatus'] = $course['quizStatus'];
         }
     }
     
     // Store the calculated progress
-    $course['progressPercentage'] = $totalSteps > 0 
+    $enrolledCourses[$index]['progressPercentage'] = $totalSteps > 0 
         ? round(($completedSteps / $totalSteps) * 100) 
         : 0;
     
     // Also set isCompleted flag
-    $course['isCompleted'] = ($course['enrollmentStatus'] === 'completed');
+    $enrolledCourses[$index]['isCompleted'] = ($course['enrollmentStatus'] === 'completed');
 }
 
-// Separate into active and completed
+// Separate into active and completed - show ALL enrollments
 $activeCourses = [];
 $completedCourses = [];
 foreach ($enrolledCourses as $course) {
-    if ($course['enrollmentStatus'] === 'completed') {
+    // Check enrollment status - use 'completed' status from database
+    // Also check if progress is 100% as a fallback
+    $status = isset($course['enrollmentStatus']) ? strtolower(trim($course['enrollmentStatus'])) : '';
+    $progress = isset($course['progressPercentage']) ? (float)$course['progressPercentage'] : 0;
+    
+    $isCompleted = ($status === 'completed') || ($progress >= 100);
+    
+    if ($isCompleted) {
+        // Ensure status is set to completed for display
+        $course['enrollmentStatus'] = 'completed';
         $completedCourses[] = $course;
     } else {
         $activeCourses[] = $course;
     }
 }
+
+// Debug: Log separation results
+error_log("Active courses: " . count($activeCourses));
+error_log("Completed courses: " . count($completedCourses));
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -294,6 +302,63 @@ foreach ($enrolledCourses as $course) {
         .progress-success {
             background: linear-gradient(90deg, #43a047 0%, #66bb6a 100%) !important;
         }
+
+        /* Tab Styles - Matching Photo */
+        .course-tabs {
+            display: flex;
+            gap: 0.5rem;
+            background: #f5f5f5;
+            padding: 0.5rem;
+            border-radius: 0.75rem;
+            margin-bottom: 2rem;
+        }
+
+        .course-tab {
+            flex: 1;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            border: none;
+            background: transparent;
+            color: #333;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        .course-tab:hover {
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .course-tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .course-tab.active .badge {
+            background: white !important;
+        }
+
+        .course-tab:not(.active) .badge {
+            display: none;
+        }
+
+        .course-tab i {
+            font-size: 1.1rem;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
     </style>
 </head>
 
@@ -406,20 +471,31 @@ foreach ($enrolledCourses as $course) {
                 </div>
             </div>
 
-            <?php if (count($enrolledCourses) > 0): ?>
+            <!-- Show sections if there are any courses (active or completed) -->
+            <?php if (count($activeCourses) > 0 || count($completedCourses) > 0): ?>
 
-                <!-- Active Courses -->
+                <!-- Tabs Navigation -->
+                <div class="course-tabs">
+                    <button class="course-tab active" onclick="switchTab('in-progress')" id="tab-in-progress">
+                        <i class="bi bi-list-ul"></i>
+                        <span>In Progress</span>
+                        <?php if (count($activeCourses) > 0): ?>
+                            <span class="badge bg-white text-primary rounded-pill ms-2" style="font-size: 0.75rem;"><?php echo count($activeCourses); ?></span>
+                        <?php endif; ?>
+                    </button>
+                    <button class="course-tab" onclick="switchTab('completed')" id="tab-completed">
+                        <i class="bi bi-grid"></i>
+                        <span>Completed</span>
+                        <?php if (count($completedCourses) > 0): ?>
+                            <span class="badge bg-white text-success rounded-pill ms-2" style="font-size: 0.75rem;"><?php echo count($completedCourses); ?></span>
+                        <?php endif; ?>
+                    </button>
+                </div>
+
+                <!-- In Progress Tab Content -->
+                <div class="tab-content active" id="content-in-progress">
                 <?php if (count($activeCourses) > 0): ?>
-                    <div class="row mb-3">
-                        <div class="col-12">
-                            <div class="d-flex align-items-center gap-3 border-bottom pb-2">
-                                <h2 class="h5 fw-bold mb-0">In Progress</h2>
-                                <span class="badge bg-primary rounded-pill"><?php echo count($activeCourses); ?></span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row g-4 mb-5">
+                    <div class="row g-4">
                         <?php foreach ($activeCourses as $course): ?>
                             <div class="col-12 col-lg-6" data-course-id="<?php echo $course['enrollmentID']; ?>">
                                 <div class="card border-0 rounded-4 shadow-sm card-hover h-100">
@@ -478,20 +554,21 @@ foreach ($enrolledCourses as $course) {
                             </div>
                         <?php endforeach; ?>
                     </div>
-                <?php endif; ?>
-
-                <!-- Completed Courses -->
-                <?php if (count($completedCourses) > 0): ?>
-                    <div class="row mb-3">
-                        <div class="col-12">
-                            <div class="d-flex align-items-center gap-3 border-bottom pb-2">
-                                <h2 class="h5 fw-bold mb-0 text-success"><i class="bi bi-trophy-fill"></i> Completed</h2>
-                                <span class="badge bg-success rounded-pill"><?php echo count($completedCourses); ?></span>
-                            </div>
+                <?php else: ?>
+                    <div class="card border-0 rounded-4 shadow-sm">
+                        <div class="card-body text-center py-5">
+                            <i class="bi bi-play-circle display-4 text-muted mb-3"></i>
+                            <h5 class="fw-bold mb-2">No Courses In Progress</h5>
+                            <p class="text-muted">You don't have any active courses at the moment.</p>
                         </div>
                     </div>
+                <?php endif; ?>
+                </div>
 
-                    <div class="row g-4 mb-5">
+                <!-- Completed Tab Content -->
+                <div class="tab-content" id="content-completed">
+                <?php if (count($completedCourses) > 0): ?>
+                    <div class="row g-4">
                         <?php foreach ($completedCourses as $course): ?>
                             <div class="col-12 col-lg-6" data-course-id="<?php echo $course['enrollmentID']; ?>">
                                 <div class="card border-0 rounded-4 shadow-sm card-hover h-100 border-success">
@@ -549,9 +626,19 @@ foreach ($enrolledCourses as $course) {
                             </div>
                         <?php endforeach; ?>
                     </div>
+                <?php else: ?>
+                    <div class="card border-0 rounded-4 shadow-sm">
+                        <div class="card-body text-center py-5">
+                            <i class="bi bi-trophy display-4 text-muted mb-3"></i>
+                            <h5 class="fw-bold mb-2">No Completed Courses</h5>
+                            <p class="text-muted">You haven't completed any courses yet. Keep learning!</p>
+                        </div>
+                    </div>
                 <?php endif; ?>
+                </div>
 
             <?php else: ?>
+                <!-- No courses message -->
                 <div class="row">
                     <div class="col-12">
                         <div class="card border-0 rounded-4 shadow-sm">
@@ -638,6 +725,31 @@ foreach ($enrolledCourses as $course) {
                 courseCards.forEach(card => card.style.display = '');
             }
         });
+
+        // Tab Switching Function
+        function switchTab(tabName) {
+            // Remove active class from all tabs
+            document.querySelectorAll('.course-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Remove active class from all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Add active class to selected tab
+            const selectedTab = document.getElementById('tab-' + tabName);
+            if (selectedTab) {
+                selectedTab.classList.add('active');
+            }
+            
+            // Show selected tab content
+            const selectedContent = document.getElementById('content-' + tabName);
+            if (selectedContent) {
+                selectedContent.classList.add('active');
+            }
+        }
 
         // Delete confirmation
         function confirmDelete(enrollmentID, courseTitle) {
