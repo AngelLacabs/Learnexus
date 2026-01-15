@@ -133,19 +133,11 @@ include 'includes/header.php';
 include 'includes/sidebar.php';
 ?>
 
-<div class="main-content">
+<div class="main-content pb-3 pb-lg-4 ps-3 ps-lg-4 pe-3 pe-lg-4 pt-3">
     <div class="container-fluid">
-        <!-- Page Header -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h1 class="h3 mb-0">Enrollment Management</h1>
-                <p class="text-muted mb-0">Manage all course enrollments and student progress</p>
-            </div>
-        </div>
-
         <!-- Success/Error Messages -->
         <?php if (isset($_SESSION['success'])): ?>
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
                 <?php echo $_SESSION['success']; ?>
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
@@ -153,73 +145,89 @@ include 'includes/sidebar.php';
         <?php endif; ?>
         
         <?php if (isset($_SESSION['error'])): ?>
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
                 <?php echo $_SESSION['error']; ?>
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
             <?php unset($_SESSION['error']); ?>
         <?php endif; ?>
 
-        <!-- Statistics Cards -->
-        <div class="row g-3 mb-4">
+        <!-- Box 1: Page Header -->
+        <div class="card border-0 rounded-4 shadow-sm mb-5">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="h3 mb-0">Enrollment Management</h1>
+                        <p class="text-muted mb-0">Manage all course enrollments and student progress</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Box 2: Statistics Cards - Separate Boxes -->
+        <div class="row g-4 mb-5">
+            <!-- Total Enrollments -->
             <div class="col-lg-3 col-md-6">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
+                <div class="card border-0 rounded-4 h-100 text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15), 0 4px 8px rgba(0, 0, 0, 0.1);">
+                    <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="text-muted mb-1">Total Enrollments</h6>
-                                <h3 class="mb-0"><?php echo number_format($stats['total']); ?></h3>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-2 text-white-50" style="font-size: 0.875rem; font-weight: 500;">Total Enrollments</h6>
+                                <h2 class="mb-0 text-white fw-bold" style="font-size: 2rem;"><?php echo number_format($stats['total']); ?></h2>
                             </div>
-                            <div class="text-primary">
-                                <i class="bi bi-journal-check fs-2"></i>
+                            <div class="ms-3" style="opacity: 0.9;">
+                                <i class="bi bi-journal-check" style="font-size: 2.5rem;"></i>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
             
+            <!-- Active Students -->
             <div class="col-lg-3 col-md-6">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
+                <div class="card border-0 rounded-4 h-100 text-white" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15), 0 4px 8px rgba(0, 0, 0, 0.1);">
+                    <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="text-muted mb-1">Active Students</h6>
-                                <h3 class="mb-0"><?php echo number_format($stats['uniqueStudents']); ?></h3>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-2 text-white-50" style="font-size: 0.875rem; font-weight: 500;">Active Students</h6>
+                                <h2 class="mb-0 text-white fw-bold" style="font-size: 2rem;"><?php echo number_format($stats['uniqueStudents']); ?></h2>
                             </div>
-                            <div class="text-success">
-                                <i class="bi bi-people-fill fs-2"></i>
+                            <div class="ms-3" style="opacity: 0.9;">
+                                <i class="bi bi-people-fill" style="font-size: 2.5rem;"></i>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
             
+            <!-- Avg. Progress -->
             <div class="col-lg-3 col-md-6">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
+                <div class="card border-0 rounded-4 h-100 text-white" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15), 0 4px 8px rgba(0, 0, 0, 0.1);">
+                    <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="text-muted mb-1">Avg. Progress</h6>
-                                <h3 class="mb-0"><?php echo number_format($stats['avgProgress'], 1); ?>%</h3>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-2 text-white-50" style="font-size: 0.875rem; font-weight: 500;">Avg. Progress</h6>
+                                <h2 class="mb-0 text-white fw-bold" style="font-size: 2rem;"><?php echo number_format($stats['avgProgress'], 1); ?>%</h2>
                             </div>
-                            <div class="text-info">
-                                <i class="bi bi-graph-up fs-2"></i>
+                            <div class="ms-3" style="opacity: 0.9;">
+                                <i class="bi bi-graph-up" style="font-size: 2.5rem;"></i>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
             
+            <!-- Completed -->
             <div class="col-lg-3 col-md-6">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
+                <div class="card border-0 rounded-4 h-100 text-white" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15), 0 4px 8px rgba(0, 0, 0, 0.1);">
+                    <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="text-muted mb-1">Completed</h6>
-                                <h3 class="mb-0"><?php echo number_format($stats['completed']); ?></h3>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-2 text-white-50" style="font-size: 0.875rem; font-weight: 500;">Completed</h6>
+                                <h2 class="mb-0 text-white fw-bold" style="font-size: 2rem;"><?php echo number_format($stats['completed']); ?></h2>
                             </div>
-                            <div class="text-warning">
-                                <i class="bi bi-award fs-2"></i>
+                            <div class="ms-3" style="opacity: 0.9;">
+                                <i class="bi bi-award" style="font-size: 2.5rem;"></i>
                             </div>
                         </div>
                     </div>
@@ -227,76 +235,9 @@ include 'includes/sidebar.php';
             </div>
         </div>
 
-        <!-- Status Breakdown -->
-        <div class="row g-3 mb-4">
-            <div class="col-lg-3 col-md-6">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="text-muted mb-1">Active</h6>
-                                <h3 class="mb-0"><?php echo number_format($stats['active']); ?></h3>
-                            </div>
-                            <div class="text-success">
-                                <span class="badge bg-success">●</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-lg-3 col-md-6">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="text-muted mb-1">Dropped</h6>
-                                <h3 class="mb-0"><?php echo number_format($stats['dropped']); ?></h3>
-                            </div>
-                            <div class="text-danger">
-                                <span class="badge bg-danger">●</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-lg-3 col-md-6">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="text-muted mb-1">Pending</h6>
-                                <h3 class="mb-0"><?php echo number_format($stats['pending']); ?></h3>
-                            </div>
-                            <div class="text-warning">
-                                <span class="badge bg-warning">●</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-lg-3 col-md-6">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="text-muted mb-1">Unique Courses</h6>
-                                <h3 class="mb-0"><?php echo number_format($stats['uniqueCourses']); ?></h3>
-                            </div>
-                            <div class="text-info">
-                                <i class="bi bi-book-fill fs-2"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Filters Card -->
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-body">
+        <!-- Box 3: Filters Card -->
+        <div class="card border-0 rounded-4 shadow-sm mb-5">
+            <div class="card-body p-4">
                 <form method="GET" action="" class="row g-3">
                     <div class="col-md-3">
                         <label class="form-label">Search</label>
@@ -346,7 +287,7 @@ include 'includes/sidebar.php';
                     
                     <div class="col-md-3 d-flex align-items-end">
                         <div class="d-flex gap-2 w-100">
-                            <button type="submit" class="btn btn-primary w-100">
+                            <button type="submit" class="btn w-100 text-white border-0" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                                 <i class="bi bi-funnel me-2"></i>Filter
                             </button>
                             <a href="enrollments.php" class="btn btn-outline-secondary">
@@ -358,12 +299,12 @@ include 'includes/sidebar.php';
             </div>
         </div>
 
-        <!-- Enrollments Table -->
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white border-0 py-3">
+        <!-- Box 4: Enrollments Table -->
+        <div class="card border-0 rounded-4 shadow-sm">
+            <div class="card-header bg-white border-0 py-3 px-4">
                 <h5 class="mb-0">Enrollments List</h5>
             </div>
-            <div class="card-body">
+            <div class="card-body px-4">
                 <?php if (empty($enrollments)): ?>
                     <div class="text-center py-5">
                         <i class="bi bi-journal-check fs-1 text-muted"></i>
@@ -476,27 +417,12 @@ include 'includes/sidebar.php';
                                             <br><small class="text-muted"><?php echo date('h:i A', strtotime($enrollment['enrolledAt'])); ?></small>
                                         </td>
                                         <td>
-                                            <div class="btn-group btn-group-sm">
-                                                <a href="enrollment_view.php?id=<?php echo $enrollment['enrollmentID']; ?>" 
-                                                   class="btn btn-outline-primary" 
-                                                   data-bs-toggle="tooltip" 
-                                                   title="View Details">
-                                                    <i class="bi bi-eye"></i>
-                                                </a>
-                                                <a href="enrollment_edit.php?id=<?php echo $enrollment['enrollmentID']; ?>" 
-                                                   class="btn btn-outline-secondary" 
-                                                   data-bs-toggle="tooltip" 
-                                                   title="Edit">
-                                                    <i class="bi bi-pencil"></i>
-                                                </a>
-                                                <a href="enrollment_actions.php?action=delete&id=<?php echo $enrollment['enrollmentID']; ?>" 
-                                                   class="btn btn-outline-danger" 
-                                                   data-confirm-delete="Are you sure you want to delete this enrollment? This will permanently delete all related data including quiz results and progress tracking."
-                                                   data-bs-toggle="tooltip" 
-                                                   title="Delete">
-                                                    <i class="bi bi-trash"></i>
-                                                </a>
-                                            </div>
+                                            <a href="enrollment_view.php?id=<?php echo $enrollment['enrollmentID']; ?>" 
+                                               class="btn btn-outline-primary btn-sm" 
+                                               data-bs-toggle="tooltip" 
+                                               title="View Details">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
