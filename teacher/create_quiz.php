@@ -474,13 +474,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 </div>
                             </div>
 
-                            <div class="d-flex gap-3">
+                            <div class="d-flex gap-3 justify-content-end">
+                                <a href="quizzes.php" class="btn btn-outline-secondary">
+                                    <i class="bi bi-x-circle me-2"></i> Cancel
+                                </a>
                                 <button type="submit" class="btn-gradient">
                                     <i class="bi bi-plus-circle me-2"></i> Create Quiz
                                 </button>
-                                <a href="quizzes.php" class="btn-outline-secondary">
-                                    <i class="bi bi-x-circle me-2"></i> Cancel
-                                </a>
                             </div>
                         </form>
                     </div>

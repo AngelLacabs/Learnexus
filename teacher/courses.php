@@ -616,7 +616,7 @@ document.querySelectorAll('.status-tab').forEach(tab => {
     });
 });
 
-// Course status toggle function (from original)
+// Course status toggle function with updated toast notifications
 function toggleCourseStatus(courseID, action) {
     fetch('ajax_toggle_course_status.php', {
         method: 'POST',
@@ -629,29 +629,63 @@ function toggleCourseStatus(courseID, action) {
     .then(res => res.json())
     .then(res => {
         if (res.success) {
-            Swal.fire('Success', res.message, 'success')
-                .then(() => location.reload());
+            // Updated to use toast notification like student settings
+            Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: res.message,
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true
+            }).then(() => {
+                location.reload();
+            });
         } else {
-            Swal.fire('Error', res.message, 'error');
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: res.message || 'Failed to update course status',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true
+            });
         }
     })
-    .catch(() => Swal.fire('Error', 'Server error', 'error'));
+    .catch(() => {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Server error',
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true
+        });
+    });
 }
 
-// Delete confirmation
+// Delete confirmation with updated toast notifications
 function confirmDelete(courseID, courseTitle) {
     Swal.fire({
         title: 'Delete Course?',
         html: `Are you sure you want to delete <strong>${courseTitle}</strong>?<br>This action cannot be undone.`,
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonColor: '#dc3545',
-        cancelButtonColor: '#6c757d',
         confirmButtonText: 'Yes, Delete',
-        cancelButtonText: 'Cancel'
+        cancelButtonText: 'Cancel',
+        reverseButtons: true,
+        customClass: {
+            confirmButton: 'btn-gradient',
+            cancelButton: 'btn-cancel'
+        },
+        buttonsStyling: false
     }).then((result) => {
         if (result.isConfirmed) {
-            // Add your delete API call here
             fetch('ajax_delete_course.php', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
@@ -662,18 +696,49 @@ function confirmDelete(courseID, courseTitle) {
             .then(res => res.json())
             .then(res => {
                 if (res.success) {
-                    Swal.fire('Deleted!', 'Course has been deleted.', 'success')
-                        .then(() => location.reload());
+                    // Updated to use toast notification like student settings
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: 'Course has been deleted.',
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3000,
+                        timerProgressBar: true
+                    }).then(() => {
+                        location.reload();
+                    });
                 } else {
-                    Swal.fire('Error', res.message || 'Failed to delete course', 'error');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: res.message || 'Failed to delete course',
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3000,
+                        timerProgressBar: true
+                    });
                 }
             })
-            .catch(() => Swal.fire('Error', 'Server error', 'error'));
+            .catch(() => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Server error',
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true
+                });
+            });
         }
     });
 }
 
-// Show create course modal (UPDATED: Cancel on left, Create Course on right)
+// Show create course modal with updated success message style
 function showCreateCourseModal() {
     Swal.fire({
         title: 'Create New Course',
@@ -707,12 +772,12 @@ function showCreateCourseModal() {
         showCancelButton: true,
         confirmButtonText: 'Create Course',
         cancelButtonText: 'Cancel',
-        reverseButtons: true, // This swaps the button positions
+        reverseButtons: true,
         customClass: {
             confirmButton: 'btn-gradient',
             cancelButton: 'btn-cancel'
         },
-        buttonsStyling: false, // Disable default styling
+        buttonsStyling: false,
         preConfirm: () => {
             const form = document.getElementById('createCourseForm');
             if (!form.title.value) Swal.showValidationMessage('Please enter a course title');
@@ -722,14 +787,52 @@ function showCreateCourseModal() {
         if (result.isConfirmed) {
             const data = result.value;
             data.append('action','create_course');
-            fetch('ajax_create_course.php',{
-                method:'POST',
-                body:data
-            }).then(res=>res.json())
-              .then(res=>{
-                  if(res.success) Swal.fire('Success','Course created!','success').then(()=>location.reload());
-                  else Swal.fire('Error',res.message,'error');
-              }).catch(()=>Swal.fire('Error','Something went wrong','error'));
+            
+            fetch('ajax_create_course.php', {
+                method: 'POST',
+                body: data
+            })
+            .then(res => res.json())
+            .then(res => {
+                if (res.success) {
+                    // Updated success alert to match student side settings.php
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: 'Course created successfully!',
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3000,
+                        timerProgressBar: true
+                    }).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: res.message || 'Failed to create course',
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3000,
+                        timerProgressBar: true
+                    });
+                }
+            })
+            .catch(() => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Something went wrong',
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true
+                });
+            });
         }
     });
 }

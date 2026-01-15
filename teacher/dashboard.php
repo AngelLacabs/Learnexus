@@ -190,6 +190,15 @@ $dailyMotivationTeacher = $teacherMotivations[$dayOfYear % count($teacherMotivat
             box-shadow: 0 8px 24px rgba(0,0,0,0.12);
         }
 
+        /* White Card Container */
+        .white-card-container {
+            background: white;
+            border-radius: 16px;
+            border: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            padding: 24px;
+        }
+
         /* Search */
         .search-input {
             padding-left: 2.5rem;
@@ -443,85 +452,88 @@ $dailyMotivationTeacher = $teacherMotivations[$dayOfYear % count($teacherMotivat
                 </div>
             </div>
 
-            <!-- Section Title -->
-            <div class="row mb-3">
+            <!-- Recent Courses in White Card -->
+            <div class="row mb-4">
                 <div class="col-12">
-                    <h2 class="h4 fw-bold">Recent Courses</h2>
-                </div>
-            </div>
-
-            <!-- Course Cards -->
-            <div class="row g-4 mb-5" id="coursesContainer">
-                <?php if (count($recentCourses) > 0): ?>
-                    <?php foreach ($recentCourses as $course): ?>
-                        <div class="col-12 col-md-6 col-lg-4 course-card-wrapper" 
-                             data-course-title="<?php echo strtolower(htmlspecialchars($course['title'])); ?>"
-                             data-course-status="<?php echo strtolower(htmlspecialchars($course['status'])); ?>">
-                            <div class="card border-0 rounded-4 shadow-sm card-hover h-100">
-                                <!-- Course Header -->
-                                <div class="course-header position-relative d-flex align-items-center justify-content-center">
-                                    <span class="badge status-<?php echo strtolower($course['status']); ?> position-absolute top-0 end-0 m-2 shadow-sm fw-bold">
-                                        <?php echo ucfirst($course['status']); ?>
-                                    </span>
-                                    <span class="fs-1">📚</span>
-                                </div>
-                                
-                                <div class="card-body p-4">
-                                    <p class="text-primary small text-uppercase fw-bold mb-2">
-                                        <?php echo htmlspecialchars($course['category'] ?? 'General'); ?>
-                                    </p>
-                                    <h5 class="fw-bold mb-3"><?php echo htmlspecialchars($course['title']); ?></h5>
-                                    
-                                    <div class="row g-2 mb-3">
-                                        <div class="col-4">
-                                            <div class="text-center p-2 bg-light rounded-3">
-                                                <div class="fw-bold text-primary"><?php echo $course['enrollmentCount']; ?></div>
-                                                <small class="text-muted">Students</small>
+                    <div class="white-card-container">
+                        <!-- Section Title -->
+                        <h2 class="h4 fw-bold mb-4">Recent Courses</h2>
+                        
+                        <!-- Course Cards -->
+                        <div class="row g-4" id="coursesContainer">
+                            <?php if (count($recentCourses) > 0): ?>
+                                <?php foreach ($recentCourses as $course): ?>
+                                    <div class="col-12 col-md-6 col-lg-4 course-card-wrapper" 
+                                         data-course-title="<?php echo strtolower(htmlspecialchars($course['title'])); ?>"
+                                         data-course-status="<?php echo strtolower(htmlspecialchars($course['status'])); ?>">
+                                        <div class="card border-0 rounded-4 shadow-sm card-hover h-100">
+                                            <!-- Course Header -->
+                                            <div class="course-header position-relative d-flex align-items-center justify-content-center">
+                                                <span class="badge status-<?php echo strtolower($course['status']); ?> position-absolute top-0 end-0 m-2 shadow-sm fw-bold">
+                                                    <?php echo ucfirst($course['status']); ?>
+                                                </span>
+                                                <span class="fs-1">📚</span>
                                             </div>
-                                        </div>
-                                        <div class="col-4">
-                                            <div class="text-center p-2 bg-light rounded-3">
-                                                <div class="fw-bold text-success"><?php echo $course['lessonCount']; ?></div>
-                                                <small class="text-muted">Lessons</small>
-                                            </div>
-                                        </div>
-                                        <div class="col-4">
-                                            <div class="text-center p-2 bg-light rounded-3">
-                                                <div class="fw-bold text-warning"><?php echo $course['quizCount']; ?></div>
-                                                <small class="text-muted">Quizzes</small>
+                                            
+                                            <div class="card-body p-4">
+                                                <p class="text-primary small text-uppercase fw-bold mb-2">
+                                                    <?php echo htmlspecialchars($course['category'] ?? 'General'); ?>
+                                                </p>
+                                                <h5 class="fw-bold mb-3"><?php echo htmlspecialchars($course['title']); ?></h5>
+                                                
+                                                <div class="row g-2 mb-3">
+                                                    <div class="col-4">
+                                                        <div class="text-center p-2 bg-light rounded-3">
+                                                            <div class="fw-bold text-primary"><?php echo $course['enrollmentCount']; ?></div>
+                                                            <small class="text-muted">Students</small>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-4">
+                                                        <div class="text-center p-2 bg-light rounded-3">
+                                                            <div class="fw-bold text-success"><?php echo $course['lessonCount']; ?></div>
+                                                            <small class="text-muted">Lessons</small>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-4">
+                                                        <div class="text-center p-2 bg-light rounded-3">
+                                                            <div class="fw-bold text-warning"><?php echo $course['quizCount']; ?></div>
+                                                            <small class="text-muted">Quizzes</small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <p class="text-muted small mb-3">
+                                                    <i class="bi bi-calendar me-1"></i>
+                                                    Created <?php echo date('M d, Y', strtotime($course['createdAt'])); ?>
+                                                </p>
+                                                
                                             </div>
                                         </div>
                                     </div>
-                                    
-                                    <p class="text-muted small mb-3">
-                                        <i class="bi bi-calendar me-1"></i>
-                                        Created <?php echo date('M d, Y', strtotime($course['createdAt'])); ?>
-                                    </p>
-                                    
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <div class="col-12" id="emptyState">
+                                    <div class="card border-0 rounded-4 shadow-sm">
+                                        <div class="card-body text-center py-5">
+                                            <i class="bi bi-book display-1 text-muted mb-3"></i>
+                                            <h3 class="h5 fw-bold mb-3">No Courses Yet</h3>
+                                            <p class="text-muted mb-4">You haven't created any courses yet. Start creating to inspire your students!</p>
+                                            <a href="courses.php" class="btn btn-primary rounded-pill px-4 fw-semibold">
+                                                <i class="bi bi-plus-circle me-2"></i>Create First Course
+                                            </a>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <div class="col-12" id="emptyState">
-                        <div class="card border-0 rounded-4 shadow-sm">
-                            <div class="card-body text-center py-5">
-                                <i class="bi bi-book display-1 text-muted mb-3"></i>
-                                <h3 class="h5 fw-bold mb-3">No Courses Yet</h3>
-                                <p class="text-muted mb-4">You haven't created any courses yet. Start creating to inspire your students!</p>
-                                <a href="courses.php" class="btn btn-primary rounded-pill px-4 fw-semibold">
-                                    <i class="bi bi-plus-circle me-2"></i>Create First Course
-                                </a>
-                            </div>
+                            <?php endif; ?>
                         </div>
                     </div>
-                <?php endif; ?>
+                </div>
             </div>
 
             <!-- No Results -->
             <div class="row d-none" id="noResults">
                 <div class="col-12">
-                    <div class="card border-0 rounded-4 shadow-sm">
+                    <div class="white-card-container">
                         <div class="card-body text-center py-5">
                             <i class="bi bi-search display-1 text-muted mb-3"></i>
                             <h3 class="h5 fw-bold mb-3">No Courses Found</h3>
@@ -594,6 +606,7 @@ $dailyMotivationTeacher = $teacherMotivations[$dayOfYear % count($teacherMotivat
                 noResultsEl.classList.add('d-none');
                 if (emptyState) emptyState.style.display = totalCourses === 0 ? 'block' : 'none';
                 return;
+            }
             
             if (emptyState) emptyState.style.display = 'none';
             

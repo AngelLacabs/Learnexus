@@ -42,10 +42,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['avatar'])) {
                     $_SESSION['success'] = "Avatar updated successfully!";
                     header("Location: settings.php");
                     exit();
-                    
-                    $stmt = $conn->prepare("SELECT * FROM users WHERE userID = ?");
-                    $stmt->execute([$userID]);
-                    $user = $stmt->fetch();
                 } else {
                     $error = "Failed to upload avatar.";
                 }
@@ -252,56 +248,64 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
             }
         }
 
-        /* Cards - Updated to match student design */
-        .stat-card {
-            border-radius: 16px;
-            border: none;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            transition: transform 0.2s;
+        /* Settings Specific Styles - Matching student design */
+        .settings-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
 
-        .stat-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        .avatar-upload-section {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            margin: 0 auto;
         }
 
-        /* Settings Cards */
-        .settings-card {
-            border-radius: 16px;
-            border: none;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            transition: transform 0.2s;
+        .avatar-circle {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 48px;
+            font-weight: 700;
+            overflow: hidden;
+            border: 4px solid white;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
         }
 
-        .settings-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        .avatar-circle img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
-        /* Search Input */
-        .search-input {
-            border: 1px solid #dee2e6;
-            background: rgba(255, 255, 255, 0.9);
+        .avatar-upload-btn {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 40px;
+            height: 40px;
+            background: white;
+            border: 3px solid #667eea;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #667eea;
         }
 
-        .search-input:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25);
+        .avatar-upload-btn:hover {
+            background: #667eea;
+            color: white;
+            transform: scale(1.1);
         }
 
-        .search-icon {
-            color: #6c757d;
-        }
-
-        /* User Avatar */
-        .user-avatar {
-            width: 45px;
-            height: 45px;
-            min-width: 45px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-        }
-
-        /* Status Tabs */
+        /* Status Tabs - Matching enrollees.php */
         .status-tab {
             padding: 8px 16px;
             border-radius: 20px;
@@ -321,102 +325,111 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
             color: white;
         }
 
-        /* Action Buttons */
-        .btn-gradient {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-            color: white;
-        }
-
-        .btn-gradient:hover {
-            background: linear-gradient(135deg, #5a6fd8 0%, #6a4098 100%);
-            color: white;
-        }
-
-        /* Profile Avatar */
-        .profile-avatar-lg {
-            width: 120px;
-            height: 120px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 48px;
-            font-weight: 700;
-            margin: 0 auto 20px;
-            overflow: hidden;
-            border: 4px solid white;
-            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
-        }
-
-        /* Form Styling */
-        .form-label {
-            font-weight: 500;
-            color: #374151;
-        }
-
         .form-control {
-            border: 1px solid #dee2e6;
             border-radius: 12px;
+            border: 2px solid #e0e0e0;
             padding: 12px 16px;
-            transition: all 0.2s;
+            transition: all 0.3s ease;
         }
 
         .form-control:focus {
             border-color: #667eea;
-            box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25);
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.15);
         }
 
-        /* Password Toggle */
-        .password-toggle {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-left: none;
-            border-radius: 0 12px 12px 0;
-            padding: 0 16px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #6c757d;
-        }
-
-        .password-toggle:hover {
-            background: #e9ecef;
-        }
-
-        /* Danger Zone */
-        .danger-zone {
-            border-top: 2px solid #fee;
-            padding-top: 30px;
-            margin-top: 40px;
-        }
-
-        .danger-zone-title {
-            color: #dc3545;
+        .btn-save {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 40px;
+            border-radius: 12px;
             font-weight: 600;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .danger-zone {
+            border: 2px solid #fee;
+            border-radius: 16px;
+            padding: 30px;
+            background: #fff5f5;
+            margin-top: 40px;
         }
 
         .btn-delete {
             background: #dc3545;
             color: white;
             border: none;
+            padding: 12px 40px;
             border-radius: 12px;
-            padding: 12px 24px;
             font-weight: 600;
-            transition: all 0.2s;
+            transition: all 0.3s ease;
         }
 
         .btn-delete:hover {
             background: #c82333;
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+            box-shadow: 0 8px 20px rgba(220, 53, 69, 0.4);
+        }
+
+        .info-card {
+            background: linear-gradient(135deg, #e3f2fd 0%, #e8eaf6 100%);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .tab-content-section {
+            display: none;
+        }
+
+        .tab-content-section.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .input-group .btn {
+            border-radius: 0 12px 12px 0;
+        }
+
+        #avatarInput {
+            display: none;
+        }
+
+        /* User Avatar in Header */
+        .user-avatar-header {
+            width: 45px;
+            height: 45px;
+            min-width: 45px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+        
+        /* Settings Card */
+        .settings-card {
+            border-radius: 16px;
+            border: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transition: transform 0.2s;
+        }
+
+        .settings-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
         }
     </style>
 </head>
@@ -469,22 +482,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
 
     <!-- Main Content -->
     <main class="main-content p-3 p-lg-4">
-        <div class="container-fluid">
-            <!-- Header with Profile -->
+        <div class="container-fluid" style="max-width: 1200px;">
+            <!-- Header -->
             <div class="row mb-4">
                 <div class="col-12">
                     <div class="card border-0 rounded-4 shadow-sm">
-                        <div class="card-body p-3 d-flex justify-content-between align-items-center gap-3">
+                        <div class="card-body p-3 d-flex justify-content-between align-items-center">
                             <div>
-                                <h1 class="h3 fw-bold mb-1"><i class="bi bi-gear me-2"></i>Settings</h1>
-                                <p class="text-muted mb-0">Manage your account settings and preferences</p>
+                                <h4 class="mb-0 fw-bold"><i class="bi bi-gear me-2"></i>Settings</h4>
                             </div>
                             
-                            <div class="d-flex align-items-center gap-3" role="button" style="flex-shrink: 0;">
+                            <div class="d-flex align-items-center gap-3" onclick="window.location.href='settings.php'" role="button" style="flex-shrink: 0;">
                                 <span class="fw-semibold d-none d-sm-inline text-nowrap">
                                     <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>
                                 </span>
-                                <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold user-avatar">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold user-avatar-header">
                                     <?php if (!empty($user['avatar']) && file_exists($user['avatar'])): ?>
                                         <img src="<?php echo htmlspecialchars($user['avatar']); ?>" alt="Avatar" 
                                              class="w-100 h-100 rounded-circle object-fit-cover">
@@ -498,33 +510,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
                 </div>
             </div>
 
-            <!-- Profile Card -->
+            <!-- Profile Header with Avatar -->
             <div class="row mb-4">
                 <div class="col-12">
-                    <div class="card settings-card">
-                        <div class="card-body p-4 text-center">
-                            <div class="profile-avatar-lg">
-                                <?php if (!empty($user['avatar']) && file_exists($user['avatar'])): ?>
-                                    <img src="<?php echo htmlspecialchars($user['avatar']); ?>" alt="Avatar" class="w-100 h-100 object-fit-cover">
-                                <?php else: ?>
-                                    <?php echo strtoupper(substr($_SESSION['first_name'], 0, 1)); ?>
-                                <?php endif; ?>
+                    <div class="card border-0 rounded-4 shadow-sm settings-header text-white">
+                        <div class="card-body p-4 p-lg-5 text-center">
+                            <div class="avatar-upload-section">
+                                <div class="avatar-circle">
+                                    <?php if (!empty($user['avatar']) && file_exists($user['avatar'])): ?>
+                                        <img src="<?php echo htmlspecialchars($user['avatar']); ?>" alt="Avatar">
+                                    <?php else: ?>
+                                        <?php echo strtoupper(substr($_SESSION['first_name'], 0, 1)); ?>
+                                    <?php endif; ?>
+                                </div>
+                                <form method="POST" enctype="multipart/form-data" id="avatarForm">
+                                    <input type="file" name="avatar" id="avatarInput" accept="image/*"
+                                           onchange="document.getElementById('avatarForm').submit()">
+                                    <label for="avatarInput" class="avatar-upload-btn">
+                                        <i class="bi bi-camera-fill"></i>
+                                    </label>
+                                </form>
                             </div>
-                            <h3 class="fw-bold mb-1"><?php echo htmlspecialchars($user['firstName'] . ' ' . $user['lastName']); ?></h3>
-                            <p class="text-muted mb-3"><i class="bi bi-award me-1"></i> Teacher</p>
-                            
-                            <form method="POST" enctype="multipart/form-data" id="avatarForm" class="avatar-form">
-                                <input type="file" name="avatar" id="avatarInput" accept="image/*" onchange="document.getElementById('avatarForm').submit()" class="d-none">
-                                <button type="button" class="btn btn-outline-primary rounded-pill px-4" onclick="document.getElementById('avatarInput').click()">
-                                    <i class="bi bi-camera me-2"></i> Change Avatar
-                                </button>
-                            </form>
+                            <h3 class="fw-bold mt-3 mb-1"><?php echo htmlspecialchars($user['firstName'] . ' ' . $user['lastName']); ?></h3>
+                            <p class="mb-0 opacity-75">
+                                <i class="bi bi-award me-2"></i>Teacher Account
+                            </p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Settings Tabs -->
+            <!-- Status Tabs - Matching enrollees.php design -->
             <div class="row mb-4">
                 <div class="col-12">
                     <div class="card border-0 rounded-4 shadow-sm">
@@ -534,7 +550,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
                                     <i class="bi bi-person me-1"></i> Personal Information
                                 </button>
                                 <button class="status-tab" onclick="showTab('security')">
-                                    <i class="bi bi-shield-lock me-1"></i> Password & Security
+                                    <i class="bi bi-shield-lock me-1"></i> Security
                                 </button>
                             </div>
                         </div>
@@ -547,51 +563,65 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
                 <div class="col-12">
                     <div class="card settings-card">
                         <div class="card-body p-4">
-                            <h4 class="fw-bold mb-4"><i class="bi bi-person me-2"></i> Personal Information</h4>
-                            <p class="text-muted mb-4">Update your personal details and information.</p>
-                            
+                            <div class="info-card">
+                                <div class="d-flex align-items-start gap-3">
+                                    <i class="bi bi-info-circle fs-4 text-primary"></i>
+                                    <div>
+                                        <h6 class="fw-bold mb-1">Keep your information up to date</h6>
+                                        <p class="mb-0 small text-muted">Your personal information helps us provide you with a better teaching experience.</p>
+                                    </div>
+                                </div>
+                            </div>
+
                             <form method="POST">
                                 <input type="hidden" name="update_info" value="1">
-                                
-                                <div class="row g-3 mb-4">
-                                    <div class="col-md-4">
-                                        <label class="form-label">First Name</label>
+
+                                <div class="row">
+                                    <div class="col-md-5 mb-3">
+                                        <label class="form-label fw-semibold">
+                                            <i class="bi bi-person text-primary me-2"></i>First Name
+                                        </label>
                                         <input type="text" name="firstName" class="form-control" 
                                                value="<?php echo htmlspecialchars($user['firstName']); ?>" required>
                                     </div>
-                                    <div class="col-md-4">
-                                        <label class="form-label">Middle Initial</label>
+                                    <div class="col-md-2 mb-3">
+                                        <label class="form-label fw-semibold">M.I.</label>
                                         <input type="text" name="middleInitial" class="form-control" maxlength="5" 
                                                value="<?php echo htmlspecialchars($user['middleInitial']); ?>">
                                     </div>
-                                    <div class="col-md-4">
-                                        <label class="form-label">Last Name</label>
+                                    <div class="col-md-5 mb-3">
+                                        <label class="form-label fw-semibold">
+                                            <i class="bi bi-person text-primary me-2"></i>Last Name
+                                        </label>
                                         <input type="text" name="lastName" class="form-control" 
                                                value="<?php echo htmlspecialchars($user['lastName']); ?>" required>
                                     </div>
                                 </div>
-                                
-                                <div class="row g-3 mb-4">
-                                    <div class="col-md-6">
-                                        <label class="form-label">Email address</label>
-                                        <input type="email" name="email" class="form-control" 
-                                               value="<?php echo htmlspecialchars($user['email']); ?>" required>
-                                        <small class="text-muted">
-                                            <i class="bi bi-envelope me-1"></i> Email notifications will be sent to this address
-                                        </small>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">Phone Number</label>
-                                        <input type="text" name="phone" class="form-control" maxlength="11" 
-                                               value="<?php echo htmlspecialchars($user['phone']); ?>">
-                                        <small class="text-muted">
-                                            <i class="bi bi-telephone me-1"></i> SMS notifications
-                                        </small>
-                                    </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">
+                                        <i class="bi bi-envelope text-primary me-2"></i>Email Address
+                                    </label>
+                                    <input type="email" name="email" class="form-control" 
+                                           value="<?php echo htmlspecialchars($user['email']); ?>" required>
+                                    <small class="text-muted">
+                                        <i class="bi bi-shield-check me-1"></i>We'll send important notifications to this email
+                                    </small>
                                 </div>
-                                
-                                <button type="submit" class="btn btn-gradient rounded-pill px-4">
-                                    <i class="bi bi-check-circle me-2"></i> Save Changes
+
+                                <div class="mb-4">
+                                    <label class="form-label fw-semibold">
+                                        <i class="bi bi-telephone text-primary me-2"></i>Phone Number
+                                    </label>
+                                    <input type="text" name="phone" class="form-control" maxlength="11" 
+                                           value="<?php echo htmlspecialchars($user['phone']); ?>" placeholder="09XXXXXXXXX">
+                                    <small class="text-muted">
+                                        <i class="bi bi-chat-dots me-1"></i>Optional - for SMS notifications
+                                    </small>
+                                </div>
+
+                                <button type="submit" class="btn btn-save">
+                                    <i class="bi bi-check-circle me-2"></i>Save Changes
                                 </button>
                             </form>
                         </div>
@@ -599,67 +629,80 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
                 </div>
             </div>
 
-            <!-- Password & Security Tab -->
+            <!-- Security Tab -->
             <div class="row d-none" id="security">
                 <div class="col-12">
                     <div class="card settings-card">
                         <div class="card-body p-4">
-                            <h4 class="fw-bold mb-4"><i class="bi bi-shield-lock me-2"></i> Password and Security</h4>
-                            <p class="text-muted mb-4">Manage your password and login settings.</p>
-                            
+                            <div class="info-card">
+                                <div class="d-flex align-items-start gap-3">
+                                    <i class="bi bi-shield-check fs-4 text-primary"></i>
+                                    <div>
+                                        <h6 class="fw-bold mb-1">Protect your account</h6>
+                                        <p class="mb-0 small text-muted">Use a strong password and update it regularly to keep your account secure.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <h5 class="fw-bold mb-3">Change Password</h5>
+
                             <form method="POST">
                                 <input type="hidden" name="update_password" value="1">
-                                
-                                <div class="row g-3 mb-4">
-                                    <div class="col-md-6">
-                                        <label class="form-label">Current Password</label>
-                                        <div class="input-group">
-                                            <input type="password" name="currentPassword" class="form-control" 
-                                                   id="currentPassword" required>
-                                            <button class="password-toggle" type="button" onclick="togglePassword('currentPassword')">
-                                                <i class="bi bi-eye"></i>
-                                            </button>
-                                        </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">
+                                        <i class="bi bi-key text-primary me-2"></i>Current Password
+                                    </label>
+                                    <div class="input-group">
+                                        <input type="password" name="currentPassword" class="form-control" required>
+                                        <button class="btn btn-outline-secondary" type="button" onclick="togglePassword(this)">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
                                     </div>
                                 </div>
-                                
-                                <div class="row g-3 mb-4">
-                                    <div class="col-md-6">
-                                        <label class="form-label">New Password</label>
-                                        <div class="input-group">
-                                            <input type="password" name="newPassword" class="form-control" 
-                                                   id="newPassword" required>
-                                            <button class="password-toggle" type="button" onclick="togglePassword('newPassword')">
-                                                <i class="bi bi-eye"></i>
-                                            </button>
-                                        </div>
-                                        <small class="text-muted">Minimum 6 characters</small>
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">
+                                        <i class="bi bi-key-fill text-primary me-2"></i>New Password
+                                    </label>
+                                    <div class="input-group">
+                                        <input type="password" name="newPassword" class="form-control" required>
+                                        <button class="btn btn-outline-secondary" type="button" onclick="togglePassword(this)">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
                                     </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">Confirm Password</label>
-                                        <div class="input-group">
-                                            <input type="password" name="confirmPassword" class="form-control" 
-                                                   id="confirmPassword" required>
-                                            <button class="password-toggle" type="button" onclick="togglePassword('confirmPassword')">
-                                                <i class="bi bi-eye"></i>
-                                            </button>
-                                        </div>
+                                    <small class="text-muted">
+                                        <i class="bi bi-info-circle me-1"></i>Minimum 6 characters
+                                    </small>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label class="form-label fw-semibold">
+                                        <i class="bi bi-check-circle text-primary me-2"></i>Confirm New Password
+                                    </label>
+                                    <div class="input-group">
+                                        <input type="password" name="confirmPassword" class="form-control" required>
+                                        <button class="btn btn-outline-secondary" type="button" onclick="togglePassword(this)">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
                                     </div>
                                 </div>
-                                
-                                <button type="submit" class="btn btn-gradient rounded-pill px-4">
-                                    <i class="bi bi-key me-2"></i> Update Password
+
+                                <button type="submit" class="btn btn-save">
+                                    <i class="bi bi-shield-check me-2"></i>Update Password
                                 </button>
                             </form>
-                            
+
                             <!-- Danger Zone -->
                             <div class="danger-zone">
-                                <h5 class="danger-zone-title">
-                                    <i class="bi bi-exclamation-triangle"></i> Danger Zone
+                                <h5 class="fw-bold text-danger mb-3">
+                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>Danger Zone
                                 </h5>
-                                <p class="text-muted mb-3">Once you delete your account, there is no going back. Please be certain.</p>
-                                <button type="button" class="btn btn-delete rounded-pill px-4" onclick="confirmDeleteAccount()">
-                                    <i class="bi bi-trash me-2"></i> Delete Account
+                                <p class="text-muted mb-3">
+                                    Once you delete your account, all your data including courses, students, and teaching history will be permanently removed. This action cannot be undone.
+                                </p>
+                                <button type="button" class="btn btn-delete" onclick="confirmDeleteAccount()">
+                                    <i class="bi bi-trash me-2"></i>Delete My Account
                                 </button>
                             </div>
                         </div>
@@ -721,11 +764,10 @@ function showTab(tabId) {
 }
 
 // Password toggle function
-function togglePassword(inputId) {
-    const input = document.getElementById(inputId);
-    const button = input.nextElementSibling;
+function togglePassword(button) {
+    const input = button.closest('.input-group').querySelector('input');
     const icon = button.querySelector('i');
-    
+
     if (input.type === 'password') {
         input.type = 'text';
         icon.classList.remove('bi-eye');
@@ -742,37 +784,71 @@ function confirmDeleteAccount() {
     Swal.fire({
         title: 'Delete Account?',
         html: `
-            <p style="color: #666; margin-bottom: 20px;">This action cannot be undone! All your data will be permanently deleted.</p>
-            <label style="display: block; text-align: left; margin-bottom: 8px; font-weight: 500;">Enter your password to confirm</label>
-            <div style="position: relative;">
-                <input type="password" id="deletePasswordInput" class="swal2-input" placeholder="Your password" style="width: 100%; padding-right: 45px;">
-                <button type="button" onclick="toggleDeletePassword()" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; padding: 5px;">
-                    <i class="bi bi-eye" id="deletePasswordIcon" style="font-size: 18px; color: #666;"></i>
-                </button>
+            <div class="text-start">
+                <p class="text-secondary mb-3">
+                    This action cannot be undone. All your data including:
+                    <ul class="text-start ps-4 mb-3">
+                        <li>Your personal information</li>
+                        <li>Courses you created</li>
+                        <li>Student enrollment data</li>
+                        <li>Teaching history and statistics</li>
+                    </ul>
+                    will be permanently deleted.
+                </p>
+                <label class="form-label fw-medium mb-2 d-block">
+                    <i class="bi bi-key me-2"></i>Enter your password to confirm
+                </label>
+                <div class="input-group">
+                    <input type="password" id="deletePasswordInput" class="form-control" 
+                           placeholder="Enter your current password">
+                    <button class="btn btn-outline-secondary" type="button" onclick="toggleDeletePassword()">
+                        <i class="bi bi-eye" id="deletePasswordIcon"></i>
+                    </button>
+                </div>
             </div>
         `,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#dc3545',
         cancelButtonColor: '#6c757d',
-        confirmButtonText: 'Yes, delete my account',
+        confirmButtonText: 'Yes, Delete My Account',
         cancelButtonText: 'Cancel',
         focusConfirm: false,
+        allowOutsideClick: false,
+        showLoaderOnConfirm: true,
         preConfirm: () => {
             const password = document.getElementById('deletePasswordInput').value;
             if (!password) {
-                Swal.showValidationMessage('Password is required');
+                Swal.showValidationMessage('Please enter your password');
+                return false;
             }
             return password;
+        },
+        didOpen: () => {
+            const input = document.getElementById('deletePasswordInput');
+            const button = input.nextElementSibling;
+            if (button) {
+                button.style.borderRadius = '0 8px 8px 0';
+            }
         }
     }).then((result) => {
-        if (result.isConfirmed) {
+        if (result.isConfirmed && result.value) {
             const form = document.createElement('form');
             form.method = 'POST';
-            form.innerHTML = `
-                <input type="hidden" name="delete_account" value="1">
-                <input type="hidden" name="deletePassword" value="${result.value}">
-            `;
+            form.style.display = 'none';
+
+            const deleteAccountInput = document.createElement('input');
+            deleteAccountInput.type = 'hidden';
+            deleteAccountInput.name = 'delete_account';
+            deleteAccountInput.value = '1';
+
+            const passwordInput = document.createElement('input');
+            passwordInput.type = 'hidden';
+            passwordInput.name = 'deletePassword';
+            passwordInput.value = result.value;
+
+            form.appendChild(deleteAccountInput);
+            form.appendChild(passwordInput);
             document.body.appendChild(form);
             form.submit();
         }
@@ -782,7 +858,7 @@ function confirmDeleteAccount() {
 function toggleDeletePassword() {
     const input = document.getElementById('deletePasswordInput');
     const icon = document.getElementById('deletePasswordIcon');
-    
+
     if (input.type === 'password') {
         input.type = 'text';
         icon.classList.remove('bi-eye');
@@ -799,9 +875,12 @@ function toggleDeletePassword() {
 Swal.fire({
     icon: 'success',
     title: 'Success!',
-    text: '<?php echo $success; ?>',
-    confirmButtonText: 'OK',
-    confirmButtonColor: '#667eea'
+    text: '<?php echo addslashes($success); ?>',
+    toast: true,
+    position: 'top-end',
+    showConfirmButton: false,
+    timer: 3000,
+    timerProgressBar: true
 });
 <?php endif; ?>
 
@@ -809,8 +888,12 @@ Swal.fire({
 Swal.fire({
     icon: 'error',
     title: 'Error',
-    text: '<?php echo $error; ?>',
-    confirmButtonColor: '#667eea'
+    text: '<?php echo addslashes($error); ?>',
+    toast: true,
+    position: 'top-end',
+    showConfirmButton: false,
+    timer: 3000,
+    timerProgressBar: true
 });
 <?php endif; ?>
 </script>
