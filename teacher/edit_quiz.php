@@ -130,7 +130,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_quiz'])) {
         
         // Redirect to manage course page
         $_SESSION['success'] = "Quiz deleted successfully!";
-        header("Location: manage_course.php?id={$quiz['courseID']}&tab=quizzes");
+        header("Location:quizzes.php?id={$quiz['courseID']}&tab=quizzes");
         exit();
         
     } catch (Exception $e) {
@@ -849,21 +849,30 @@ if (isset($_SESSION['success'])) {
         });
 
         <?php if (isset($success)): ?>
+        // Updated to use toast notification like student settings.php
         Swal.fire({
             icon: 'success',
             title: 'Success!',
             text: '<?php echo addslashes($success); ?>',
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
             timer: 3000,
-            showConfirmButton: true
+            timerProgressBar: true
         });
         <?php endif; ?>
 
         <?php if (isset($error)): ?>
+        // Updated to use toast notification like student settings.php
         Swal.fire({
             icon: 'error',
-            title: 'Error!',
+            title: 'Error',
             text: '<?php echo addslashes($error); ?>',
-            showConfirmButton: true
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true
         });
         <?php endif; ?>
 
@@ -874,8 +883,10 @@ if (isset($_SESSION['success'])) {
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Yes, delete it!'
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, delete it!',
+                cancelButtonText: 'Cancel',
+                reverseButtons: true
             }).then((result) => {
                 if (result.isConfirmed) {
                     button.closest('form').submit();
@@ -902,9 +913,10 @@ if (isset($_SESSION['success'])) {
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
+                cancelButtonColor: '#6c757d',
                 confirmButtonText: 'Yes, delete everything',
                 cancelButtonText: 'Cancel',
+                reverseButtons: true,
                 preConfirm: () => {
                     const confirmValue = document.getElementById('confirmDeleteInput').value;
                     if (confirmValue !== 'DELETE') {
