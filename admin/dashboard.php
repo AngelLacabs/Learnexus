@@ -10,6 +10,28 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
 
 $page_title = "Admin Dashboard - Learnexus";
 
+// Get admin avatar
+$stmt = $conn->prepare("SELECT avatar FROM users WHERE userID = ?");
+$stmt->execute([$_SESSION['user_id']]);
+$userAvatar = $stmt->fetchColumn();
+
+// Admin motivational phrases
+$adminMotivations = [
+    "Empowering education through effective administration.",
+    "Your leadership shapes the future of learning.",
+    "Excellence in administration drives educational success.",
+    "Managing with vision, leading with purpose.",
+    "Building bridges between students, teachers, and success.",
+    "Your dedication ensures quality education for all.",
+    "Administrative excellence creates educational opportunities.",
+    "Guiding the platform that transforms lives through learning.",
+    "Every decision you make impacts countless learners.",
+    "Thank you for maintaining excellence in education!"
+];
+
+$dayOfYear = date('z');
+$dailyMotivationAdmin = $adminMotivations[$dayOfYear % count($adminMotivations)];
+
 // Fetch statistics
 try {
     // Total users by role
@@ -53,8 +75,8 @@ try {
     $totalVouchers = $voucherStats['total'] ?? 0;
     $usedVouchers = $voucherStats['used'] ?? 0;
 
-    // Recent users (last 5)
-    $stmt = $conn->query("SELECT userID, firstName, lastName, role, createdAt FROM users ORDER BY createdAt DESC LIMIT 5");
+    // Recent users (last 5) - exclude admins
+    $stmt = $conn->query("SELECT userID, firstName, lastName, role, createdAt, avatar FROM users WHERE role != 'admin' ORDER BY createdAt DESC LIMIT 5");
     $recentUsers = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // Recent courses (last 5)
@@ -83,20 +105,56 @@ try {
 }
 
 include 'includes/header.php';
-include 'includes/sidebar.php';
 ?>
-
-<div class="main-content">
-    <div class="container-fluid">
-        <!-- Page Header -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h1 class="h3 mb-0">Dashboard</h1>
-                <p class="text-muted mb-0">Welcome back, <?php echo htmlspecialchars($_SESSION['first_name']); ?>! 👋</p>
+    <!-- Hamburger Button (Mobile) -->
+    <div class="position-fixed top-0 start-0 p-3 d-lg-none" style="z-index: 1100;">
+        <button class="hamburger-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" id="hamburgerBtn">
+            <div class="hamburger-icon d-flex flex-column align-items-center justify-content-center">
+                <span></span>
+                <span></span>
+                <span></span>
             </div>
-            <!-- <div>
-                <span class="badge bg-success">System Online</span>
-            </div> -->
+        </button>
+    </div>
+
+<?php include 'includes/sidebar.php'; ?>
+
+<div class="main-content pb-5 pb-lg-4 ps-3 ps-lg-4 pe-3 pe-lg-4 pt-3">
+    <div class="container-fluid">
+        <!-- Header -->
+        <div class="row mb-4 mt-3">
+            <div class="col-12">
+                <div class="card border-0 rounded-4 shadow-sm">
+                    <div class="card-body p-3 d-flex justify-content-end align-items-center">
+                        <div class="d-flex align-items-center gap-3" onclick="window.location.href='user_view.php?id=<?php echo urlencode($_SESSION['user_id']); ?>'" role="button" style="flex-shrink: 0;">
+                            <span class="fw-semibold d-none d-sm-inline text-nowrap">
+                                <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>
+                            </span>
+                            <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold" 
+                                 style="width: 45px; height: 45px; min-width: 45px; background: linear-gradient(135deg, #667eea, #764ba2);">
+                                <?php if (!empty($userAvatar) && file_exists($userAvatar)): ?>
+                                    <img src="<?php echo htmlspecialchars($userAvatar); ?>" alt="Avatar" 
+                                         class="w-100 h-100 rounded-circle object-fit-cover">
+                                <?php else: ?>
+                                    <?php echo strtoupper(substr($_SESSION['first_name'], 0, 1)); ?>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Welcome Banner -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 rounded-4 shadow text-white" 
+                     style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <div class="card-body p-4 p-lg-5">
+                        <h2 class="h3 fw-bold mb-0"><?php echo htmlspecialchars($dailyMotivationAdmin); ?></h2>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Statistics Cards -->
@@ -105,16 +163,13 @@ include 'includes/sidebar.php';
             <div class="col-xl-3 col-md-6">
                 <div class="card stat-card border-0 shadow-sm h-100">
                     <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="text-muted mb-2">Total Users</h6>
-                                <h2 class="mb-0"><?php echo number_format($totalUsers); ?></h2>
-                                <small class="text-success">
-                                    <i class="bi bi-arrow-up"></i> Students: <?php echo $totalStudents; ?>
-                                </small>
-                            </div>
-                            <div class="stat-icon bg-primary">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="stat-icon-circle bg-primary bg-opacity-10 text-primary">
                                 <i class="bi bi-people-fill"></i>
+                            </div>
+                            <div>
+                                <h6 class="text-muted mb-1">Total Users</h6>
+                                <h2 class="mb-0"><?php echo number_format($totalUsers); ?></h2>
                             </div>
                         </div>
                     </div>
@@ -125,18 +180,13 @@ include 'includes/sidebar.php';
             <div class="col-xl-3 col-md-6">
                 <div class="card stat-card border-0 shadow-sm h-100">
                     <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="text-muted mb-2">Total Courses</h6>
-                                <h2 class="mb-0"><?php echo number_format($totalCourses); ?></h2>
-                                <div class="d-flex gap-2 justify-content-start align-items-center mt-2">
-                                    <small class="text-info">
-                                        <i class="bi bi-check-circle"></i> Published: <?php echo $publishedCourses; ?>
-                                    </small>
-                                </div>
-                            </div>
-                            <div class="stat-icon bg-success">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="stat-icon-circle bg-success bg-opacity-10 text-success">
                                 <i class="bi bi-book-fill"></i>
+                            </div>
+                            <div>
+                                <h6 class="text-muted mb-1">Total Courses</h6>
+                                <h2 class="mb-0"><?php echo number_format($totalCourses); ?></h2>
                             </div>
                         </div>
                     </div>
@@ -147,16 +197,13 @@ include 'includes/sidebar.php';
             <div class="col-xl-3 col-md-6">
                 <div class="card stat-card border-0 shadow-sm h-100">
                     <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="text-muted mb-2">Total Enrollments</h6>
-                                <h2 class="mb-0"><?php echo number_format($totalEnrollments); ?></h2>
-                                <small class="text-warning">
-                                    <i class="bi bi-journal-bookmark"></i> Active
-                                </small>
-                            </div>
-                            <div class="stat-icon bg-warning">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="stat-icon-circle bg-warning bg-opacity-10 text-warning">
                                 <i class="bi bi-journal-check"></i>
+                            </div>
+                            <div>
+                                <h6 class="text-muted mb-1">Total Enrollments</h6>
+                                <h2 class="mb-0"><?php echo number_format($totalEnrollments); ?></h2>
                             </div>
                         </div>
                     </div>
@@ -167,16 +214,13 @@ include 'includes/sidebar.php';
             <div class="col-xl-3 col-md-6">
                 <div class="card stat-card border-0 shadow-sm h-100">
                     <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="text-muted mb-2">Total Revenue</h6>
-                                <h2 class="mb-0">₱<?php echo number_format($totalRevenue, 2); ?></h2>
-                                <small class="text-success">
-                                    <i class="bi bi-clock"></i> Pending: <?php echo $pendingPayments; ?>
-                                </small>
-                            </div>
-                            <div class="stat-icon bg-info">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="stat-icon-circle bg-info bg-opacity-10 text-info">
                                 <i class="bi bi-currency-dollar"></i>
+                            </div>
+                            <div>
+                                <h6 class="text-muted mb-1">Total Revenue</h6>
+                                <h2 class="mb-0">₱<?php echo number_format($totalRevenue, 2); ?></h2>
                             </div>
                         </div>
                     </div>
@@ -188,33 +232,61 @@ include 'includes/sidebar.php';
         <div class="row g-4 mb-4">
             <div class="col-xl-3 col-md-6">
                 <div class="card border-0 shadow-sm hover-stat">
-                    <div class="card-body text-center">
-                        <h6 class="text-muted">Teachers</h6>
-                        <h3 class="text-primary"><?php echo number_format($totalTeachers); ?></h3>
+                    <div class="card-body">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="stat-icon-circle bg-primary bg-opacity-10 text-primary">
+                                <i class="bi bi-people-fill"></i>
+                            </div>
+                            <div>
+                                <h6 class="text-muted mb-1">Teachers</h6>
+                                <h3 class="mb-0 text-primary"><?php echo number_format($totalTeachers); ?></h3>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
             <div class="col-xl-3 col-md-6">
                 <div class="card border-0 shadow-sm hover-stat">
-                    <div class="card-body text-center">
-                        <h6 class="text-muted">Certificates</h6>
-                        <h3 class="text-success"><?php echo number_format($totalCertificates); ?></h3>
+                    <div class="card-body">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="stat-icon-circle bg-info bg-opacity-10 text-info">
+                                <i class="bi bi-person-badge-fill"></i>
+                            </div>
+                            <div>
+                                <h6 class="text-muted mb-1">Students</h6>
+                                <h3 class="mb-0 text-info"><?php echo number_format($totalStudents); ?></h3>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
             <div class="col-xl-3 col-md-6">
                 <div class="card border-0 shadow-sm hover-stat">
-                    <div class="card-body text-center">
-                        <h6 class="text-muted">Vouchers</h6>
-                        <h3 class="text-warning"><?php echo number_format($totalVouchers); ?></h3>
+                    <div class="card-body">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="stat-icon-circle bg-success bg-opacity-10 text-success">
+                                <i class="bi bi-award-fill"></i>
+                            </div>
+                            <div>
+                                <h6 class="text-muted mb-1">Certificates</h6>
+                                <h3 class="mb-0 text-success"><?php echo number_format($totalCertificates); ?></h3>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
             <div class="col-xl-3 col-md-6">
                 <div class="card border-0 shadow-sm hover-stat">
-                    <div class="card-body text-center">
-                        <h6 class="text-muted">Draft Courses</h6>
-                        <h3 class="text-secondary"><?php echo number_format($draftCourses); ?></h3>
+                    <div class="card-body">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="stat-icon-circle bg-warning bg-opacity-10 text-warning">
+                                <i class="bi bi-ticket-perforated"></i>
+                            </div>
+                            <div>
+                                <h6 class="text-muted mb-1">Vouchers</h6>
+                                <h3 class="mb-0 text-warning"><?php echo number_format($totalVouchers); ?></h3>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -224,107 +296,137 @@ include 'includes/sidebar.php';
         <div class="row g-4">
             <!-- Recent Users -->
             <div class="col-md-4 col-12">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-header bg-white border-0 py-3">
-                        <h5 class="mb-0">Recent Users</h5>
+                <div class="card border-0 shadow-lg h-100 recent-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 20px !important;">
+                    <div class="card-header border-0 py-4 px-4" style="background: transparent;">
+                        <h5 class="mb-0 text-white fw-bold" style="font-size: 1.1rem;">Recent Users</h5>
                     </div>
-                    <div class="card-body d-flex flex-column">
+                    <div class="card-body d-flex flex-column px-4 pb-4">
                         <div class="flex-grow-1 overflow-auto">
-                            <div class="list-group list-group-flush">
-                                <?php if (empty($recentUsers)): ?>
-                                    <p class="text-muted">No recent users</p>
-                                <?php else: ?>
-                                    <?php foreach ($recentUsers as $user): ?>
-                                        <div class="list-group-item px-0">
-                                            <div class="d-flex align-items-center">
-                                                <div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3">
-                                                    <?php echo strtoupper(substr($user['firstName'], 0, 1)); ?>
-                                                </div>
-                                                <div class="flex-grow-1">
-                                                    <h6 class="mb-0"><?php echo htmlspecialchars($user['firstName'] . ' ' . $user['lastName']); ?></h6>
-                                                    <small class="text-muted">
-                                                        <span class="badge bg-<?php echo $user['role'] === 'student' ? 'primary' : 'success'; ?>">
-                                                            <?php echo ucfirst($user['role']); ?>
-                                                        </span>
-                                                        <?php echo date('M d, Y', strtotime($user['createdAt'])); ?>
-                                                    </small>
-                                                </div>
+                            <?php if (empty($recentUsers)): ?>
+                                <p class="text-white-50 mb-0">No recent users</p>
+                            <?php else: ?>
+                                <?php foreach ($recentUsers as $user): ?>
+                                    <div class="d-flex align-items-center mb-3 pb-3" style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                        <div class="avatar-recent bg-white text-dark rounded-circle d-flex align-items-center justify-content-center me-3 fw-bold" style="width: 48px; height: 48px; font-size: 1.1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.15); overflow: hidden;">
+                                            <?php if (!empty($user['avatar']) && file_exists($user['avatar'])): ?>
+                                                <img src="<?php echo htmlspecialchars($user['avatar']); ?>" alt="Avatar" 
+                                                     class="w-100 h-100 rounded-circle object-fit-cover">
+                                            <?php else: ?>
+                                                <?php echo strtoupper(substr($user['firstName'], 0, 1)); ?>
+                                            <?php endif; ?>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1 text-white fw-bold" style="font-size: 0.95rem;"><?php echo htmlspecialchars($user['firstName'] . ' ' . $user['lastName']); ?></h6>
+                                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                                <span class="badge bg-white text-dark border-0 fw-semibold" style="font-size: 0.75rem; padding: 4px 10px;">
+                                                    <?php echo ucfirst($user['role']); ?>
+                                                </span>
+                                                <small class="text-white-50" style="font-size: 0.8rem;">
+                                                    <?php echo date('M d, Y', strtotime($user['createdAt'])); ?>
+                                                </small>
                                             </div>
                                         </div>
-                                    <?php endforeach; ?>
-                                <?php endif; ?>
-                            </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
                         </div>
-                        <a href="users.php" class="btn btn-sm btn-outline-primary w-100 mt-3 mt-auto">View All Users</a>
+                        <a href="users.php" class="btn btn-light w-100 mt-3 mt-auto fw-bold rounded-pill" style="padding: 10px; font-size: 0.9rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">View All Users</a>
                     </div>
                 </div>
             </div>
 
             <!-- Recent Courses -->
             <div class="col-md-4 col-12">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-header bg-white border-0 py-3">
-                        <h5 class="mb-0">Recent Courses</h5>
+                <div class="card border-0 shadow-lg h-100 recent-card" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); border-radius: 20px !important;">
+                    <div class="card-header border-0 py-4 px-4" style="background: transparent;">
+                        <h5 class="mb-0 text-white fw-bold" style="font-size: 1.1rem;">Recent Courses</h5>
                     </div>
-                    <div class="card-body d-flex flex-column">
+                    <div class="card-body d-flex flex-column px-4 pb-4">
                         <div class="flex-grow-1 overflow-auto">
-                            <div class="list-group list-group-flush">
-                                <?php if (empty($recentCourses)): ?>
-                                    <p class="text-muted">No recent courses</p>
-                                <?php else: ?>
-                                    <?php foreach ($recentCourses as $course): ?>
-                                        <div class="list-group-item px-0">
-                                            <h6 class="mb-1"><?php echo htmlspecialchars($course['title']); ?></h6>
-                                            <small class="text-muted">
+                            <?php if (empty($recentCourses)): ?>
+                                <p class="text-white-50 mb-0">No recent courses</p>
+                            <?php else: ?>
+                                <?php foreach ($recentCourses as $course): ?>
+                                    <div class="mb-3 pb-3" style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                        <h6 class="mb-2 text-white fw-bold" style="font-size: 0.95rem; line-height: 1.4;"><?php echo htmlspecialchars($course['title']); ?></h6>
+                                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                                            <small class="text-white-50" style="font-size: 0.85rem;">
                                                 By <?php echo htmlspecialchars($course['firstName'] . ' ' . $course['lastName']); ?>
-                                                <span class="badge bg-<?php 
-                                                    echo $course['status'] === 'published' ? 'success' : 
-                                                        ($course['status'] === 'draft' ? 'warning' : 'secondary'); 
-                                                ?> ms-2">
-                                                    <?php echo ucfirst($course['status']); ?>
-                                                </span>
                                             </small>
+                                            <span class="badge bg-white text-dark border-0 fw-semibold" style="font-size: 0.75rem; padding: 4px 10px;">
+                                                <?php echo ucfirst($course['status']); ?>
+                                            </span>
                                         </div>
-                                    <?php endforeach; ?>
-                                <?php endif; ?>
-                            </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
                         </div>
-                        <a href="courses.php" class="btn btn-sm btn-outline-success w-100 mt-3 mt-auto">View All Courses</a>
+                        <a href="courses.php" class="btn btn-light w-100 mt-3 mt-auto fw-bold rounded-pill" style="padding: 10px; font-size: 0.9rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">View All Courses</a>
                     </div>
                 </div>
             </div>
 
             <!-- Recent Enrollments -->
             <div class="col-md-4 col-12">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-header bg-white border-0 py-3">
-                        <h5 class="mb-0">Recent Enrollments</h5>
+                <div class="card border-0 shadow-lg h-100 recent-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border-radius: 20px !important;">
+                    <div class="card-header border-0 py-4 px-4" style="background: transparent;">
+                        <h5 class="mb-0 text-white fw-bold" style="font-size: 1.1rem;">Recent Enrollments</h5>
                     </div>
-                    <div class="card-body d-flex flex-column">
+                    <div class="card-body d-flex flex-column px-4 pb-4">
                         <div class="flex-grow-1 overflow-auto">
-                            <div class="list-group list-group-flush">
-                                <?php if (empty($recentEnrollments)): ?>
-                                    <p class="text-muted">No recent enrollments</p>
-                                <?php else: ?>
-                                    <?php foreach ($recentEnrollments as $enrollment): ?>
-                                        <div class="list-group-item px-0">
-                                            <h6 class="mb-1"><?php echo htmlspecialchars($enrollment['firstName'] . ' ' . $enrollment['lastName']); ?></h6>
-                                            <small class="text-muted">
+                            <?php if (empty($recentEnrollments)): ?>
+                                <p class="text-white-50 mb-0">No recent enrollments</p>
+                            <?php else: ?>
+                                <?php foreach ($recentEnrollments as $enrollment): ?>
+                                    <div class="mb-3 pb-3" style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                        <h6 class="mb-2 text-white fw-bold" style="font-size: 0.95rem;"><?php echo htmlspecialchars($enrollment['firstName'] . ' ' . $enrollment['lastName']); ?></h6>
+                                        <div class="d-flex flex-column gap-1">
+                                            <small class="text-white-50 fw-medium" style="font-size: 0.85rem;">
                                                 <?php echo htmlspecialchars($enrollment['title']); ?>
-                                                <br>
+                                            </small>
+                                            <small class="text-white-50" style="font-size: 0.8rem;">
                                                 <?php echo date('M d, Y', strtotime($enrollment['enrolledAt'])); ?>
                                             </small>
                                         </div>
-                                    <?php endforeach; ?>
-                                <?php endif; ?>
-                            </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
                         </div>
-                        <a href="enrollments.php" class="btn btn-sm btn-outline-warning w-100 mt-3 mt-auto">View All Enrollments</a>
+                        <a href="enrollments.php" class="btn btn-light w-100 mt-3 mt-auto fw-bold rounded-pill" style="padding: 10px; font-size: 0.9rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">View All Enrollments</a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+// Hamburger button animation
+document.addEventListener('DOMContentLoaded', function() {
+    const hamburgerBtn = document.getElementById('hamburgerBtn');
+    const sidebar = document.getElementById('sidebar');
+    
+    if (hamburgerBtn && sidebar) {
+        sidebar.addEventListener('show.bs.offcanvas', () => {
+            hamburgerBtn.classList.add('active');
+        });
+        
+        sidebar.addEventListener('hide.bs.offcanvas', () => {
+            hamburgerBtn.classList.remove('active');
+        });
+    }
+    
+    // Close sidebar when clicking nav links on mobile
+    const navLinks = document.querySelectorAll('.sidebar .nav-link');
+    navLinks.forEach(link => {
+        link.addEventListener('click', () => {
+            if (window.innerWidth <= 991.98) {
+                const offcanvas = bootstrap.Offcanvas.getInstance(sidebar);
+                if (offcanvas) offcanvas.hide();
+            }
+        });
+    });
+});
+</script>
 
 <?php include 'includes/footer.php'; ?>

@@ -14,108 +14,83 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #f8f9fa;
-    padding-top: var(--navbar-height);
+    background: #212925;
+    min-height: 100vh;
 }
 
-/* Navbar */
-.navbar {
-    height: var(--navbar-height);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    z-index: 1030;
-}
-
-/* Custom navbar color to match primary theme */
-.navbar-custom {
-    background-color: var(--primary-color);
-}
-
-.navbar-custom .navbar-brand,
-.navbar-custom .nav-link,
-.navbar-custom .navbar-toggler-icon {
-    color: #fff;
-}
-
-/* Keep profile on the right at all sizes */
-.navbar-profile {
-    margin-left: auto;
-    display: flex;
-    align-items: center;
-}
-
-/* Ensure dropdown caret and link are white */
-.navbar-profile .nav-link {
-    color: #fff;
-}
-
-/* Toggler visibility and left-aligned layout only on small screens (below lg) */
-@media (max-width: 991.98px) {
-    /* Show toggler and align brand/toggler together */
-    .navbar-toggler {
-        display: inline-flex !important;
-    }
-
-    .navbar .container-fluid {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    /* Make the collapsible area take remaining space (keeps profile to the far right)
-       but do not hide the profile inside the collapse */
-    .collapse.navbar-collapse {
-        flex: 1 1 auto;
-    }
-
-    .navbar-brand {
-        margin: 0;
-    }
-}
-
-/* Hide toggler only on medium screens (md: 768px - 991.98px) */
-@media (min-width: 768px) and (max-width: 991.98px) {
-    .navbar-toggler {
-        display: none !important;
-    }
-}
-
-/* Hide toggler on large screens (lg and above) */
-@media (min-width: 992px) {
-    .navbar-toggler {
-        display: none !important;
-    }
-}
-
-
-/* Toggler styling and spacing */
-.navbar-custom .navbar-toggler {
+/* Hamburger Button */
+.hamburger-btn {
+    width: 50px;
+    height: 50px;
+    background: white;
     border: none;
-    padding: 0.35rem 0.6rem;
-    margin-right: 0.25rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
 }
 
-/* Ensure the icon is white */
-.navbar-custom .navbar-toggler-icon {
-    background-image: url("data:image/svg+xml;charset=utf8,%3Csvg viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='rgba(255,255,255,1)' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E");
+.hamburger-icon span {
+    display: block;
+    width: 24px;
+    height: 3px;
+    background: #1a73e8;
+    border-radius: 3px;
+    transition: all 0.3s ease;
+    margin: 5px 0;
 }
 
-/* Align toggler and brand nicely on small screens (below lg breakpoint) */
-@media (max-width: 991.98px) {
-    .navbar .container-fluid {
-        display: flex;
-        align-items: center;
-    }
-    .navbar-brand {
-        margin: 0;
-    }
+.hamburger-btn.active .hamburger-icon span:nth-child(1) {
+    transform: translateY(8px) rotate(45deg);
 }
 
-.navbar-custom .nav-link:hover {
-    color: rgba(255,255,255,0.9);
+.hamburger-btn.active .hamburger-icon span:nth-child(2) {
+    opacity: 0;
 }
 
-.navbar-brand {
-    font-size: 1.25rem;
+.hamburger-btn.active .hamburger-icon span:nth-child(3) {
+    transform: translateY(-8px) rotate(-45deg);
+}
+
+/* Search Input Styles */
+.search-input {
+    padding-left: 2.5rem;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    border-radius: 25px !important;
+}
+
+.search-input:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.15);
+}
+
+.search-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #999;
+    z-index: 10;
+}
+
+.search-input:focus ~ .search-icon {
+    color: #667eea;
+}
+
+.clear-search {
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #999;
+    cursor: pointer;
+    display: none;
+    z-index: 10;
+}
+
+.clear-search.show {
+    display: block;
 }
 
 /* Avatar */
@@ -182,15 +157,15 @@ body {
     .avatar-xl { width: 96px; height: 96px; }
 }
 
-/* Sidebar */
+/* Sidebar - Updated to match teacher/student style */
 .sidebar {
     position: fixed;
-    top: var(--navbar-height);
+    top: 0;
     left: 0;
     width: var(--sidebar-width);
-    height: calc(100vh - var(--navbar-height));
-    background: white;
-    box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+    height: 100vh;
+    background: linear-gradient(180deg, #e8f0fe 0%, #f0f4ff 50%, #f8f9fa 100%);
+    box-shadow: 4px 0 20px rgba(0,0,0,0.08);
     overflow-y: auto;
     z-index: 1020;
     transition: all 0.3s;
@@ -247,8 +222,19 @@ body {
 /* Main Content */
 .main-content {
     margin-left: var(--sidebar-width);
-    padding: 30px;
-    min-height: calc(100vh - var(--navbar-height));
+    min-height: 100vh;
+}
+
+@media (min-width: 992px) {
+    .main-content {
+        margin-left: var(--sidebar-width);
+    }
+}
+
+@media (max-width: 991.98px) {
+    .main-content {
+        margin-left: 0;
+    }
 }
 
 /* Statistics Cards */
@@ -324,6 +310,32 @@ body {
 
 .stat-icon.bg-info {
     background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+/* Circular Icon Style for Secondary Stats */
+.stat-icon-circle {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+/* White Icon Circle for Gradient Cards */
+.stat-icon-circle-white {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
 }
 
 /* Cards */
@@ -421,6 +433,8 @@ body {
 .footer {
     margin-left: var(--sidebar-width);
     border-top: 1px solid #e9ecef;
+    padding: 20px 30px;
+    margin-top: 4rem;
 }
 
 /* Responsive */

@@ -1,4 +1,4 @@
-<div class="sidebar offcanvas-lg offcanvas-start position-fixed top-0 start-0 h-100" style="width: var(--sidebar-width);">
+<div class="sidebar offcanvas-lg offcanvas-start position-fixed top-0 start-0 h-100" style="width: var(--sidebar-width);" id="sidebar">
     <div class="offcanvas-header d-lg-none border-bottom">
         <h5 class="offcanvas-title sidebar-brand">LEARNEXUS ADMIN</h5>
     </div>
@@ -63,6 +63,12 @@
                 <span>Vouchers</span>
             </a>
         </nav>
+        
+        <div class="p-3 mt-auto">
+            <button class="btn btn-outline-danger w-100 rounded-pill fw-semibold" onclick="window.location.href='logout.php'">
+                <i class="bi bi-box-arrow-left me-2"></i>Logout
+            </button>
+        </div>
     </div>
 </div>
 

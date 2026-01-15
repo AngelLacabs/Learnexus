@@ -24,6 +24,7 @@ try {
                u.lastName as teacherLastName,
                u.email as teacherEmail,
                u.phone as teacherPhone,
+               u.avatar as teacherAvatar,
                u.createdAt as teacherCreatedAt
         FROM courses c 
         JOIN users u ON c.teacherID = u.userID 
@@ -106,76 +107,47 @@ include 'includes/header.php';
 include 'includes/sidebar.php';
 ?>
 
-<div class="main-content">
+<div class="main-content pb-3 pb-lg-4 ps-3 ps-lg-4 pe-3 pe-lg-4 pt-5">
     <div class="container-fluid">
         <!-- Page Header -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div class="d-flex align-items-center">
-                <a href="courses.php" class="btn btn-outline-secondary me-3">
-                    <i class="bi bi-arrow-left"></i>
-                </a>
-                <div>
-                    <h1 class="h3 mb-0">Course Details</h1>
-                    <nav aria-label="breadcrumb">
-                        <ol class="breadcrumb mb-0">
-                            <li class="breadcrumb-item"><a href="dashboard.php">Dashboard</a></li>
-                            <li class="breadcrumb-item"><a href="courses.php">Courses</a></li>
-                            <li class="breadcrumb-item active" aria-current="page"><?php echo htmlspecialchars($course['title']); ?></li>
-                        </ol>
-                    </nav>
-                </div>
-            </div>
-            <div class="btn-group">
-                <?php if ($course['status'] === 'draft'): ?>
-                    <a href="course_actions.php?action=publish&id=<?php echo $courseID; ?>" class="btn btn-success">
-                        <i class="bi bi-check-circle me-2"></i>Publish Course
-                    </a>
-                <?php elseif ($course['status'] === 'published'): ?>
-                    <button type="button" 
-                            class="btn btn-warning reject-course-btn" 
-                            data-course-id="<?php echo $courseID; ?>"
-                            data-course-title="<?php echo htmlspecialchars($course['title']); ?>">
-                        <i class="bi bi-x-circle me-2"></i>Reject/Archive
-                    </button>
-                <?php endif; ?>
-                
-                <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
-                    <span class="visually-hidden">Toggle Dropdown</span>
-                </button>
-                <ul class="dropdown-menu">
-                    <?php if ($course['status'] === 'published'): ?>
-                        <li>
-                            <a class="dropdown-item" href="course_actions.php?action=archive&id=<?php echo $courseID; ?>">
-                                <i class="bi bi-archive me-2"></i>Archive
-                            </a>
-                        </li>
-                    <?php elseif ($course['status'] === 'archived'): ?>
-                        <li>
-                            <a class="dropdown-item" href="course_actions.php?action=publish&id=<?php echo $courseID; ?>">
-                                <i class="bi bi-check-circle me-2"></i>Publish
-                            </a>
-                        </li>
-                    <?php endif; ?>
-                    <li><hr class="dropdown-divider"></li>
-                    <li>
-                        <a class="dropdown-item text-danger" 
-                           href="course_actions.php?action=delete&id=<?php echo $courseID; ?>"
-                           data-confirm-delete="Are you sure you want to delete this course? This will permanently delete the course, all its modules, content, quizzes, and student enrollments.">
-                            <i class="bi bi-trash me-2"></i>Delete Course
+        <div class="card border-0 rounded-4 shadow-sm mb-5">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                        <a href="courses.php" class="btn btn-outline-secondary me-3">
+                            <i class="bi bi-arrow-left"></i>
                         </a>
-                    </li>
-                </ul>
+                        <div>
+                            <h1 class="h3 mb-0">Course Details</h1>
+                            <nav aria-label="breadcrumb">
+                                <ol class="breadcrumb mb-0">
+                                    <li class="breadcrumb-item"><a href="dashboard.php">Dashboard</a></li>
+                                    <li class="breadcrumb-item"><a href="courses.php">Courses</a></li>
+                                    <li class="breadcrumb-item active" aria-current="page"><?php echo htmlspecialchars($course['title']); ?></li>
+                                </ol>
+                            </nav>
+                        </div>
+                    </div>
+                    <a href="course_actions.php?action=delete&id=<?php echo $courseID; ?>" 
+                       class="btn btn-danger"
+                       data-confirm-delete="Are you sure you want to delete this course? This will permanently delete the course, all its modules, content, quizzes, and student enrollments."
+                       onclick="return confirm('Are you sure you want to delete this course? This will permanently delete the course, all its modules, content, quizzes, and student enrollments.');">
+                        <i class="bi bi-trash me-2"></i>Delete
+                    </a>
+                </div>
             </div>
         </div>
 
         <!-- Course Overview -->
         <div class="row mb-4">
             <div class="col-lg-8">
-                <div class="card border-0 shadow-sm mb-4">
-                    <div class="card-header bg-white border-0">
-                        <h5 class="mb-0">Course Information</h5>
+                <div class="card border-0 rounded-4 shadow-sm mb-4">
+                    <div class="card-header border-0 px-4 py-3" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 1rem 1rem 0 0;">
+                        <h5 class="mb-0 text-white d-flex align-items-center">
+                            <i class="bi bi-info-circle me-2"></i>Course Information
+                        </h5>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body px-4">
                         <h4 class="mb-3"><?php echo htmlspecialchars($course['title']); ?></h4>
                         
                         <div class="mb-4">
@@ -226,11 +198,13 @@ include 'includes/sidebar.php';
                 </div>
                 
                 <!-- Course Content -->
-                <div class="card border-0 shadow-sm mb-4">
-                    <div class="card-header bg-white border-0">
-                        <h5 class="mb-0">Course Contentss</h5>
+                <div class="card border-0 rounded-4 shadow-sm mb-4">
+                    <div class="card-header border-0 px-4 py-3" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); border-radius: 1rem 1rem 0 0;">
+                        <h5 class="mb-0 text-white d-flex align-items-center">
+                            <i class="bi bi-file-earmark-text me-2"></i>Course Contents
+                        </h5>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body px-4">
                         <!-- Modules -->
                         <?php if (!empty($modules)): ?>
                             <h6 class="mb-3">Modules (<?php echo count($modules); ?>)</h6>
@@ -374,14 +348,21 @@ include 'includes/sidebar.php';
             
             <div class="col-lg-4">
                 <!-- Teacher Information -->
-                <div class="card border-0 shadow-sm mb-4">
-                    <div class="card-header bg-white border-0">
-                        <h5 class="mb-0">Course Creator</h5>
+                <div class="card border-0 rounded-4 shadow-sm mb-4">
+                    <div class="card-header border-0 px-4 py-3" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); border-radius: 1rem 1rem 0 0;">
+                        <h5 class="mb-0 text-white d-flex align-items-center">
+                            <i class="bi bi-person-circle me-2"></i>Course Creator
+                        </h5>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body px-4">
                         <div class="text-center mb-3">
-                            <div class="avatar-lg bg-primary text-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3">
-                                <?php echo strtoupper(substr($course['teacherFirstName'], 0, 1)); ?>
+                            <div class="avatar-lg bg-primary text-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="overflow: hidden;">
+                                <?php if (!empty($course['teacherAvatar']) && file_exists($course['teacherAvatar'])): ?>
+                                    <img src="<?php echo htmlspecialchars($course['teacherAvatar']); ?>" alt="Avatar" 
+                                         class="w-100 h-100 rounded-circle object-fit-cover">
+                                <?php else: ?>
+                                    <?php echo strtoupper(substr($course['teacherFirstName'], 0, 1)); ?>
+                                <?php endif; ?>
                             </div>
                             <h5><?php echo htmlspecialchars($course['teacherFirstName'] . ' ' . $course['teacherLastName']); ?></h5>
                             <p class="text-muted mb-2"><?php echo htmlspecialchars($course['teacherEmail']); ?></p>
@@ -399,11 +380,13 @@ include 'includes/sidebar.php';
                 </div>
                 
                 <!-- Enrollment Statistics -->
-                <div class="card border-0 shadow-sm mb-4">
-                    <div class="card-header bg-white border-0">
-                        <h5 class="mb-0">Enrollment Statistics</h5>
+                <div class="card border-0 rounded-4 shadow-sm mb-4">
+                    <div class="card-header border-0 px-4 py-3" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border-radius: 1rem 1rem 0 0;">
+                        <h5 class="mb-0 text-white d-flex align-items-center">
+                            <i class="bi bi-graph-up-arrow me-2"></i>Enrollment Statistics
+                        </h5>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body px-4">
                         <div class="row text-center">
                             <div class="col-6 mb-3">
                                 <h2 class="text-primary mb-1"><?php echo $enrollmentStats['totalEnrollments']; ?></h2>
@@ -432,11 +415,11 @@ include 'includes/sidebar.php';
                 
                 <!-- Recent Enrollments -->
                 <?php if (!empty($recentEnrollments)): ?>
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-header bg-white border-0">
+                    <div class="card border-0 rounded-4 shadow-sm">
+                        <div class="card-header bg-white border-0 px-4 pt-4">
                             <h5 class="mb-0">Recent Enrollments</h5>
                         </div>
-                        <div class="card-body">
+                        <div class="card-body px-4">
                             <div class="list-group list-group-flush">
                                 <?php foreach ($recentEnrollments as $enrollment): ?>
                                     <div class="list-group-item px-0">
@@ -469,79 +452,13 @@ include 'includes/sidebar.php';
     </div>
 </div>
 
-<!-- Reject Course Modal -->
-<div class="modal fade" id="rejectCourseModal" tabindex="-1" aria-labelledby="rejectCourseModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="rejectCourseModalLabel">Reject/Archive Course</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form id="rejectCourseForm" method="POST" action="course_actions.php">
-                <input type="hidden" name="action" value="reject">
-                <input type="hidden" name="id" value="<?php echo $courseID; ?>">
-                
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Course</label>
-                        <input type="text" class="form-control" value="<?php echo htmlspecialchars($course['title']); ?>" readonly>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Action *</label>
-                        <select class="form-select" name="status" required>
-                            <option value="draft">Send back to Draft (for revisions)</option>
-                            <option value="archived">Archive Course (hide from students)</option>
-                        </select>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Reason/Feedback *</label>
-                        <textarea class="form-control" name="rejection_reason" rows="4" required 
-                                  placeholder="Provide specific feedback to the teacher about what needs to be improved..."></textarea>
-                        <small class="text-muted">This feedback will be sent to the course creator</small>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-warning">Submit Rejection</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-
-
-
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Handle reject course button click
-    const rejectBtn = document.querySelector('.reject-course-btn');
-    const rejectModal = new bootstrap.Modal(document.getElementById('rejectCourseModal'));
-    const rejectCourseForm = document.getElementById('rejectCourseForm');
-    
-    if (rejectBtn) {
-        rejectBtn.addEventListener('click', function() {
-            rejectModal.show();
-        });
-    }
-    
-    if (rejectCourseForm) {
-        rejectCourseForm.addEventListener('submit', function() {
-            const submitBtn = this.querySelector('button[type="submit"]');
-            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
-            submitBtn.disabled = true;
-        });
-    }
-    
     // Initialize tooltips
     const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl);
     });
-    
-
 });
 </script>
 

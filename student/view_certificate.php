@@ -97,6 +97,30 @@ try {
     error_log("Certificate tracking error: " . $e->getMessage());
 }
 
+/* =====================
+   FETCH VOUCHER FOR THIS CERTIFICATE
+===================== */
+$voucher = null;
+try {
+    $stmt = $conn->prepare("
+        SELECT 
+            v.*,
+            CASE 
+                WHEN v.isUsed = 1 THEN 'redeemed'
+                WHEN v.expiryDate < CURDATE() THEN 'expired'
+                ELSE 'active'
+            END as voucherStatus
+        FROM vouchers v
+        WHERE v.certificateID = ?
+        ORDER BY v.generatedAt DESC
+        LIMIT 1
+    ");
+    $stmt->execute([$certificate['certificateID']]);
+    $voucher = $stmt->fetch(PDO::FETCH_ASSOC);
+} catch (Exception $e) {
+    error_log("Voucher fetch error: " . $e->getMessage());
+}
+
 $issueDate = date('F d, Y', strtotime($certificate['issuedAt']));
 ?>
 <!DOCTYPE html>
@@ -404,6 +428,87 @@ $issueDate = date('F d, Y', strtotime($certificate['issuedAt']));
     </div>
 </div>
 
+<!-- Voucher Modal -->
+<?php if ($voucher): ?>
+<div class="modal fade" id="voucherModal" tabindex="-1" aria-labelledby="voucherModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+            <div class="modal-header border-0 pb-0" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 20px 20px 0 0;">
+                <h5 class="modal-title text-white fw-bold" id="voucherModalLabel">
+                    <i class="bi bi-gift-fill me-2"></i>Congratulations! You Earned a Voucher
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="text-center mb-4">
+                    <div class="rounded-circle bg-gradient d-inline-flex align-items-center justify-content-center mb-3" 
+                         style="width: 80px; height: 80px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        <i class="bi bi-ticket-perforated text-white" style="font-size: 2.5rem;"></i>
+                    </div>
+                    <h4 class="fw-bold mb-2">SoleSource Discount Voucher</h4>
+                    <p class="text-muted mb-0">Get <?= $voucher['discountPercentage'] ?><?= $voucher['discount_type'] === 'percent' ? '%' : ' PHP' ?> off your next purchase!</p>
+                </div>
+
+                <div class="card border-2 border-primary mb-3" style="border-radius: 15px;">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <small class="text-muted text-uppercase fw-semibold">Voucher Code</small>
+                            <span class="badge bg-<?= $voucher['voucherStatus'] === 'active' ? 'success' : ($voucher['voucherStatus'] === 'redeemed' ? 'secondary' : 'danger') ?>">
+                                <?= strtoupper($voucher['voucherStatus']) ?>
+                            </span>
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded-3 mb-3">
+                            <span class="fs-4 fw-bold text-primary" id="voucherCodeDisplay"><?= htmlspecialchars($voucher['voucherCode']) ?></span>
+                            <button class="btn btn-sm btn-outline-primary rounded-circle" 
+                                    onclick="copyVoucherCode('<?= htmlspecialchars($voucher['voucherCode']) ?>')" 
+                                    title="Copy code">
+                                <i class="bi bi-clipboard"></i>
+                            </button>
+                        </div>
+                        <div class="row g-3 text-center">
+                            <div class="col-6">
+                                <small class="text-muted d-block">Discount</small>
+                                <strong class="text-success fs-5">
+                                    <?= $voucher['discountPercentage'] ?><?= $voucher['discount_type'] === 'percent' ? '%' : ' PHP' ?> OFF
+                                </strong>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted d-block">Expires</small>
+                                <strong class="text-dark"><?= date('M d, Y', strtotime($voucher['expiryDate'])) ?></strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <?php if ($voucher['voucherStatus'] === 'active'): ?>
+                    <a href="https://dev.art2cart.shop/pages/shop.php?voucher=<?= urlencode($voucher['voucherCode']) ?>" 
+                       target="_blank" 
+                       class="btn btn-primary w-100 rounded-pill fw-semibold py-2 mb-2">
+                        <i class="bi bi-bag-fill me-2"></i>Shop at SoleSource
+                    </a>
+                <?php elseif ($voucher['voucherStatus'] === 'redeemed'): ?>
+                    <div class="alert alert-secondary mb-0">
+                        <i class="bi bi-check-circle-fill me-2"></i>
+                        Redeemed on <?= date('M d, Y', strtotime($voucher['redeemed_at'])) ?>
+                    </div>
+                <?php else: ?>
+                    <div class="alert alert-danger mb-0">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        This voucher has expired
+                    </div>
+                <?php endif; ?>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">Close</button>
+                <a href="vouchers.php" class="btn btn-primary rounded-pill">
+                    <i class="bi bi-ticket-perforated me-2"></i>View All Vouchers
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
@@ -423,6 +528,31 @@ function downloadCertificate() {
     
     html2pdf().set(opt).from(element).save();
 }
+
+function copyVoucherCode(code) {
+    navigator.clipboard.writeText(code).then(function() {
+        // Show feedback
+        const btn = event.target.closest('button');
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-check"></i>';
+        btn.classList.add('btn-success');
+        btn.classList.remove('btn-outline-primary');
+        
+        setTimeout(function() {
+            btn.innerHTML = originalHTML;
+            btn.classList.remove('btn-success');
+            btn.classList.add('btn-outline-primary');
+        }, 2000);
+    });
+}
+
+// Show voucher modal automatically when page loads
+<?php if ($voucher): ?>
+document.addEventListener('DOMContentLoaded', function() {
+    const voucherModal = new bootstrap.Modal(document.getElementById('voucherModal'));
+    voucherModal.show();
+});
+<?php endif; ?>
 </script>
 
 </body>

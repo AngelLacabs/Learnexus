@@ -2,8 +2,7 @@
     <div class="container-fluid">
         <div class="row">
             <div class="col-12 text-center">
-                <p class="mb-1 text-muted">© 2026 Learnexus. All rights reserved.</p>
-                <p class="mb-0 text-muted">Admin Panel v1.0</p>
+                <p class="mb-0 text-muted">© 2026 Learnexus. All rights reserved.</p>
             </div>
         </div>
     </div>

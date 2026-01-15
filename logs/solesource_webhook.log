@@ -45,3 +45,7 @@
 [2026-01-14 17:46:18] Auth check | {"header":"Bearer learnexus_web..."}
 [2026-01-14 17:46:18] Processing redemption | {"code":"REWARD-TL6Y","order":"SO-20260114174622-7620","student":"learnexus-11"}
 [2026-01-14 17:46:18] SUCCESS: Voucher redeemed | {"code":"REWARD-TL6Y","order":"SO-20260114174622-7620","discount":539.4}
+[2026-01-15 15:01:42] Webhook request received | {"method":"POST","ip":"::1","payload_size":229}
+[2026-01-15 15:01:42] Auth check | {"header":"Bearer learnexus_web..."}
+[2026-01-15 15:01:42] Processing redemption | {"code":"REWARD-W3QL","order":"SO-20260115150147-9075","student":"learnexus-3"}
+[2026-01-15 15:01:42] SUCCESS: Voucher redeemed | {"code":"REWARD-W3QL","order":"SO-20260115150147-9075","discount":1079.3999999999999}
