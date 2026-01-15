@@ -549,7 +549,7 @@ function generateFallbackResponse($question, $courses)
         }
 
         .send-btn {
-            padding: 16px 40px;
+            padding: 16px 30px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
@@ -934,7 +934,7 @@ function generateFallbackResponse($question, $courses)
                             <input id="input" type="text" placeholder="Type your question about courses here..."
                                 onkeypress="if(event.key==='Enter') sendMessage()" autocomplete="off">
                             <button id="sendBtn" class="send-btn" onclick="sendMessage()">
-                                <i class="fas fa-paper-plane"></i> Send
+                                <i class="fas fa-paper-plane"></i><span class="d-none d-sm-inline ms-2">Send</span>
                             </button>
                         </div>
                     </div>
