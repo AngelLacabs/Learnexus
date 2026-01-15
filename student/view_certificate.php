@@ -481,11 +481,11 @@ $issueDate = date('F d, Y', strtotime($certificate['issuedAt']));
                 </div>
 
                 <?php if ($voucher['voucherStatus'] === 'active'): ?>
-                    <a href="https://dev.art2cart.shop/pages/shop.php?voucher=<?= urlencode($voucher['voucherCode']) ?>" 
-                       target="_blank" 
-                       class="btn btn-primary w-100 rounded-pill fw-semibold py-2 mb-2">
-                        <i class="bi bi-bag-fill me-2"></i>Shop at SoleSource
-                    </a>
+                    <a href="https://dev.art2cart.shop/?voucher=<?= urlencode($voucher['voucherCode']) ?>" 
+   target="_blank" 
+   class="btn btn-primary w-100 rounded-pill fw-semibold py-2 mb-2">
+    <i class="bi bi-bag-fill me-2"></i>Shop at SoleSource
+</a>
                 <?php elseif ($voucher['voucherStatus'] === 'redeemed'): ?>
                     <div class="alert alert-secondary mb-0">
                         <i class="bi bi-check-circle-fill me-2"></i>
