@@ -14,6 +14,7 @@ $userAvatar = $stmt->fetchColumn();
 
 // Get all enrolled courses
 // Get all enrolled courses with DYNAMIC PROGRESS CALCULATION
+// Use subquery to get only the most recent enrollment per course to prevent duplicates
 $stmt = $conn->prepare("
     SELECT 
         c.*,
@@ -66,6 +67,12 @@ $stmt = $conn->prepare("
         ) as quizStatus
         
     FROM enrollments e
+    INNER JOIN (
+        SELECT courseID, userID, MAX(enrollmentID) as maxEnrollmentID
+        FROM enrollments
+        WHERE userID = ? AND status IN ('active', 'completed')
+        GROUP BY courseID, userID
+    ) latest ON e.enrollmentID = latest.maxEnrollmentID AND e.courseID = latest.courseID AND e.userID = latest.userID
     JOIN courses c ON e.courseID = c.courseID
     JOIN users u ON c.teacherID = u.userID
     LEFT JOIN payments p ON e.paymentID = p.paymentID
@@ -74,7 +81,7 @@ $stmt = $conn->prepare("
         CASE WHEN e.status = 'completed' THEN 1 ELSE 0 END ASC,
         e.enrolledAt DESC
 ");
-$stmt->execute([$userID]);
+$stmt->execute([$userID, $userID]);
 $enrolledCourses = $stmt->fetchAll();
 
 // Process each course to calculate progress USING SAME LOGIC
