@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 15, 2026 at 09:35 AM
+-- Generation Time: Jan 15, 2026 at 12:06 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -21,11 +21,11 @@ SET time_zone = "+00:00";
 -- Database: `lmslearnexus`
 --
 
-DROP PROCEDURE IF EXISTS `reset_all_tables`;
-
 DELIMITER $$
-CREATE DEFINER=`root`@`localhost` PROCEDURE `reset_all_tables`()
-BEGIN
+--
+-- Procedures
+--
+CREATE DEFINER=`root`@`localhost` PROCEDURE `reset_all_tables` ()   BEGIN
     DECLARE _foreign_key_checks INT DEFAULT @@FOREIGN_KEY_CHECKS;
     
     SET FOREIGN_KEY_CHECKS = 0;
@@ -67,6 +67,7 @@ BEGIN
     
     SET FOREIGN_KEY_CHECKS = _foreign_key_checks;
 END$$
+
 DELIMITER ;
 
 -- --------------------------------------------------------
@@ -86,21 +87,6 @@ CREATE TABLE `certificates` (
   `studentName` varchar(255) DEFAULT NULL,
   `courseTitle` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `certificates`
---
-
-INSERT INTO `certificates` (`certificateID`, `enrollmentID`, `courseID`, `userID`, `certificateUUID`, `issuedAt`, `instructorName`, `studentName`, `courseTitle`) VALUES
-(1, 1, 2, 2, 'a259ccd4-8e2c-4dda-bc9d-7cbc80a314a1', '2026-01-12 06:04:17', 'Andrew Coral', 'Andrew B. Coral', 'Data Administration'),
-(8, 9, 2, 5, '21b9db90-f3d2-456b-832c-6ad4fa15601e', '2026-01-13 12:59:17', 'Andrew Coral', 'SoleSource KICKS. Caranay', 'Data Administration'),
-(11, 14, 2, 9, '7aa240a9-205d-4b16-b11a-7e989f1c3755', '2026-01-13 13:57:37', 'Andrew Coral', 'Adrian L. Caranay', 'Data Administration'),
-(12, 17, 2, 10, '2d5d4f29-8dce-4380-8f88-eff5d97ec66b', '2026-01-13 16:18:26', 'Andrew Coral', 'Angelica R.. Lacaba', 'Data Administration'),
-(13, 19, 2, 11, 'ad55bada-313d-4751-a2c0-ba4af63b5685', '2026-01-14 02:41:23', 'Andrew Coral', 'Angelica Lacaba', 'Data Administration'),
-(14, 21, 7, 11, '9d9af3e3-d7f3-40f2-a393-599a14844ff6', '2026-01-14 11:27:01', 'moana heyhey', 'Angelica Lacaba', 'Hotel Management'),
-(16, 23, 10, 11, 'bba12b41-adba-466b-8a17-1dd3327b5568', '2026-01-14 13:02:36', 'moana heyhey', 'Angelica Lacaba', 'Fundamentals of Research'),
-(17, 20, 6, 11, 'f95d03c7-6745-43ce-9958-dfed5e3af9d9', '2026-01-14 16:44:14', 'moana heyhey', 'Angelica Lacaba', 'Moana study 1'),
-(18, 24, 4, 11, 'cert_6967d20b133074.25765685', '2026-01-14 17:27:39', NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -125,15 +111,8 @@ CREATE TABLE `courses` (
 --
 
 INSERT INTO `courses` (`courseID`, `teacherID`, `title`, `description`, `price`, `category`, `status`, `passingScore`, `createdAt`) VALUES
-(2, 3, 'Data Administration', '', 100.00, 'Programming', 'published', 70, '2026-01-11 10:21:25'),
-(3, 3, 'SAD', '', 50.00, 'Design', 'draft', 70, '2026-01-12 06:18:05'),
-(4, 3, 'RIPH', '', 10.00, 'Programming', 'published', 70, '2026-01-12 06:21:37'),
-(5, 3, 'Web Development', '', 10.00, 'Programming', 'published', 70, '2026-01-13 13:57:15'),
-(6, 12, 'Moana study 1', 'test 1', 10.00, 'Marketing', 'published', 70, '2026-01-14 06:10:44'),
-(7, 12, 'Hotel Management', 'Hotel Management test course 1', 50.00, 'Marketing', 'published', 70, '2026-01-14 11:11:45'),
-(8, 12, 'programming chap 1', 'chapter 1', 10.00, 'Programming', 'published', 70, '2026-01-14 11:21:52'),
-(9, 12, 'WebDEveloper', 'WebDEv', 200.00, 'Programming', 'published', 70, '2026-01-14 12:27:08'),
-(10, 12, 'Fundamentals of Research', 'Research', 10.00, 'Design', 'published', 70, '2026-01-14 12:49:14');
+(1, 1, 'Subject 1', 'test 1', 10.00, 'Programming', 'draft', 70, '2026-01-15 10:19:53'),
+(2, 1, 'Subject 2', 'Test 2', 10.00, 'Design', 'published', 70, '2026-01-15 10:39:56');
 
 -- --------------------------------------------------------
 
@@ -156,23 +135,12 @@ CREATE TABLE `emailotp` (
 --
 
 INSERT INTO `emailotp` (`emailOtpID`, `email`, `otpCode`, `userID`, `expiresAt`, `verified`, `createdAt`) VALUES
-(1, 'angelicalacaba0660@gmail.com', '427507', NULL, '2026-01-09 10:40:05', 0, '2026-01-09 17:30:05'),
-(8, 'coralandrew7@gmail.com', '620305', NULL, '2026-01-10 18:21:38', 0, '2026-01-11 01:11:38'),
-(10, 'gelicakes.rodrigo66@gmail.com', '858689', NULL, '2026-01-11 00:49:05', 0, '2026-01-11 07:39:05'),
-(11, 'paduakim085@gmail.com', '628521', NULL, '2026-01-11 01:22:24', 0, '2026-01-11 08:12:24'),
-(12, 'marasigan.juliamae@gmail.com', '426840', NULL, '2026-01-11 23:40:54', 0, '2026-01-12 06:30:54'),
-(13, 'solesource@gmail.com', '584839', NULL, '2026-01-13 04:20:51', 0, '2026-01-13 11:10:51'),
-(14, 'noreply.solesource@gmail.com', '471578', NULL, '2026-01-13 04:22:22', 0, '2026-01-13 11:12:22'),
-(15, 'jamescarlorivera52@gmail.com', '696817', NULL, '2026-01-13 05:42:48', 0, '2026-01-13 12:32:48'),
-(16, 'laurenceadrian1@gmail.com', '645488', NULL, '2026-01-13 06:43:36', 0, '2026-01-13 13:33:36'),
-(17, 'laurenceadrian1@gmail.com', '843666', NULL, '2026-01-13 07:06:13', 0, '2026-01-13 13:56:13'),
-(18, 'carlorivera206@gmail.com', '580669', NULL, '2026-01-13 09:22:30', 0, '2026-01-13 16:12:30'),
-(19, 'abulencialeanne@gmail.com', '014670', NULL, '2026-01-13 10:15:43', 0, '2026-01-13 17:05:43'),
-(20, 'yanayand18@gmail.com', '420844', NULL, '2026-01-13 10:17:43', 0, '2026-01-13 17:07:43'),
-(21, 'justineweslley.0@gmail.com', '263637', NULL, '2026-01-13 10:19:02', 0, '2026-01-13 17:09:02'),
-(22, 'thelifeangelica@gmail.com', '840125', NULL, '2026-01-13 10:31:39', 0, '2026-01-13 17:21:39'),
-(23, 'justineweslley.1@gmail.com', '641921', NULL, '2026-01-13 10:40:11', 0, '2026-01-13 17:30:11'),
-(24, 'andreimendoza.neust@gmail.com', '937469', NULL, '2026-01-14 10:30:10', 0, '2026-01-14 17:20:10');
+(1, 'angelicalacaba0660@gmail.com', '961123', NULL, '2026-01-15 09:06:28', 1, '2026-01-15 09:02:43'),
+(2, 'angelicalacaba0660@gmail.com', '557338', NULL, '2026-01-15 02:16:28', 0, '2026-01-15 09:06:28'),
+(3, 'angelicalacaba0660@gmail.com', '951183', NULL, '2026-01-15 02:19:45', 0, '2026-01-15 09:09:45'),
+(4, 'angelicalacaba0660@gmail.com', '502130', NULL, '2026-01-15 02:22:30', 0, '2026-01-15 09:12:30'),
+(5, 'justineweslley.0@gmail.com', '767798', NULL, '2026-01-15 02:45:59', 0, '2026-01-15 09:35:59'),
+(6, 'justineweslley.0@gmail.com', '957553', NULL, '2026-01-15 02:46:25', 0, '2026-01-15 09:36:25');
 
 -- --------------------------------------------------------
 
@@ -196,20 +164,7 @@ CREATE TABLE `enrollments` (
 --
 
 INSERT INTO `enrollments` (`enrollmentID`, `userID`, `courseID`, `paymentID`, `progressPercentage`, `enrolledAt`, `completedAt`, `status`) VALUES
-(1, 2, 2, 3, 100.00, '2026-01-11 15:32:17', '2026-01-13 06:51:58', 'completed'),
-(9, 5, 2, 16, 100.00, '2026-01-13 12:59:05', '2026-01-13 12:59:15', 'completed'),
-(13, 2, 4, 18, 100.00, '2026-01-13 13:54:09', '2026-01-13 06:54:51', 'completed'),
-(14, 9, 2, 19, 100.00, '2026-01-13 13:57:17', '2026-01-13 13:57:34', 'completed'),
-(15, 2, 5, 20, 100.00, '2026-01-13 14:04:17', '2026-01-13 14:07:09', 'completed'),
-(16, 10, 5, 21, 33.00, '2026-01-13 16:13:24', NULL, 'completed'),
-(17, 10, 2, 22, 100.00, '2026-01-13 16:14:21', '2026-01-13 16:14:28', 'completed'),
-(18, 11, 5, 23, 33.00, '2026-01-14 02:39:54', NULL, 'completed'),
-(19, 11, 2, 24, 100.00, '2026-01-14 02:40:45', '2026-01-14 10:26:57', 'completed'),
-(20, 11, 6, 25, 100.00, '2026-01-14 06:17:01', '2026-01-14 09:44:12', 'completed'),
-(21, 11, 7, 26, 75.00, '2026-01-14 11:23:45', NULL, 'completed'),
-(23, 11, 10, 28, 0.00, '2026-01-14 13:02:05', NULL, 'completed'),
-(24, 11, 4, 29, 100.00, '2026-01-14 17:14:04', '2026-01-14 11:48:37', 'completed'),
-(25, 11, 8, 30, 100.00, '2026-01-14 18:58:09', '2026-01-14 18:58:19', 'completed');
+(1, 3, 2, 1, 100.00, '2026-01-15 10:44:24', '2026-01-15 10:44:42', 'completed');
 
 -- --------------------------------------------------------
 
@@ -229,24 +184,7 @@ CREATE TABLE `lessoncompletion` (
 --
 
 INSERT INTO `lessoncompletion` (`id`, `userID`, `lessonID`, `completedAt`) VALUES
-(22, 2, 2, '2026-01-12 14:00:29'),
-(30, 5, 2, '2026-01-13 20:59:11'),
-(31, 8, 2, '2026-01-13 21:37:49'),
-(32, 2, 4, '2026-01-13 21:54:20'),
-(33, 9, 2, '2026-01-13 21:57:27'),
-(34, 2, 5, '2026-01-13 22:07:09'),
-(35, 10, 5, '2026-01-14 00:13:31'),
-(36, 10, 2, '2026-01-14 00:14:28'),
-(37, 11, 5, '2026-01-14 10:40:03'),
-(38, 11, 2, '2026-01-14 10:41:05'),
-(39, 11, 8, '2026-01-14 19:26:41'),
-(40, 11, 9, '2026-01-14 19:26:43'),
-(44, 11, 13, '2026-01-14 21:02:28'),
-(45, 11, 14, '2026-01-14 21:02:29'),
-(46, 11, 7, '2026-01-15 00:44:03'),
-(47, 11, 6, '2026-01-15 00:44:04'),
-(48, 11, 4, '2026-01-15 01:15:27'),
-(49, 11, 10, '2026-01-15 02:58:19');
+(1, 3, 1, '2026-01-15 18:44:42');
 
 -- --------------------------------------------------------
 
@@ -267,19 +205,7 @@ CREATE TABLE `lessons` (
 --
 
 INSERT INTO `lessons` (`lessonID`, `courseID`, `title`, `filename`, `uploadedAt`) VALUES
-(2, 2, 'Part 1', 'uploads/lessons/6963b390b09cf_Self Intro.pdf', '2026-01-11 14:28:32'),
-(3, 3, 'SAD - Intro Lesson', 'uploads/lessons/6964921d42278_FINALIZING-LMS.drawio.pdf', '2026-01-12 06:18:05'),
-(4, 4, 'RIPH - Intro Lesson', 'uploads/lessons/696492f1ec86a_myDB.pdf', '2026-01-12 06:21:37'),
-(5, 5, 'Web Development - Intro Lesson', 'uploads/lessons/69664f3b32892_Act3.pdf', '2026-01-13 13:57:15'),
-(6, 6, 'Introduction', 'uploads/lessons/lesson_69673364184d6.pdf', '2026-01-14 06:10:44'),
-(7, 6, '11', 'uploads/lessons/6967351c547f2_namecheap-order-191981448.pdf', '2026-01-14 06:18:04'),
-(8, 7, 'Introduction', 'uploads/lessons/lesson_696779f19ff52.pdf', '2026-01-14 11:11:45'),
-(9, 7, '1', 'uploads/lessons/69677a98de0d6_Certificate_Database_Julia_Marasigan.pdf', '2026-01-14 11:14:32'),
-(10, 8, '1', 'uploads/lessons/6967800d5593c_allaboutSadSiaWeb.pdf', '2026-01-14 11:37:49'),
-(11, 9, 'lesson 1', 'uploads/lessons/69678bb667f9c_Certificate_Hotel_Management_Angelica___Lacaba.pdf', '2026-01-14 12:27:34'),
-(12, 9, 'lesson 2', 'uploads/lessons/69678bc4d9966_Lesson1.pdf', '2026-01-14 12:27:48'),
-(13, 10, '1', 'uploads/lessons/696792ce7d8d4_yeess-IntroLesson.pdf', '2026-01-14 12:57:50'),
-(14, 10, 'Lesson 2', 'uploads/lessons/696792db47337_Certificate_Hotel_Management_Angelica___Lacaba.pdf', '2026-01-14 12:58:03');
+(1, 2, 'Lesson 1', 'uploads/lessons/6968c45f7a638_FINALERD.drawio1.pdf', '2026-01-15 10:41:35');
 
 -- --------------------------------------------------------
 
@@ -304,25 +230,7 @@ CREATE TABLE `payments` (
 --
 
 INSERT INTO `payments` (`paymentID`, `enrollmentID`, `userID`, `courseID`, `amount`, `transactionReference`, `status`, `paymentDate`, `createdAt`) VALUES
-(3, 1, 2, 2, 100.00, '3PD75966M49920535', 'completed', '2026-01-11 15:32:17', '2026-01-11 15:32:17'),
-(4, 1, 2, 2, 100.00, '95P06104YJ299842S', 'completed', '2026-01-12 05:46:48', '2026-01-12 05:46:48'),
-(5, 1, 2, 2, 100.00, '65648183083769645', 'completed', '2026-01-12 05:52:49', '2026-01-12 05:52:49'),
-(6, 1, 2, 2, 100.00, '17P05731LP463472L', 'completed', '2026-01-12 05:55:35', '2026-01-12 05:55:35'),
-(7, 1, 2, 2, 100.00, '2MW68986YN407984D', 'completed', '2026-01-12 05:57:50', '2026-01-12 05:57:50'),
-(8, 1, 2, 2, 100.00, '5VS99243D90050401', 'completed', '2026-01-12 06:00:23', '2026-01-12 06:00:23'),
-(16, 9, 5, 2, 100.00, '5T132583JE281001E', 'completed', '2026-01-13 12:59:05', '2026-01-13 12:59:05'),
-(18, 13, 2, 4, 10.00, '09T24446MM440903E', 'completed', '2026-01-13 13:54:09', '2026-01-13 13:54:09'),
-(19, 14, 9, 2, 100.00, '5BP58424KJ7773841', 'completed', '2026-01-13 13:57:17', '2026-01-13 13:57:17'),
-(20, 15, 2, 5, 10.00, '85H4119985755372E', 'completed', '2026-01-13 14:04:17', '2026-01-13 14:04:17'),
-(21, 16, 10, 5, 10.00, '04M58607AF543612H', 'completed', '2026-01-13 16:13:24', '2026-01-13 16:13:24'),
-(22, 17, 10, 2, 100.00, '3YL776214Y783190U', 'completed', '2026-01-13 16:14:21', '2026-01-13 16:14:21'),
-(23, 18, 11, 5, 10.00, '0X7905570Y914112L', 'completed', '2026-01-14 02:39:54', '2026-01-14 02:39:54'),
-(24, 19, 11, 2, 100.00, '81261375DK2663400', 'completed', '2026-01-14 02:40:45', '2026-01-14 02:40:45'),
-(25, 20, 11, 6, 10.00, '00H798717A8391241', 'completed', '2026-01-14 06:17:01', '2026-01-14 06:17:01'),
-(26, 21, 11, 7, 50.00, '44732611EC205614E', 'completed', '2026-01-14 11:23:45', '2026-01-14 11:23:45'),
-(28, 23, 11, 10, 10.00, '4HT273265M323453X', 'completed', '2026-01-14 13:02:05', '2026-01-14 13:02:05'),
-(29, 24, 11, 4, 10.00, '46C856065R3438514', 'completed', '2026-01-14 17:14:04', '2026-01-14 17:14:04'),
-(30, 25, 11, 8, 10.00, '9GE28633WM100402K', 'completed', '2026-01-14 18:58:09', '2026-01-14 18:58:09');
+(1, 1, 3, 2, 10.00, '53X96568WH858392P', 'completed', '2026-01-15 10:44:24', '2026-01-15 10:44:24');
 
 -- --------------------------------------------------------
 
@@ -336,18 +244,6 @@ CREATE TABLE `quizanswers` (
   `questionID` int(11) NOT NULL,
   `selectedOption` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `quizanswers`
---
-
-INSERT INTO `quizanswers` (`answerID`, `quizResultID`, `questionID`, `selectedOption`) VALUES
-(1, 23, 3, 0),
-(2, 23, 4, 0),
-(3, 24, 8, 0),
-(6, 26, 14, 0),
-(7, 27, 6, 1),
-(8, 27, 7, 2);
 
 -- --------------------------------------------------------
 
@@ -372,18 +268,7 @@ CREATE TABLE `quizquestions` (
 --
 
 INSERT INTO `quizquestions` (`questionID`, `quizID`, `question`, `option1`, `option2`, `option3`, `option4`, `correct_option`, `createdAt`) VALUES
-(3, 1, 'tulog kana?', 'yes', 'no', 'maybe', 'pake mo', 0, '2026-01-11 19:38:48'),
-(4, 1, 'Ye_?', 's', 'b', 'd', 'p', 0, '2026-01-11 20:14:49'),
-(5, 3, 'Meaning of API', 'inaapi', 'mangaapi', 'Application Programming Interface', 'APIr', 0, '2026-01-13 13:58:44'),
-(6, 4, '1+1', '3', '2', '4', '1', 1, '2026-01-14 06:12:20'),
-(7, 4, '2+2', '3', '2', '4', '6', 2, '2026-01-14 06:12:35'),
-(8, 5, '1+1 = 2', 't', 'f', 'maybe', 'stupid', 0, '2026-01-14 11:15:22'),
-(9, 6, '1+ 1 =', 'f', '2', 'r', 'f', 1, '2026-01-14 11:16:07'),
-(10, 8, '1+1', '4', '4', '56', '2', 3, '2026-01-14 12:28:17'),
-(11, 8, '2+2', '4', 'df', 'g', 'sf', 0, '2026-01-14 12:28:30'),
-(12, 9, '1+1', 'edad', 'asd', '2', 'asd', 2, '2026-01-14 12:29:15'),
-(13, 9, 'abcd', 'e', 'dasd', 'asdad', 'adas', 0, '2026-01-14 12:29:27'),
-(14, 10, 'dadad', 'a', 'sdfsdf', 'fsdfdsf', 'sdfsdf', 0, '2026-01-14 12:59:39');
+(1, 1, '1+1 =', '2', 'frf', 'r', 'ade', 0, '2026-01-15 10:38:19');
 
 -- --------------------------------------------------------
 
@@ -404,20 +289,6 @@ CREATE TABLE `quizresults` (
   `passed` tinyint(1) NOT NULL DEFAULT 0,
   `takenAt` datetime NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `quizresults`
---
-
-INSERT INTO `quizresults` (`resultID`, `enrollmentID`, `userID`, `quizID`, `score`, `totalPoints`, `percentage`, `status`, `submittedAt`, `passed`, `takenAt`) VALUES
-(12, 1, 2, 1, 2.00, NULL, 100.00, 'passed', '2026-01-12 06:00:38', 1, '2026-01-12 14:00:38'),
-(19, 9, 5, 1, 2.00, NULL, 100.00, 'passed', '2026-01-13 12:59:15', 1, '2026-01-13 20:59:15'),
-(21, 14, 9, 1, 2.00, NULL, 100.00, 'passed', '2026-01-13 13:57:34', 1, '2026-01-13 21:57:34'),
-(22, 17, 10, 1, 2.00, NULL, 100.00, 'passed', '2026-01-13 16:14:39', 1, '2026-01-14 00:14:39'),
-(23, 19, 11, 1, 2.00, NULL, 100.00, 'passed', '2026-01-14 02:41:19', 1, '2026-01-14 10:41:19'),
-(24, 21, 11, 5, 1.00, NULL, 100.00, 'passed', '2026-01-14 11:26:49', 1, '2026-01-14 19:26:49'),
-(26, 23, 11, 10, 1.00, NULL, 100.00, 'passed', '2026-01-14 13:02:34', 1, '2026-01-14 21:02:34'),
-(27, 20, 11, 4, 2.00, NULL, 100.00, 'passed', '2026-01-14 16:44:12', 1, '2026-01-15 00:44:12');
 
 -- --------------------------------------------------------
 
@@ -441,16 +312,8 @@ CREATE TABLE `quizzes` (
 --
 
 INSERT INTO `quizzes` (`quizID`, `courseID`, `title`, `description`, `allowRetake`, `passingScore`, `timeLimitMinutes`, `createdAt`) VALUES
-(1, 2, 'QUIZ 1', '', 1, 70, NULL, '2026-01-11 17:52:13'),
-(2, 5, 'Finals', '', 0, 70, NULL, '2026-01-13 13:57:54'),
-(3, 5, 'Finals', '', 0, 70, NULL, '2026-01-13 13:58:06'),
-(4, 6, 'final test 1', 'test 1 final', 1, 70, NULL, '2026-01-14 06:12:02'),
-(5, 7, 'Final Exam Test 1', 'math', 1, 70, NULL, '2026-01-14 11:14:57'),
-(6, 7, 'quiz 2 with time', 'timing quizzzo', 1, 70, 5, '2026-01-14 11:15:51'),
-(7, 8, 'qui 1', '', 1, 70, 5, '2026-01-14 11:39:13'),
-(8, 9, 'qui 1', '', 1, 70, 5, '2026-01-14 12:28:05'),
-(9, 9, 'Quiz 2', '2 webdev', 1, 70, 5, '2026-01-14 12:29:05'),
-(10, 10, 'FInal exam1', 'ddhfnsa;ufhonweiofbhweikjufewdf', 1, 70, 5, '2026-01-14 12:59:24');
+(1, 1, 'Subject 1 Exam', 'Exam 1', 1, 70, 5, '2026-01-15 10:37:58'),
+(2, 2, 'Quiz2', '', 1, 70, NULL, '2026-01-15 10:40:34');
 
 -- --------------------------------------------------------
 
@@ -472,10 +335,12 @@ CREATE TABLE `smsotp` (
 --
 
 INSERT INTO `smsotp` (`otpID`, `phone`, `otpCode`, `expiresAt`, `verified`, `createdAt`) VALUES
-(1, '09661308611', '742565', '2026-01-11 01:22:34', 0, '2026-01-11 08:12:34'),
-(2, '09387450528', '942507', '2026-01-11 23:41:04', 0, '2026-01-12 06:31:04'),
-(3, '09068624180', '790224', '2026-01-14 17:21:35', 1, '2026-01-14 17:20:50'),
-(4, '09068624180', '927358', '2026-01-14 17:22:02', 1, '2026-01-14 17:21:35');
+(1, '09954778940', '638038', '2026-01-15 09:08:52', 1, '2026-01-15 09:07:37'),
+(2, '09954778940', '591002', '2026-01-15 09:08:59', 1, '2026-01-15 09:08:52'),
+(3, '09954778940', '664137', '2026-01-15 09:09:16', 1, '2026-01-15 09:08:59'),
+(4, '09954778940', '116109', '2026-01-15 09:14:58', 1, '2026-01-15 09:09:16'),
+(5, '09954778940', '961309', '2026-01-15 09:15:22', 1, '2026-01-15 09:14:58'),
+(6, '09913487886', '215372', '2026-01-15 02:46:15', 0, '2026-01-15 09:36:15');
 
 -- --------------------------------------------------------
 
@@ -506,19 +371,9 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`userID`, `email`, `passwordHash`, `firstName`, `lastName`, `middleInitial`, `phone`, `avatar`, `phoneVerified`, `emailVerified`, `role`, `status`, `createdAt`, `studentNumber`, `teacherNumber`) VALUES
-(2, 'coralandrew7@gmail.com', '$2y$10$El2k8n20aI0h69tNIVHfaOVIZESP58WFkO4lbrh2QypLPLwzSZ6ia', 'Andrew', 'Coral', 'B', '09661308611', '../uploads/avatars/avatar_2_1768096756.jpg', 1, 1, 'student', 'active', '2026-01-11 01:14:31', '2023-00361-ST-0', NULL),
-(3, 'gelicakes.rodrigo66@gmail.com', '$2y$10$3AcItDmydOTghw1zXATUXuDvmVMYh1/9bcUdgLP7CMuV9m6AvtPm6', 'Andrew', 'Coral', 'B', '09306906952', '../uploads/avatars/avatar_3_1768120349.png', 1, 1, 'instructor', 'active', '2026-01-11 07:39:32', NULL, '123456789'),
-(4, 'marasigan.juliamae@gmail.com', '$2y$10$IhPbMcwZggqLiRfI8/0TZOPLcGhNtIa1XeQaHdGHlviGz4L6tQW8K', 'Julia', 'Marasigan', '', '09387450528', NULL, 1, 1, 'student', 'active', '2026-01-12 06:31:41', 'STU-007', NULL),
-(5, 'noreply.solesource@gmail.com', '$2y$10$moZuIycWLa7NGQ5mfDVaFeXUPXXm9Xf2AE2YeWUZWddef1CJeh8ei', 'SoleSource', 'Caranay', 'KICKS', '09457996892', NULL, 1, 1, 'student', 'active', '2026-01-13 11:12:42', 'SOLESOURCE01', NULL),
-(6, 'jamescarlorivera52@gmail.com', '$2y$10$H9hMKvs3e8v.AM1npfZeg.ch1FtVnZdV.06E1.yPLmqs5IN5QFIvm', 'test', 'test', 'test', '09457996892', NULL, 1, 1, 'student', 'active', '2026-01-13 12:33:20', 'SOLESOURCE02', NULL),
-(7, 'learnexuspupstc@gmail.com', '$2y$10$SlP1S6.Jen0XGSSIIoq.ouuNYSvsHajSFcMrhJvQm61XhmNV54uEq', 'Admin', 'Learnexus', 'L', '09123456789', NULL, 1, 1, 'admin', 'active', '2026-01-13 12:49:38', NULL, NULL),
-(9, 'laurenceadrian1@gmail.com', '$2y$10$gnJ4OerQnvt9qXSqUC6cAuFWLk4.AiHToodLbK1Pjt7AtUgXFIQMq', 'Adrian', 'Caranay', 'L', '09918043621', NULL, 1, 1, 'student', 'active', '2026-01-13 13:56:32', 'solesourcetest', NULL),
-(10, 'carlorivera206@gmail.com', '$2y$10$hNd4OSzWzbTgU.XbTQ7Pv.5SUQ7PNsDkJ/cNB0FBiOdVrXPykQ.bW', 'Angelica', 'Lacaba', 'R.', '09954778940', NULL, 1, 1, 'student', 'active', '2026-01-13 16:12:46', 'rivera123', NULL),
-(11, 'abulencialeanne@gmail.com', '$2y$10$.bG.XkKpKzHjOtKQhvNML.pqdo1fvNuW/Gn/nPMZj0yximpvsH0tu', 'Angelica', 'Lacaba', '', '09913487886', '../uploads/avatars/avatar_11_1768390084.png', 1, 1, 'student', 'active', '2026-01-13 17:06:04', '123456', NULL),
-(12, 'justineweslley.0@gmail.com', '$2y$10$N1n/QanWDGtMAioq.rsueeRpL44thFW.G6s3hNKOlwYeRtLaQGduC', 'moana', 'heyhey', '', '12345555554', '../uploads/avatars/avatar_12_1768389390.png', 1, 1, 'instructor', 'active', '2026-01-13 17:09:21', NULL, 'moanaandheyhey'),
-(13, 'thelifeangelica@gmail.com', '$2y$10$sbz7WEWNHMrEDnHiYInvz.WqprVpHlBkRPy5qDcPBvISdpHzDqBG.', 'samantha', 'leanne', '', '23242342353', NULL, 1, 1, 'student', 'active', '2026-01-13 17:21:52', 'sam123', NULL),
-(14, 'justineweslley.1@gmail.com', '$2y$10$.XzHj35RjN7m2jys4ohaA.boZ9qlbNVcgw763/1fNXrhr/15Qal4m', 'Justine Weslley', 'Pontilla', 'b.', '09940695628', NULL, 1, 1, 'student', 'active', '2026-01-13 17:30:29', '12345678', NULL),
-(15, 'andreimendoza.neust@gmail.com', '$2y$10$a6Xf12rS5HcpOA39g4Vq8usF5Xt7Ge.dhcq2mW/ElT4H0CnOzJQ0q', 'doxie', 'yaz', '', '09068624180', NULL, 1, 1, 'student', 'active', '2026-01-14 17:22:02', '12345678910', NULL);
+(1, 'angelicalacaba0660@gmail.com', '$2y$10$/RJWTkGCAQyzqLPdvSeXjuInbvO7Fgc1H2I.VEXZc0dQ7p436ggmi', 'Angelica', 'Lacaba', '', '09954778940', '../uploads/avatars/avatar_1_1768468564.png', 1, 1, 'instructor', 'active', '2026-01-15 09:15:22', NULL, 'Teacher-1-2026'),
+(2, 'learnexuspupstc@gmail.com', '$2y$10$FchQ6ncrleF/tyOJ8IWu1eD0/MDksgNPwjiA2eLkLWpoQtOD4NbEu', 'Admin', 'Learnexus', 'L', '09123456789', NULL, 1, 1, 'admin', 'active', '2026-01-15 09:16:50', NULL, NULL),
+(3, 'justineweslley.0@gmail.com', '$2y$10$NHgYOoVWLfneBc6PjZcMN..j82Eu4KHzQj.PEnHA3I0wRNdQyIora', 'Justine', 'Pontilla', '', '09913487886', '../uploads/avatars/avatar_3_1768470067.jpg', 1, 1, 'student', 'active', '2026-01-15 09:37:08', 'Student-1-2026', NULL);
 
 -- --------------------------------------------------------
 
@@ -541,21 +396,6 @@ CREATE TABLE `vouchers` (
   `expiryDate` date NOT NULL,
   `generatedAt` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `vouchers`
---
-
-INSERT INTO `vouchers` (`voucherID`, `voucherCode`, `userID`, `student_identifier`, `certificateID`, `discountPercentage`, `discount_type`, `isUsed`, `redeemed_order`, `redeemed_at`, `source`, `expiryDate`, `generatedAt`) VALUES
-(1, 'GETSOLE-5XNU', 5, 'learnexus-5', 8, 12.00, 'percent', 1, 'ORDER-TEST-001', '2026-01-13 20:00:00', 'course', '2026-01-20', '2026-01-13 12:59:17'),
-(2, 'REWARD-SAFJ', NULL, 'learnexus-8', NULL, 12.00, 'percent', 1, 'SO-20260113143906-4183', '2026-01-13 21:39:06', 'course', '2026-01-20', '2026-01-13 13:38:02'),
-(3, 'GETSOLE-UZZS', 9, 'learnexus-9', 11, 12.00, 'percent', 1, 'SO-20260113150008-7025', '2026-01-13 15:00:08', 'course', '2026-01-20', '2026-01-13 13:57:37'),
-(4, 'GETSOLE-37WK', 10, 'learnexus-10', 12, 12.00, 'percent', 1, 'SO-20260113172258-7705', '2026-01-13 17:22:58', 'course', '2026-01-20', '2026-01-13 16:18:26'),
-(5, 'GETSOLE-FHEU', 11, 'learnexus-11', 13, 12.00, 'percent', 0, NULL, NULL, 'course', '2026-01-21', '2026-01-14 02:41:23'),
-(6, 'GETSOLE-P336', 11, 'learnexus-11', 14, 12.00, 'percent', 0, NULL, NULL, 'course', '2026-01-21', '2026-01-14 11:27:01'),
-(7, 'GETSOLE-2LZ6', 11, 'learnexus-11', NULL, 12.00, 'percent', 0, NULL, NULL, 'course', '2026-01-21', '2026-01-14 12:48:35'),
-(8, 'GETSOLE-AK9P', 11, 'learnexus-11', 16, 12.00, 'percent', 0, NULL, NULL, 'course', '2026-01-21', '2026-01-14 13:02:36'),
-(9, 'REWARD-TL6Y', 11, 'learnexus-11', 17, 12.00, 'percent', 1, 'SO-20260114174622-7620', '2026-01-14 17:46:22', 'course', '2026-01-21', '2026-01-14 16:44:15');
 
 --
 -- Indexes for dumped tables
@@ -690,85 +530,85 @@ ALTER TABLE `vouchers`
 -- AUTO_INCREMENT for table `certificates`
 --
 ALTER TABLE `certificates`
-  MODIFY `certificateID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+  MODIFY `certificateID` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `courses`
 --
 ALTER TABLE `courses`
-  MODIFY `courseID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `courseID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `emailotp`
 --
 ALTER TABLE `emailotp`
-  MODIFY `emailOtpID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
+  MODIFY `emailOtpID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `enrollments`
 --
 ALTER TABLE `enrollments`
-  MODIFY `enrollmentID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
+  MODIFY `enrollmentID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `lessoncompletion`
 --
 ALTER TABLE `lessoncompletion`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=50;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `lessons`
 --
 ALTER TABLE `lessons`
-  MODIFY `lessonID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+  MODIFY `lessonID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `payments`
 --
 ALTER TABLE `payments`
-  MODIFY `paymentID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
+  MODIFY `paymentID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `quizanswers`
 --
 ALTER TABLE `quizanswers`
-  MODIFY `answerID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `answerID` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `quizquestions`
 --
 ALTER TABLE `quizquestions`
-  MODIFY `questionID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+  MODIFY `questionID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `quizresults`
 --
 ALTER TABLE `quizresults`
-  MODIFY `resultID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
+  MODIFY `resultID` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `quizzes`
 --
 ALTER TABLE `quizzes`
-  MODIFY `quizID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `quizID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `smsotp`
 --
 ALTER TABLE `smsotp`
-  MODIFY `otpID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `otpID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `userID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `userID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `vouchers`
 --
 ALTER TABLE `vouchers`
-  MODIFY `voucherID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `voucherID` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- Constraints for dumped tables
