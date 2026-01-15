@@ -97,13 +97,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_course'])) {
     ");
     $stmt->execute([$title, $description, $price, $category, $status, $passingScore, $courseID, $teacherID]);
     
-    $success = "Course updated successfully!";
+    $_SESSION['success'] = "Course updated successfully!";
     $activeTab = 'details';
     
     // Refresh course data
     $stmt = $conn->prepare("SELECT * FROM courses WHERE courseID = ?");
     $stmt->execute([$courseID]);
     $course = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    // Redirect to same page to show notification
+    header("Location: manage_course.php?id=$courseID&tab=details");
+    exit();
 }
 
 // Handle course deletion
@@ -164,8 +168,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_course'])) {
         
     } catch (Exception $e) {
         $conn->rollBack();
-        $error = "Failed to delete course: " . $e->getMessage();
+        $_SESSION['error'] = "Failed to delete course: " . $e->getMessage();
         $activeTab = 'details';
+        
+        header("Location: manage_course.php?id=$courseID&tab=details");
+        exit();
     }
 }
 
@@ -180,15 +187,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['upload_lesson']) && i
     $uploadDir = '../uploads/lessons/';
     if (!file_exists($uploadDir)) {
         if (!mkdir($uploadDir, 0777, true)) {
-            $error = "Failed to create upload directory!";
-            $uploadErrors[] = "Directory creation failed";
+            $_SESSION['error'] = "Failed to create upload directory!";
+            header("Location: manage_course.php?id=$courseID&tab=lessons");
+            exit();
         }
     }
     
     // Check if directory is writable
     if (!is_writable($uploadDir)) {
-        $error = "Upload directory is not writable!";
-        $uploadErrors[] = "Directory not writable";
+        $_SESSION['error'] = "Upload directory is not writable!";
+        header("Location: manage_course.php?id=$courseID&tab=lessons");
+        exit();
     }
     
     // Validate file upload
@@ -202,8 +211,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['upload_lesson']) && i
             UPLOAD_ERR_CANT_WRITE => 'Failed to write file to disk',
             UPLOAD_ERR_EXTENSION => 'A PHP extension stopped the file upload'
         ];
-        $error = $errorMessages[$file['error']] ?? "Unknown upload error: " . $file['error'];
-        $uploadErrors[] = $error;
+        $_SESSION['error'] = $errorMessages[$file['error']] ?? "Unknown upload error: " . $file['error'];
+        header("Location: manage_course.php?id=$courseID&tab=lessons");
+        exit();
     }
     
     // Validate file extension
@@ -211,59 +221,72 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['upload_lesson']) && i
     $allowedExts = ['pdf'];
     
     if (!in_array($fileExt, $allowedExts)) {
-        $error = "Only PDF files are allowed! You uploaded: .$fileExt";
-        $uploadErrors[] = $error;
+        $_SESSION['error'] = "Only PDF files are allowed! You uploaded: .$fileExt";
+        header("Location: manage_course.php?id=$courseID&tab=lessons");
+        exit();
     }
     
     // Validate file size (10MB limit)
     if ($file['size'] > 10485760) {
-        $error = "File size must be less than 10MB! Your file: " . round($file['size']/1048576, 2) . "MB";
-        $uploadErrors[] = $error;
+        $_SESSION['error'] = "File size must be less than 10MB! Your file: " . round($file['size']/1048576, 2) . "MB";
+        header("Location: manage_course.php?id=$courseID&tab=lessons");
+        exit();
     }
     
     // If no errors, proceed with upload
-    if (empty($uploadErrors)) {
-        // Generate unique filename
-        $newFileName = uniqid() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', basename($file['name']));
-        $uploadPath = $uploadDir . $newFileName;
-        $dbPath = 'uploads/lessons/' . $newFileName;
+    // Generate unique filename
+    $newFileName = uniqid() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', basename($file['name']));
+    $uploadPath = $uploadDir . $newFileName;
+    $dbPath = 'uploads/lessons/' . $newFileName;
+    
+    // Attempt to move uploaded file
+    if (move_uploaded_file($file['tmp_name'], $uploadPath)) {
         
-        // Attempt to move uploaded file
-        if (move_uploaded_file($file['tmp_name'], $uploadPath)) {
+        // Verify file exists
+        if (file_exists($uploadPath)) {
             
-            // Verify file exists
-            if (file_exists($uploadPath)) {
-                
-                // Insert into database
-                $stmt = $conn->prepare("INSERT INTO lessons (courseID, title, filename, uploadedAt) VALUES (?, ?, ?, NOW())");
-                
-                if ($stmt->execute([$courseID, $lessonTitle, $dbPath])) {
-                    $success = "Lesson uploaded successfully! File: $newFileName";
-                    $activeTab = 'lessons';
-                    
-                    // Refresh lessons
-                    $stmt = $conn->prepare("SELECT * FROM lessons WHERE courseID = ? ORDER BY uploadedAt DESC");
-                    $stmt->execute([$courseID]);
-                    $lessons = $stmt->fetchAll(PDO::FETCH_ASSOC);
-                } else {
-                    // Database insert failed - delete uploaded file
-                    unlink($uploadPath);
-                    $error = "Database error: Failed to save lesson record";
-                    $activeTab = 'lessons';
-                }
-            } else {
-                $error = "File uploaded but cannot be found on disk!";
+            // Insert into database
+            $stmt = $conn->prepare("INSERT INTO lessons (courseID, title, filename, uploadedAt) VALUES (?, ?, ?, NOW())");
+            
+            if ($stmt->execute([$courseID, $lessonTitle, $dbPath])) {
+                $_SESSION['success'] = "Lesson uploaded successfully!";
                 $activeTab = 'lessons';
+                
+                // Refresh lessons
+                $stmt = $conn->prepare("SELECT * FROM lessons WHERE courseID = ? ORDER BY uploadedAt DESC");
+                $stmt->execute([$courseID]);
+                $lessons = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                
+                header("Location: manage_course.php?id=$courseID&tab=lessons");
+                exit();
+            } else {
+                // Database insert failed - delete uploaded file
+                unlink($uploadPath);
+                $_SESSION['error'] = "Database error: Failed to save lesson record";
+                header("Location: manage_course.php?id=$courseID&tab=lessons");
+                exit();
             }
         } else {
-            $error = "Failed to move uploaded file! Check directory permissions.";
-            $activeTab = 'lessons';
+            $_SESSION['error'] = "File uploaded but cannot be found on disk!";
+            header("Location: manage_course.php?id=$courseID&tab=lessons");
+            exit();
         }
     } else {
-        // Show first error
-        $error = $uploadErrors[0];
-        $activeTab = 'lessons';
+        $_SESSION['error'] = "Failed to move uploaded file! Check directory permissions.";
+        header("Location: manage_course.php?id=$courseID&tab=lessons");
+        exit();
     }
+}
+
+// Check for success/error messages from session
+if (isset($_SESSION['success'])) {
+    $success = $_SESSION['success'];
+    unset($_SESSION['success']);
+}
+
+if (isset($_SESSION['error'])) {
+    $error = $_SESSION['error'];
+    unset($_SESSION['error']);
 }
 ?>
 <!DOCTYPE html>
@@ -1008,129 +1031,142 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['upload_lesson']) && i
                 </div>
 
                
-        </main>
+        </div>
+    </main>
 
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-        <script>
-            // Hamburger animation - EXACTLY matching dashboard
-            const hamburgerBtn = document.getElementById('hamburgerBtn');
-            const sidebar = document.getElementById('sidebar');
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Hamburger animation - EXACTLY matching dashboard
+        const hamburgerBtn = document.getElementById('hamburgerBtn');
+        const sidebar = document.getElementById('sidebar');
 
-            if (hamburgerBtn && sidebar) {
-                sidebar.addEventListener('show.bs.offcanvas', () => hamburgerBtn.classList.add('active'));
-                sidebar.addEventListener('hide.bs.offcanvas', () => hamburgerBtn.classList.remove('active'));
+        if (hamburgerBtn && sidebar) {
+            sidebar.addEventListener('show.bs.offcanvas', () => hamburgerBtn.classList.add('active'));
+            sidebar.addEventListener('hide.bs.offcanvas', () => hamburgerBtn.classList.remove('active'));
+        }
+
+        // Active nav state - EXACTLY matching dashboard
+        const navLinks = document.querySelectorAll('.sidebar .nav-link');
+        const currentPage = window.location.pathname.split('/').pop();
+        
+        navLinks.forEach(link => {
+            if (link.getAttribute('href') === currentPage) {
+                navLinks.forEach(l => l.classList.remove('active'));
+                link.classList.add('active');
             }
-
-            // Active nav state - EXACTLY matching dashboard
-            const navLinks = document.querySelectorAll('.sidebar .nav-link');
-            const currentPage = window.location.pathname.split('/').pop();
             
-            navLinks.forEach(link => {
-                if (link.getAttribute('href') === currentPage) {
-                    navLinks.forEach(l => l.classList.remove('active'));
-                    link.classList.add('active');
+            // Close sidebar
+            link.addEventListener('click', () => {
+                if (window.innerWidth <= 992) {
+                    const offcanvas = bootstrap.Offcanvas.getInstance(sidebar);
+                    if (offcanvas) offcanvas.hide();
                 }
-                
-                // Close sidebar
-                link.addEventListener('click', () => {
-                    if (window.innerWidth <= 992) {
-                        const offcanvas = bootstrap.Offcanvas.getInstance(sidebar);
-                        if (offcanvas) offcanvas.hide();
-                    }
-                });
             });
+        });
 
-            // Initialize Bootstrap tabs with URL support
-            const courseTabs = document.querySelectorAll('#courseTabs button[data-bs-toggle="tab"]');
-            courseTabs.forEach(tab => {
-                tab.addEventListener('shown.bs.tab', event => {
-                    const activeTab = event.target.getAttribute('id').replace('-tab', '');
-                    const url = new URL(window.location);
-                    url.searchParams.set('tab', activeTab);
-                    window.history.pushState({}, '', url);
-                });
+        // Initialize Bootstrap tabs with URL support
+        const courseTabs = document.querySelectorAll('#courseTabs button[data-bs-toggle="tab"]');
+        courseTabs.forEach(tab => {
+            tab.addEventListener('shown.bs.tab', event => {
+                const activeTab = event.target.getAttribute('id').replace('-tab', '');
+                const url = new URL(window.location);
+                url.searchParams.set('tab', activeTab);
+                window.history.pushState({}, '', url);
             });
+        });
 
-            // Restore active tab from URL on page load
-            const activeTabFromUrl = '<?php echo $activeTab; ?>';
-            if (activeTabFromUrl) {
-                const tabElement = document.getElementById(`${activeTabFromUrl}-tab`);
-                if (tabElement) {
-                    new bootstrap.Tab(tabElement).show();
+        // Restore active tab from URL on page load
+        const activeTabFromUrl = '<?php echo $activeTab; ?>';
+        if (activeTabFromUrl) {
+            const tabElement = document.getElementById(`${activeTabFromUrl}-tab`);
+            if (tabElement) {
+                new bootstrap.Tab(tabElement).show();
+            }
+        }
+
+        <?php if (isset($success)): ?>
+        // Updated to use toast notification
+        Swal.fire({
+            icon: 'success',
+            title: 'Success!',
+            text: '<?php echo addslashes($success); ?>',
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true
+        });
+        <?php endif; ?>
+
+        <?php if (isset($error)): ?>
+        // Updated to use toast notification
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: '<?php echo addslashes($error); ?>',
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true
+        });
+        <?php endif; ?>
+
+        function deleteLesson(lessonID) {
+            Swal.fire({
+                title: 'Delete Lesson?',
+                text: "This action cannot be undone!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, delete it!',
+                cancelButtonText: 'Cancel',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = 'delete_lesson.php?id=' + lessonID + '&course_id=<?php echo $courseID; ?>&tab=lessons';
                 }
-            }
-
-            <?php if (isset($success)): ?>
-            Swal.fire({
-                icon: 'success',
-                title: 'Success!',
-                text: '<?php echo addslashes($success); ?>',
-                timer: 3000,
-                showConfirmButton: true
             });
-            <?php endif; ?>
+        }
 
-            <?php if (isset($error)): ?>
+        function confirmDeleteCourse() {
             Swal.fire({
-                icon: 'error',
-                title: 'Error!',
-                text: '<?php echo addslashes($error); ?>',
-                showConfirmButton: true
+                title: 'Delete Course?',
+                html: `
+                    <div style="text-align: left;">
+                        <p>This action will permanently delete:</p>
+                        <ul>
+                            <li>The course: <strong><?php echo htmlspecialchars($course['title']); ?></strong></li>
+                            <li>All lessons (<?php echo $totalLessons; ?> files)</li>
+                            <li>Quiz (<?php echo $totalQuizCount; ?>)</li>
+                            <li>All student enrollments (<?php echo $enrolledStudents; ?> students)</li>
+                        </ul>
+                        <p class="text-danger"><strong>This action cannot be undone!</strong></p>
+                        <p>Type <strong>"DELETE"</strong> to confirm:</p>
+                        <input type="text" id="confirmDeleteInput" class="swal2-input" placeholder="Type DELETE here">
+                    </div>
+                `,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, delete everything',
+                cancelButtonText: 'Cancel',
+                reverseButtons: true,
+                preConfirm: () => {
+                    const confirmValue = document.getElementById('confirmDeleteInput').value;
+                    if (confirmValue !== 'DELETE') {
+                        Swal.showValidationMessage('You must type "DELETE" to confirm');
+                    }
+                    return confirmValue === 'DELETE';
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('deleteCourseForm').submit();
+                }
             });
-            <?php endif; ?>
-
-            function deleteLesson(lessonID) {
-                Swal.fire({
-                    title: 'Delete Lesson?',
-                    text: "This action cannot be undone!",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#d33',
-                    cancelButtonColor: '#3085d6',
-                    confirmButtonText: 'Yes, delete it!'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        window.location.href = 'delete_lesson.php?id=' + lessonID + '&course_id=<?php echo $courseID; ?>&tab=lessons';
-                    }
-                });
-            }
-
-            function confirmDeleteCourse() {
-                Swal.fire({
-                    title: 'Delete Course?',
-                    html: `
-                        <div style="text-align: left;">
-                            <p>This action will permanently delete:</p>
-                            <ul>
-                                <li>The course: <strong><?php echo htmlspecialchars($course['title']); ?></strong></li>
-                                <li>All lessons (<?php echo $totalLessons; ?> files)</li>
-                                <li>Quiz (<?php echo $totalQuizCount; ?>)</li>
-                                <li>All student enrollments (<?php echo $enrolledStudents; ?> students)</li>
-                            </ul>
-                            <p class="text-danger"><strong>This action cannot be undone!</strong></p>
-                            <p>Type <strong>"DELETE"</strong> to confirm:</p>
-                            <input type="text" id="confirmDeleteInput" class="swal2-input" placeholder="Type DELETE here">
-                        </div>
-                    `,
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#d33',
-                    cancelButtonColor: '#3085d6',
-                    confirmButtonText: 'Yes, delete everything',
-                    cancelButtonText: 'Cancel',
-                    preConfirm: () => {
-                        const confirmValue = document.getElementById('confirmDeleteInput').value;
-                        if (confirmValue !== 'DELETE') {
-                            Swal.showValidationMessage('You must type "DELETE" to confirm');
-                        }
-                        return confirmValue === 'DELETE';
-                    }
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        document.getElementById('deleteCourseForm').submit();
-                    }
-                });
-            }
-        </script>
-    </body>
-    </html>
+        }
+    </script>
+</body>
+</html>

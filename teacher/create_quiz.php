@@ -52,12 +52,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute([$courseID, $title, $description, $passingScore, $timeLimitMinutes, $allowRetake]);
             $quizID = $conn->lastInsertId();
             
+            // FIX: ADD SUCCESS MESSAGE HERE
+            $_SESSION['success'] = "Quiz created successfully! You can now add questions to your quiz.";
+            
             header('Location: edit_quiz.php?id=' . $quizID);
             exit();
         } catch (PDOException $e) {
-            $error = 'Failed to create quiz';
+            // FIX: Use session for error message too
+            $_SESSION['error'] = "Failed to create quiz. Please try again.";
+            header('Location: create_quiz.php');
+            exit();
         }
+    } else {
+        // FIX: Use session for error message
+        $_SESSION['error'] = "Please fill in all required fields.";
+        header('Location: create_quiz.php');
+        exit();
     }
+}
+
+// Check for success/error messages from session
+if (isset($_SESSION['success'])) {
+    $success = $_SESSION['success'];
+    unset($_SESSION['success']);
+}
+
+if (isset($_SESSION['error'])) {
+    $error = $_SESSION['error'];
+    unset($_SESSION['error']);
 }
 ?>
 <!DOCTYPE html>
@@ -410,6 +432,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </div>
                         <?php endif; ?>
 
+                        <?php if (isset($success)): ?>
+                            <div class="alert alert-success">
+                                <i class="bi bi-check-circle me-2"></i> <?php echo $success; ?>
+                            </div>
+                        <?php endif; ?>
+
                         <form method="POST">
                             <div class="mb-4">
                                 <label class="form-label">Select Course *</label>
@@ -487,6 +515,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
             </div>
 
+        </div>
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -518,6 +547,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             });
         });
+
+        // Show SweetAlert notifications if they exist
+        <?php if (isset($success)): ?>
+        Swal.fire({
+            icon: 'success',
+            title: 'Success!',
+            text: '<?php echo addslashes($success); ?>',
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true
+        });
+        <?php endif; ?>
+
+        <?php if (isset($error)): ?>
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: '<?php echo addslashes($error); ?>',
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true
+        });
+        <?php endif; ?>
     </script>
 </body>
 </html>

@@ -13,6 +13,17 @@ $stmt = $conn->prepare("SELECT * FROM users WHERE userID = ?");
 $stmt->execute([$teacherID]);
 $user = $stmt->fetch();
 
+// Check for success message from session
+if (isset($_SESSION['success'])) {
+    $success = $_SESSION['success'];
+    unset($_SESSION['success']);
+}
+
+// Check for error message from session
+if (isset($_SESSION['error'])) {
+    $error = $_SESSION['error'];
+    unset($_SESSION['error']);
+}
 
 // Get all quizzes by teacher with course info
 // NEW - querying 'quizquestions' table (the actual table name)
@@ -41,6 +52,7 @@ $courses = $stmt->fetchAll();
     <link rel="icon" type="image/png" href="../images/Learnexus.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root {
             --sidebar-width: 260px;
@@ -167,7 +179,6 @@ $courses = $stmt->fetchAll();
         }
 
         /* Status Badges */
-                /* Status Badges */
         .badge-draft {
             background: linear-gradient(135deg, #ff9800 0%, #ffb74d 100%);
             color: white;
@@ -710,6 +721,34 @@ function confirmDelete(quizID, quizTitle) {
         .catch(() => alert('Server error'));
     }
 }
+
+<?php if (isset($success)): ?>
+// Show success toast
+Swal.fire({
+    icon: 'success',
+    title: 'Success!',
+    text: '<?php echo addslashes($success); ?>',
+    toast: true,
+    position: 'top-end',
+    showConfirmButton: false,
+    timer: 3000,
+    timerProgressBar: true
+});
+<?php endif; ?>
+
+<?php if (isset($error)): ?>
+// Show error toast
+Swal.fire({
+    icon: 'error',
+    title: 'Error',
+    text: '<?php echo addslashes($error); ?>',
+    toast: true,
+    position: 'top-end',
+    showConfirmButton: false,
+    timer: 3000,
+    timerProgressBar: true
+});
+<?php endif; ?>
 </script>
 </body>
 </html>
