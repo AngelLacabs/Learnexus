@@ -380,9 +380,9 @@ $totalPublished = $stmt->fetch()['total'];
                                         No courses available or you're already enrolled in all courses
                                     <?php endif; ?>
                                 </p>
-                                <a href="course_catalog.php" class="btn btn-primary rounded-pill px-4">
-                                    <i class="bi bi-arrow-counterclockwise me-2"></i>Clear Search
-                                </a>
+                                <a href="course_catalog.php" class="btn btn-primary rounded-pill px-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white !important; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">
+    <i class="bi bi-arrow-counterclockwise me-2"></i>Clear Search
+</a>
                             </div>
                         </div>
                     </div>

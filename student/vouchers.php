@@ -356,9 +356,9 @@ unset($_SESSION['new_voucher_code']);
                                 <i class="bi bi-ticket-perforated display-1 text-muted mb-3"></i>
                                 <h3 class="h5 fw-bold mb-3">No Vouchers Yet</h3>
                                 <p class="text-muted mb-4">Complete courses to earn SoleSource discount vouchers!</p>
-                                <a href="course_catalog.php" class="btn btn-primary rounded-pill px-4 fw-semibold">
-                                    <i class="bi bi-search me-2"></i>Browse Courses
-                                </a>
+                                <a href="course_catalog.php" class="btn btn-primary rounded-pill px-4 fw-semibold" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white !important; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">
+    <i class="bi bi-search me-2"></i>Browse Courses
+</a>
                             </div>
                         </div>
                     </div>

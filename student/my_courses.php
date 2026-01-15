@@ -462,10 +462,10 @@ foreach ($enrolledCourses as $course) {
                                             Complete</p>
 
                                         <button class="btn btn-primary w-100 rounded-pill fw-semibold"
-                                            onclick="window.location.href='course_learn.php?id=<?php echo $course['courseID']; ?>'">
-                                            <i
-                                                class="bi bi-play-circle me-2"></i><?php echo $course['progressPercentage'] > 0 ? 'Continue' : 'Start Course'; ?>
-                                        </button>
+        onclick="window.location.href='course_learn.php?id=<?php echo $course['courseID']; ?>'"
+        style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white !important; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3); border: none;">
+    <i class="bi bi-play-circle me-2"></i><?php echo $course['progressPercentage'] > 0 ? 'Continue' : 'Start Course'; ?>
+</button>
                                     </div>
                                 </div>
                             </div>
@@ -558,9 +558,9 @@ foreach ($enrolledCourses as $course) {
                                 <i class="bi bi-journal-x display-1 text-muted mb-3"></i>
                                 <h3 class="h5 fw-bold mb-3">No Courses Yet</h3>
                                 <p class="text-muted mb-4">You haven't enrolled in any courses. Start learning today!</p>
-                                <a href="course_catalog.php" class="btn btn-primary rounded-pill px-4 fw-semibold">
-                                    <i class="bi bi-search me-2"></i>Browse Courses
-                                </a>
+                               <a href="course_catalog.php" class="btn btn-primary rounded-pill px-4 fw-semibold" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white !important; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">
+    <i class="bi bi-search me-2"></i>Browse Courses
+</a>
                             </div>
                         </div>
                     </div>
