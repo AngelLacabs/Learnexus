@@ -258,7 +258,7 @@ unset($_SESSION['new_voucher_code']);
 
             <div class="row mb-4">
                 <div class="col-12">
-                    <h1 class="h3 fw-bold">SoleSource Vouchers</h1>
+                    <h1 class="h3 fw-bold">My Vouchers</h1>
                     <p class="text-muted">Redeem these codes at SoleSource for exclusive discounts!</p>
                 </div>
             </div>
