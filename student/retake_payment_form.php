@@ -10,9 +10,13 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
 $userID   = $_SESSION['user_id'];
 $courseID = (int)($_GET['id'] ?? 0);
 
-// Get course + instructor
+
+// Get course + instructor + price (USED FOR PAYMENT)
 $stmt = $conn->prepare("
-    SELECT c.title, CONCAT(u.firstName,' ',u.lastName) AS instructor
+    SELECT 
+        c.title,
+        c.price,
+        CONCAT(u.firstName,' ',u.lastName) AS instructor
     FROM courses c
     JOIN users u ON c.teacherID = u.userID
     WHERE c.courseID = ?
@@ -24,9 +28,11 @@ if (!$course) {
     die('Course not found.');
 }
 
-// Retake fee
-$retakeFeePHP = 100;
-$retakeFeeUSD = number_format($retakeFeePHP / 56, 2, '.', ''); // Safe decimal formatting
+// ✅ SINGLE SOURCE OF TRUTH
+$retakeFeePHP = (float)$course['price'];
+$retakeFeeUSD = number_format($retakeFeePHP / 56, 2, '.', '');
+
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
