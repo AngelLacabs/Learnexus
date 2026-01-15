@@ -559,7 +559,7 @@ $coursesWithEnrollees = count(array_filter($enrolleesByCourse, fn($data) => coun
                                                 <th>Student Name</th>
                                                 <th>Student Number</th>
                                                 <th>Course</th>
-                                                <th width="100">Action</th>
+                                                
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -573,12 +573,7 @@ $coursesWithEnrollees = count(array_filter($enrolleesByCourse, fn($data) => coun
                                                     <td>
                                                         <div class="fw-medium"><?php echo htmlspecialchars($student['courseTitle']); ?></div>
                                                     </td>
-                                                    <td>
-                                                        <button class="btn btn-sm btn-outline-primary rounded-pill" 
-                                                                onclick="window.location.href='student_status.php?user_id=<?php echo $student['userID']; ?>'">
-                                                            <i class="bi bi-eye"></i> View
-                                                        </button>
-                                                    </td>
+                                                
                                                 </tr>
                                             <?php endforeach; ?>
                                         </tbody>

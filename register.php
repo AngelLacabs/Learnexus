@@ -109,7 +109,7 @@ if (isset($_SESSION['error'])) unset($_SESSION['error']);
             background-color: rgba(102, 126, 234, 0.05);
         }
         .logo-img {
-            max-width: 650px;
+            max-width: 550px;
             width: 100%;
             height: auto;
         }

@@ -1,8 +1,4 @@
 <?php
-// ========================================
-// FILE: teacher/student_status.php
-// View individual student's quiz results and course progress
-// ========================================
 session_start();
 require_once '../database/db_connect.php';
 
@@ -13,11 +9,12 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'instructor') {
 
 $teacherID = $_SESSION['user_id'];
 $userID = $_GET['user_id'] ?? 0;
+$activeTab = $_GET['tab'] ?? 'progress';
 
-// Get instructor data including avatar
-$stmt = $conn->prepare("SELECT * FROM users WHERE userID = ?");
+// Get user avatar
+$stmt = $conn->prepare("SELECT avatar FROM users WHERE userID = ?");
 $stmt->execute([$teacherID]);
-$user = $stmt->fetch();
+$userAvatar = $stmt->fetchColumn();
 
 // Get student info
 $stmt = $conn->prepare("SELECT * FROM users WHERE userID = ? AND role = 'student'");
@@ -77,7 +74,12 @@ foreach ($quizResults as $result) {
     }
 }
 
-$activeTab = $_GET['tab'] ?? 'progress';
+// Calculate course statistics
+$totalCourses = count($enrolledCourses);
+$completedCourses = count(array_filter($enrolledCourses, fn($c) => $c['status'] === 'completed'));
+$activeCourses = count(array_filter($enrolledCourses, fn($c) => $c['status'] === 'active'));
+$averageProgress = $totalCourses > 0 ? 
+    round(array_sum(array_column($enrolledCourses, 'progressPercentage')) / $totalCourses) : 0;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -98,7 +100,7 @@ $activeTab = $_GET['tab'] ?? 'progress';
             min-height: 100vh;
         }
 
-        /* Sidebar - Matching enrollees.php design */
+        /* Sidebar - EXACTLY matching dashboard */
         .sidebar {
             background: linear-gradient(180deg, #e8f0fe 0%, #f0f4ff 50%, #f8f9fa 100%);
             box-shadow: 4px 0 20px rgba(0,0,0,0.08);
@@ -113,7 +115,7 @@ $activeTab = $_GET['tab'] ?? 'progress';
             background-clip: text;
         }
 
-        /* Navigation */
+        /* Navigation - EXACTLY matching dashboard */
         .nav-link {
             border-radius: 12px;
             transition: all 0.2s ease;
@@ -147,7 +149,7 @@ $activeTab = $_GET['tab'] ?? 'progress';
             display: none;
         }
 
-        /* Hamburger */
+        /* Hamburger - EXACTLY matching dashboard */
         .hamburger-btn {
             width: 50px;
             height: 50px;
@@ -179,58 +181,24 @@ $activeTab = $_GET['tab'] ?? 'progress';
             transform: translateY(-8px) rotate(-45deg);
         }
 
-        /* Main Content Margin */
+        /* Main Content Margin - EXACTLY matching dashboard */
         @media (min-width: 992px) {
             .main-content {
                 margin-left: var(--sidebar-width);
             }
         }
 
-        /* Student Header */
-        .student-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 16px;
-            padding: 25px;
-            margin-bottom: 30px;
-            color: white;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        /* Card Hover Effects */
+        .card-hover {
+            transition: transform 0.2s, box-shadow 0.2s;
         }
 
-        .student-avatar {
-            width: 80px;
-            height: 80px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 32px;
-            font-weight: 600;
-            margin-right: 20px;
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12) !important;
         }
 
-        /* Status Tabs */
-        .status-tab {
-            padding: 10px 20px;
-            border-radius: 20px;
-            font-weight: 500;
-            transition: all 0.2s;
-            cursor: pointer;
-            border: none;
-            background: transparent;
-            color: #666;
-        }
-
-        .status-tab:hover {
-            background-color: rgba(102, 126, 234, 0.1);
-        }
-
-        .status-tab.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-
-        /* Cards */
+        /* Stats Cards */
         .stat-card {
             border-radius: 16px;
             border: none;
@@ -243,163 +211,291 @@ $activeTab = $_GET['tab'] ?? 'progress';
             box-shadow: 0 8px 24px rgba(0,0,0,0.12);
         }
 
-        .course-card {
+        /* Student Header */
+        .student-header-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 16px;
+            border: none;
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+        }
+
+        .student-badge {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            color: white;
+            font-weight: 500;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.875rem;
+        }
+
+        /* Tab Navigation */
+        .nav-tabs-custom {
+            border: none;
+            gap: 8px;
+        }
+
+        .nav-tabs-custom .nav-link {
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 12px 20px;
+            color: #6b7280;
+            font-weight: 500;
+            margin: 0;
+            transition: all 0.2s;
+        }
+
+        .nav-tabs-custom .nav-link:hover {
+            background-color: #f9fafb;
+            border-color: #d1d5db;
+        }
+
+        .nav-tabs-custom .nav-link.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: transparent;
+            color: white;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        /* Tab Content */
+        .tab-content {
+            background: white;
             border-radius: 16px;
             border: none;
             box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            transition: transform 0.2s;
-            height: 100%;
+            margin-top: 20px;
+        }
+
+        /* Course Cards */
+        .course-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            border: 1px solid #eaeaea;
+            transition: all 0.2s;
+            cursor: pointer;
         }
 
         .course-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-        }
-
-        /* Course Image Placeholder */
-        .course-img-placeholder {
-            height: 140px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 40px;
-            border-radius: 16px 16px 0 0;
-        }
-
-        /* Quiz Results Table */
-        .quiz-table {
-            border-radius: 12px;
-            overflow: hidden;
+            background: #f8f9fa;
+            transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        /* Table Styles */
+        .quiz-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
         }
 
         .quiz-table thead th {
             background: #f8f9fa;
-            border-bottom: 2px solid #e0e0e0;
-            color: #666;
-            font-weight: 600;
+            border-bottom: 2px solid #eaeaea;
             padding: 16px;
-        }
-
-        .quiz-table tbody tr {
-            transition: background 0.2s;
-        }
-
-        .quiz-table tbody tr:hover {
-            background: #f8f9fa;
+            font-weight: 600;
+            color: #374151;
         }
 
         .quiz-table tbody td {
             padding: 16px;
-            vertical-align: middle;
             border-bottom: 1px solid #eaeaea;
         }
 
+        .quiz-table tbody tr {
+            transition: all 0.2s;
+        }
+
+        .quiz-table tbody tr:hover {
+            background-color: #f8f9fa;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .quiz-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
         /* Badges */
-        .status-badge {
+        .badge {
             padding: 6px 12px;
             border-radius: 20px;
             font-size: 12px;
             font-weight: 600;
         }
 
-        .status-badge.passed {
-            background: rgba(76, 175, 80, 0.1);
-            color: #43a047;
+        .bg-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
         }
 
-        .status-badge.failed {
-            background: rgba(244, 67, 54, 0.1);
-            color: #ef5350;
+        .bg-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
 
-        .status-badge.completed {
-            background: rgba(76, 175, 80, 0.1);
-            color: #43a047;
+        .bg-warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
         }
 
-        .status-badge.ongoing {
-            background: rgba(33, 150, 243, 0.1);
-            color: #1e88e5;
+        .bg-danger {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
         }
 
-        /* Progress Bars */
-        .progress-circle {
-            width: 120px;
-            height: 120px;
+        .bg-info {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
         }
 
-        .progress-circle svg {
-            width: 100%;
+        /* Progress Bar */
+        .progress-bar-custom {
+            height: 8px;
+            border-radius: 4px;
+            background: #e0e0e0;
+            overflow: hidden;
+        }
+
+        .progress-bar-custom .fill {
             height: 100%;
-        }
-
-        .progress-circle-bg {
-            fill: none;
-            stroke: #e0e0e0;
-            stroke-width: 4;
-        }
-
-        .progress-circle-fill {
-            fill: none;
-            stroke-width: 4;
-            stroke-linecap: round;
-            transform: rotate(-90deg);
-            transform-origin: 50% 50%;
-            transition: stroke-dashoffset 0.5s ease;
-        }
-
-        /* Back Button */
-        .back-btn {
-            background: rgba(255, 255, 255, 0.2);
-            border: none;
-            color: white;
-            border-radius: 8px;
-            padding: 8px 16px;
-            transition: background 0.2s;
-        }
-
-        .back-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-        }
-
-        /* Search Input */
-        .search-input {
-            border: 1px solid #dee2e6;
-            background: rgba(255, 255, 255, 0.9);
-        }
-
-        .search-input:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25);
-        }
-
-        .search-icon {
-            color: #6c757d;
-        }
-
-        /* User Avatar */
-        .user-avatar {
-            width: 45px;
-            height: 45px;
-            min-width: 45px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 4px;
         }
 
         /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            background: white;
+            border-radius: 16px;
+            border: 1px solid #eaeaea;
+        }
+
         .empty-state-icon {
             font-size: 64px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            margin-bottom: 16px;
+        }
+
+        /* Section Cards */
+        .section-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            border: 1px solid #eaeaea;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2d3436;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Search Input */
+        .search-input {
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 12px 16px;
+            transition: border-color 0.2s;
+        }
+
+        .search-input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        /* Buttons */
+        .btn-outline-primary {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .btn-outline-primary:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        /* Course Stats */
+        .course-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-item {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            border: 1px solid #eaeaea;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+
+        .stat-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 12px;
+        }
+
+        .stat-icon.primary {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            color: #1a73e8;
+        }
+
+        .stat-icon.success {
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            color: #10b981;
+        }
+
+        .stat-icon.warning {
+            background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+            color: #f59e0b;
+        }
+
+        .stat-icon.purple {
+            background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
+            color: #9c27b0;
+        }
+
+        /* Course Progress Bars */
+        .course-progress {
+            margin-bottom: 12px;
+        }
+
+        .course-progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+
+        .course-progress-bar {
+            height: 6px;
+            border-radius: 3px;
+            background: #e0e0e0;
+            overflow: hidden;
+        }
+
+        .course-progress-fill {
+            height: 100%;
+            border-radius: 3px;
         }
     </style>
 </head>
 <body>
-    <!-- Hamburger Button (Mobile) -->
+    <!-- Hamburger Button (Mobile) - EXACTLY matching dashboard -->
     <div class="position-fixed top-0 start-0 p-3 d-lg-none" style="z-index: 1100;">
         <button class="hamburger-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" id="hamburgerBtn">
             <div class="hamburger-icon d-flex flex-column align-items-center justify-content-center">
@@ -410,7 +506,7 @@ $activeTab = $_GET['tab'] ?? 'progress';
         </button>
     </div>
 
-    <!-- Sidebar -->
+    <!-- Sidebar - EXACTLY matching dashboard -->
     <aside class="sidebar offcanvas-lg offcanvas-start position-fixed top-0 start-0 h-100" style="width: var(--sidebar-width);" id="sidebar">
         <div class="offcanvas-header d-lg-none border-bottom">
             <h5 class="offcanvas-title sidebar-brand">LEARNEXUS</h5>
@@ -447,29 +543,27 @@ $activeTab = $_GET['tab'] ?? 'progress';
 
     <!-- Main Content -->
     <main class="main-content p-3 p-lg-4">
-        <div class="container-fluid">
-            <!-- Header with Back Button, Search and Profile -->
+        <div class="container-fluid" style="max-width: 1200px;">
+            <!-- Breadcrumb & User -->
             <div class="row mb-4">
                 <div class="col-12">
                     <div class="card border-0 rounded-4 shadow-sm">
-                        <div class="card-body p-3 d-flex justify-content-between align-items-center gap-3">
-                            <button class="btn btn-outline-secondary rounded-pill" onclick="window.history.back()">
-                                <i class="bi bi-arrow-left me-2"></i>Back to Enrollees
-                            </button>
-                            
-                            <div class="position-relative" style="flex: 1; max-width: 500px;">
-                                <i class="bi bi-search search-icon position-absolute top-50 start-0 translate-middle-y ms-3"></i>
-                                <input type="text" id="searchInput" class="form-control search-input rounded-pill ps-5" 
-                                       placeholder="Search in <?php echo htmlspecialchars($student['firstName']); ?>'s results..." autocomplete="off">
-                            </div>
+                        <div class="card-body p-3 d-flex justify-content-between align-items-center">
+                            <nav aria-label="breadcrumb">
+                                <ol class="breadcrumb mb-0">
+                                    <li class="breadcrumb-item"><a href="enrollees.php" class="text-decoration-none">Enrollees</a></li>
+                                    <li class="breadcrumb-item active"><?php echo htmlspecialchars($student['firstName'] . ' ' . $student['lastName']); ?></li>
+                                </ol>
+                            </nav>
                             
                             <div class="d-flex align-items-center gap-3" onclick="window.location.href='settings.php'" role="button" style="flex-shrink: 0;">
                                 <span class="fw-semibold d-none d-sm-inline text-nowrap">
                                     <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>
                                 </span>
-                                <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold user-avatar">
-                                    <?php if (!empty($user['avatar']) && file_exists($user['avatar'])): ?>
-                                        <img src="<?php echo htmlspecialchars($user['avatar']); ?>" alt="Avatar" 
+                                <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold" 
+                                     style="width: 45px; height: 45px; min-width: 45px; background: linear-gradient(135deg, #667eea, #764ba2);">
+                                    <?php if (!empty($userAvatar) && file_exists($userAvatar)): ?>
+                                        <img src="<?php echo htmlspecialchars($userAvatar); ?>" alt="Avatar" 
                                              class="w-100 h-100 rounded-circle object-fit-cover">
                                     <?php else: ?>
                                         <?php echo strtoupper(substr($_SESSION['first_name'], 0, 1)); ?>
@@ -484,58 +578,50 @@ $activeTab = $_GET['tab'] ?? 'progress';
             <!-- Student Header -->
             <div class="row mb-4">
                 <div class="col-12">
-                    <div class="student-header">
-                        <div class="d-flex align-items-center">
-                            <div class="student-avatar">
-                                <?php echo strtoupper(substr($student['firstName'], 0, 1)); ?>
-                            </div>
-                            <div>
-                                <h1 class="h3 fw-bold mb-1"><?php echo htmlspecialchars($student['firstName'] . ' ' . $student['lastName']); ?></h1>
-                                <p class="mb-2 opacity-75">Student Number: <?php echo htmlspecialchars($student['studentNumber']); ?></p>
-                                <div class="d-flex gap-3">
-                                    <span class="badge bg-light text-dark">
-                                        <i class="bi bi-book me-1"></i> <?php echo count($enrolledCourses); ?> courses
-                                    </span>
-                                    <span class="badge bg-light text-dark">
-                                        <i class="bi bi-check-circle me-1"></i> <?php echo $passedQuizzes; ?> quizzes passed
-                                    </span>
-                                    <span class="badge bg-light text-dark">
-                                        <i class="bi bi-clock me-1"></i> Enrolled on <?php echo date('M d, Y', strtotime($enrolledCourses[0]['enrolledAt'] ?? 'now')); ?>
-                                    </span>
+                    <div class="card student-header-card">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle bg-white bg-opacity-20 d-flex align-items-center justify-content-center me-4" 
+                                         style="width: 80px; height: 80px; font-size: 2rem; font-weight: 600;">
+                                        <?php echo strtoupper(substr($student['firstName'], 0, 1)); ?>
+                                    </div>
+                                    <div>
+                                        <h1 class="h2 fw-bold mb-1"><?php echo htmlspecialchars($student['firstName'] . ' ' . $student['lastName']); ?></h1>
+                                        <p class="mb-2 opacity-75">
+                                            Student Number: <?php echo htmlspecialchars($student['studentNumber']); ?>
+                                        </p>
+                                        <div class="d-flex flex-wrap gap-2">
+                                            <span class="badge bg-white bg-opacity-20">
+                                                <i class="bi bi-book me-1"></i> <?php echo $totalCourses; ?> Courses
+                                            </span>
+                                            <span class="badge bg-white bg-opacity-20">
+                                                <i class="bi bi-check-circle me-1"></i> <?php echo $passedQuizzes; ?> Quizzes Passed
+                                            </span>
+                                            <span class="badge bg-white bg-opacity-20">
+                                                <i class="bi bi-clock me-1"></i> Enrolled on <?php echo date('M d, Y', strtotime($enrolledCourses[0]['enrolledAt'] ?? 'now')); ?>
+                                            </span>
+                                        </div>
+                                    </div>
                                 </div>
+                                <span class="student-badge">
+                                    <?php echo $averageProgress; ?>% Average Progress
+                                </span>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Status Tabs -->
-            <div class="row mb-4">
-                <div class="col-12">
-                    <div class="card border-0 rounded-4 shadow-sm">
-                        <div class="card-body p-3">
-                            <div class="d-flex flex-wrap gap-2">
-                                <button class="status-tab <?php echo $activeTab == 'progress' ? 'active' : ''; ?>" onclick="window.location.href='?user_id=<?php echo $userID; ?>&tab=progress'">
-                                    <i class="bi bi-graph-up me-1"></i> Course Progress
-                                </button>
-                                <button class="status-tab <?php echo $activeTab == 'quizzes' ? 'active' : ''; ?>" onclick="window.location.href='?user_id=<?php echo $userID; ?>&tab=quizzes'">
-                                    <i class="bi bi-patch-question me-1"></i> Quiz Results
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Overall Stats -->
-            <div class="row g-3 mb-4">
-                <div class="col-md-4">
+            <!-- Overall Statistics -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-3">
                     <div class="card stat-card">
                         <div class="card-body p-4">
                             <div class="d-flex align-items-center gap-3">
                                 <div class="rounded-circle d-flex align-items-center justify-content-center" 
                                      style="width: 60px; height: 60px; background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);">
-                                    <i class="bi bi-check-circle fs-4 text-success"></i>
+                                    <i class="bi bi-check-circle-fill fs-4 text-success"></i>
                                 </div>
                                 <div>
                                     <h6 class="text-muted mb-1">Passing Rate</h6>
@@ -546,13 +632,13 @@ $activeTab = $_GET['tab'] ?? 'progress';
                     </div>
                 </div>
                 
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div class="card stat-card">
                         <div class="card-body p-4">
                             <div class="d-flex align-items-center gap-3">
                                 <div class="rounded-circle d-flex align-items-center justify-content-center" 
                                      style="width: 60px; height: 60px; background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);">
-                                    <i class="bi bi-x-circle fs-4 text-danger"></i>
+                                    <i class="bi bi-x-circle-fill fs-4 text-danger"></i>
                                 </div>
                                 <div>
                                     <h6 class="text-muted mb-1">Failing Rate</h6>
@@ -563,13 +649,13 @@ $activeTab = $_GET['tab'] ?? 'progress';
                     </div>
                 </div>
                 
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div class="card stat-card">
                         <div class="card-body p-4">
                             <div class="d-flex align-items-center gap-3">
                                 <div class="rounded-circle d-flex align-items-center justify-content-center" 
                                      style="width: 60px; height: 60px; background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);">
-                                    <i class="bi bi-clipboard-data fs-4 text-primary"></i>
+                                    <i class="bi bi-clipboard-data-fill fs-4 text-primary"></i>
                                 </div>
                                 <div>
                                     <h6 class="text-muted mb-1">Total Quizzes</h6>
@@ -579,234 +665,280 @@ $activeTab = $_GET['tab'] ?? 'progress';
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <?php if ($activeTab == 'quizzes'): ?>
-                <!-- Quiz Results Tab -->
-                <div class="row">
-                    <div class="col-12">
-                        <div class="card border-0 rounded-4 shadow-sm">
-                            <div class="card-body p-0">
-                                <div class="p-4 border-bottom">
-                                    <h5 class="fw-bold mb-0"><i class="bi bi-patch-question me-2"></i> Quiz Results</h5>
-                                    <p class="text-muted mb-0 small">Showing all quiz attempts</p>
+                
+                <div class="col-md-3">
+                    <div class="card stat-card">
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center" 
+                                     style="width: 60px; height: 60px; background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);">
+                                    <i class="bi bi-book-fill fs-4 text-warning"></i>
                                 </div>
-                                
-                                <?php if (count($quizResults) > 0): ?>
-                                    <div class="table-responsive">
-                                        <table class="table table-hover quiz-table mb-0">
-                                            <thead>
-                                                <tr>
-                                                    <th>Quiz</th>
-                                                    <th>Course</th>
-                                                    <th>Score</th>
-                                                    <th>Status</th>
-                                                    <th>Date Taken</th>
-                                                    <th>Time Spent</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="quizResultsBody">
-                                                <?php foreach ($quizResults as $result): 
-                                                    // Safely handle missing fields
-                                                    $score = $result['score'] ?? 0;
-                                                    $totalQuestions = $result['totalQuestions'] ?? 0;
-                                                    $percentage = ($totalQuestions > 0) ? round(($score / $totalQuestions) * 100) : 0;
-                                                    $status = $result['status'] ?? 'unknown';
-                                                    $submittedAt = $result['submittedAt'] ?? date('Y-m-d H:i:s');
-                                                    $timeSpent = $result['timeSpent'] ?? 0;
-                                                ?>
-                                                    <tr class="quiz-row">
-                                                        <td>
-                                                            <div class="fw-medium"><?php echo htmlspecialchars($result['quizTitle'] ?? 'Untitled Quiz'); ?></div>
-                                                        </td>
-                                                        <td>
-                                                            <div class="text-muted"><?php echo htmlspecialchars($result['courseTitle'] ?? 'Unknown Course'); ?></div>
-                                                        </td>
-                                                        <td>
-                                                            <div class="fw-bold"><?php echo $score; ?>/<?php echo $totalQuestions; ?></div>
-                                                            <div class="small text-muted"><?php echo $percentage; ?>%</div>
-                                                        </td>
-                                                        <td>
-                                                            <span class="status-badge <?php echo $status; ?>">
-                                                                <?php echo ucfirst($status); ?>
-                                                            </span>
-                                                        </td>
-                                                        <td>
-                                                            <div class="text-muted"><?php echo date('M d, Y', strtotime($submittedAt)); ?></div>
-                                                            <div class="small text-muted"><?php echo date('h:i A', strtotime($submittedAt)); ?></div>
-                                                        </td>
-                                                        <td>
-                                                            <div class="text-muted"><?php echo gmdate("H:i:s", $timeSpent); ?></div>
-                                                        </td>
-                                                    </tr>
-                                                <?php endforeach; ?>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                <?php else: ?>
-                                    <div class="text-center py-5">
-                                        <i class="bi bi-patch-question empty-state-icon mb-3"></i>
-                                        <h3 class="h5 fw-bold mb-3">No Quiz Results</h3>
-                                        <p class="text-muted mb-4">This student hasn't taken any quizzes yet.</p>
-                                    </div>
-                                <?php endif; ?>
+                                <div>
+                                    <h6 class="text-muted mb-1">Completed Courses</h6>
+                                    <h3 class="fw-bold mb-0"><?php echo $completedCourses; ?></h3>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
 
-            <?php else: ?>
-                <!-- Course Progress Tab -->
-                <div class="row" id="courseProgress">
+            <!-- Tab Navigation -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <ul class="nav nav-tabs-custom d-flex flex-wrap" id="studentTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link <?php echo $activeTab === 'progress' ? 'active' : ''; ?>" 
+                                    id="progress-tab" data-bs-toggle="tab" data-bs-target="#progress" type="button" role="tab">
+                                <i class="bi bi-graph-up me-2"></i>Course Progress
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link <?php echo $activeTab === 'quizzes' ? 'active' : ''; ?>" 
+                                    id="quizzes-tab" data-bs-toggle="tab" data-bs-target="#quizzes" type="button" role="tab">
+                                <i class="bi bi-patch-question me-2"></i>Quiz Results
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Tab Content -->
+            <div class="tab-content" id="studentTabsContent">
+                <!-- Progress Tab -->
+                <div class="tab-pane fade <?php echo $activeTab === 'progress' ? 'show active' : ''; ?>" id="progress" role="tabpanel">
                     <?php if (count($enrolledCourses) > 0): ?>
-                        <?php foreach ($enrolledCourses as $course): 
-                            $coursePassingRate = 0;
-                            $courseQuizTotal = 0;
-                            if (isset($quizResultsByCourse[$course['courseID']])) {
-                                $courseQuizData = $quizResultsByCourse[$course['courseID']];
-                                $courseQuizTotal = $courseQuizData['total'] ?? 0;
-                                $coursePassed = $courseQuizData['passed'] ?? 0;
-                                $coursePassingRate = $courseQuizTotal > 0 ? 
-                                    round(($coursePassed / $courseQuizTotal) * 100) : 0;
-                            }
-                        ?>
-                            <div class="col-12 col-md-6 col-lg-4 mb-4">
-                                <div class="card course-card">
-                                    <div class="course-img-placeholder">
-                                        <i class="bi bi-book"></i>
-                                    </div>
-                                    <div class="card-body p-4">
-                                        <div class="d-flex justify-content-between align-items-start mb-3">
-                                            <div class="flex-grow-1">
-                                                <h5 class="fw-bold mb-2 text-truncate"><?php echo htmlspecialchars($course['title']); ?></h5>
-                                                <span class="status-badge <?php echo $course['status']; ?>">
-                                                    • <?php echo ucfirst($course['status']); ?>
+                        <div class="section-card">
+                            <div class="section-title">
+                                <i class="bi bi-book"></i> Enrolled Courses (<?php echo $totalCourses; ?>)
+                            </div>
+                            
+                            <div class="row g-4">
+                                <?php foreach ($enrolledCourses as $course): 
+                                    $coursePassingRate = 0;
+                                    $courseQuizTotal = 0;
+                                    if (isset($quizResultsByCourse[$course['courseID']])) {
+                                        $courseQuizData = $quizResultsByCourse[$course['courseID']];
+                                        $courseQuizTotal = $courseQuizData['total'] ?? 0;
+                                        $coursePassed = $courseQuizData['passed'] ?? 0;
+                                        $coursePassingRate = $courseQuizTotal > 0 ? 
+                                            round(($coursePassed / $courseQuizTotal) * 100) : 0;
+                                    }
+                                ?>
+                                    <div class="col-12">
+                                        <div class="course-card">
+                                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                                <div>
+                                                    <h5 class="fw-bold mb-2"><?php echo htmlspecialchars($course['title']); ?></h5>
+                                                    <p class="text-muted small mb-0"><?php echo htmlspecialchars($course['description']); ?></p>
+                                                </div>
+                                                <span class="badge <?php 
+                                                    echo $course['status'] == 'completed' ? 'bg-success' : 
+                                                        ($course['status'] == 'active' ? 'bg-primary' : 'bg-warning');
+                                                ?>">
+                                                    <?php echo ucfirst($course['status']); ?>
                                                 </span>
                                             </div>
-                                        </div>
-                                        
-                                        <div class="mb-4">
-                                            <div class="d-flex justify-content-between mb-1">
-                                                <span class="small">Course Progress</span>
-                                                <span class="small fw-bold"><?php echo round($course['progressPercentage']); ?>%</span>
+                                            
+                                            <div class="course-progress">
+                                                <div class="course-progress-label">
+                                                    <span class="small text-muted">Course Progress</span>
+                                                    <span class="small fw-bold"><?php echo round($course['progressPercentage']); ?>%</span>
+                                                </div>
+                                                <div class="course-progress-bar">
+                                                    <div class="course-progress-fill" style="width: <?php echo $course['progressPercentage']; ?>%; 
+                                                        background: <?php echo $course['status'] == 'completed' ? '#10b981' : '#667eea'; ?>;">
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <div class="progress" style="height: 8px;">
-                                                <div class="progress-bar" style="width: <?php echo $course['progressPercentage']; ?>%; 
-                                                    background: <?php echo $course['status'] == 'completed' ? '#43a047' : '#1e88e5'; ?>;">
+                                            
+                                            <div class="course-progress mb-3">
+                                                <div class="course-progress-label">
+                                                    <span class="small text-muted">Quiz Passing Rate</span>
+                                                    <span class="small fw-bold"><?php echo $coursePassingRate; ?>%</span>
+                                                </div>
+                                                <div class="course-progress-bar">
+                                                    <div class="course-progress-fill" style="width: <?php echo $coursePassingRate; ?>%; 
+                                                        background: <?php echo $coursePassingRate >= 70 ? '#10b981' : '#dc3545'; ?>;">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="row g-2">
+                                                <div class="col-md-4">
+                                                    <div class="text-center p-2 rounded bg-light">
+                                                        <div class="small text-muted">Enrolled</div>
+                                                        <div class="fw-bold"><?php echo date('M d, Y', strtotime($course['enrolledAt'] ?? 'now')); ?></div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="text-center p-2 rounded bg-light">
+                                                        <div class="small text-muted">Quizzes Taken</div>
+                                                        <div class="fw-bold"><?php echo $courseQuizTotal; ?></div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="text-center p-2 rounded bg-light">
+                                                        <div class="small text-muted">Passing Rate</div>
+                                                        <div class="fw-bold"><?php echo $coursePassingRate; ?>%</div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
-                                        
-                                        <div class="mb-4">
-                                            <div class="d-flex justify-content-between mb-1">
-                                                <span class="small">Quiz Passing Rate</span>
-                                                <span class="small fw-bold"><?php echo $coursePassingRate; ?>%</span>
-                                            </div>
-                                            <div class="progress" style="height: 8px;">
-                                                <div class="progress-bar <?php echo $coursePassingRate >= 70 ? 'bg-success' : 'bg-danger'; ?>" 
-                                                     style="width: <?php echo $coursePassingRate; ?>%;">
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="row g-2 mb-3">
-                                            <div class="col-6">
-                                                <div class="text-center p-2 rounded bg-light">
-                                                    <div class="small text-muted">Enrolled</div>
-                                                    <div class="fw-bold"><?php echo date('M d, Y', strtotime($course['enrolledAt'] ?? 'now')); ?></div>
-                                                </div>
-                                            </div>
-                                            <div class="col-6">
-                                                <div class="text-center p-2 rounded bg-light">
-                                                    <div class="small text-muted">Quizzes Taken</div>
-                                                    <div class="fw-bold"><?php echo $courseQuizTotal; ?></div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <button class="btn btn-outline-primary w-100 rounded-pill fw-semibold" 
-                                                onclick="window.location.href='view_quizresults.php?course_id=<?php echo $course['courseID']; ?>&user_id=<?php echo $userID; ?>'">
-                                            <i class="bi bi-eye me-2"></i> View Details
-                                        </button>
                                     </div>
-                                </div>
+                                <?php endforeach; ?>
                             </div>
-                        <?php endforeach; ?>
+                        </div>
                     <?php else: ?>
-                        <div class="col-12">
-                            <div class="card border-0 rounded-4 shadow-sm">
-                                <div class="card-body text-center py-5">
-                                    <i class="bi bi-book empty-state-icon mb-3"></i>
-                                    <h3 class="h5 fw-bold mb-3">Not Enrolled in Any Courses</h3>
-                                    <p class="text-muted mb-4">This student is not enrolled in any of your courses.</p>
-                                </div>
-                            </div>
+                        <div class="empty-state">
+                            <i class="bi bi-book empty-state-icon"></i>
+                            <h3 class="h5 fw-bold mb-3">Not Enrolled in Any Courses</h3>
+                            <p class="text-muted mb-4">This student is not enrolled in any of your courses.</p>
                         </div>
                     <?php endif; ?>
                 </div>
-            <?php endif; ?>
+
+                <!-- Quizzes Tab -->
+                <div class="tab-pane fade <?php echo $activeTab === 'quizzes' ? 'show active' : ''; ?>" id="quizzes" role="tabpanel">
+                    <div class="section-card">
+                        <div class="section-title">
+                            <i class="bi bi-patch-question"></i> Quiz Results (<?php echo $totalQuizzes; ?>)
+                        </div>
+                        
+                        <?php if (count($quizResults) > 0): ?>
+                            <div class="table-responsive">
+                                <table class="table quiz-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Quiz</th>
+                                            <th>Course</th>
+                                            <th>Score</th>
+                                            <th>Status</th>
+                                            <th>Date Taken</th>
+                                            <th>Time Spent</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="quizResultsBody">
+                                        <?php foreach ($quizResults as $result): 
+                                            $score = $result['score'] ?? 0;
+                                            $totalQuestions = $result['totalQuestions'] ?? 0;
+                                            $percentage = ($totalQuestions > 0) ? round(($score / $totalQuestions) * 100) : 0;
+                                            $status = $result['status'] ?? 'unknown';
+                                            $submittedAt = $result['submittedAt'] ?? date('Y-m-d H:i:s');
+                                            $timeSpent = $result['timeSpent'] ?? 0;
+                                        ?>
+                                            <tr>
+                                                <td>
+                                                    <div class="fw-bold"><?php echo htmlspecialchars($result['quizTitle'] ?? 'Untitled Quiz'); ?></div>
+                                                </td>
+                                                <td>
+                                                    <div class="text-muted"><?php echo htmlspecialchars($result['courseTitle'] ?? 'Unknown Course'); ?></div>
+                                                </td>
+                                                <td>
+                                                    <div class="fw-bold"><?php echo $score; ?>/<?php echo $totalQuestions; ?></div>
+                                                    <div class="text-muted small"><?php echo $percentage; ?>%</div>
+                                                </td>
+                                                <td>
+                                                    <span class="badge <?php 
+                                                        echo $status == 'passed' ? 'bg-success' : 
+                                                            ($status == 'failed' ? 'bg-danger' : 'bg-warning');
+                                                    ?>">
+                                                        <?php echo ucfirst($status); ?>
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <div class="text-muted"><?php echo date('M d, Y', strtotime($submittedAt)); ?></div>
+                                                    <div class="small text-muted"><?php echo date('h:i A', strtotime($submittedAt)); ?></div>
+                                                </td>
+                                                <td>
+                                                    <div class="text-muted"><?php echo gmdate("H:i:s", $timeSpent); ?></div>
+                                                </td>
+                                                
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <?php else: ?>
+                            <div class="empty-state">
+                                <i class="bi bi-patch-question empty-state-icon"></i>
+                                <h3 class="h5 fw-bold mb-3">No Quiz Results</h3>
+                                <p class="text-muted mb-4">This student hasn't taken any quizzes yet.</p>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
         </div>
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-    // Hamburger animation
-    const hamburgerBtn = document.getElementById('hamburgerBtn');
-    const sidebar = document.getElementById('sidebar');
+        // Hamburger animation - EXACTLY matching dashboard
+        const hamburgerBtn = document.getElementById('hamburgerBtn');
+        const sidebar = document.getElementById('sidebar');
 
-    if (hamburgerBtn && sidebar) {
-        sidebar.addEventListener('show.bs.offcanvas', () => hamburgerBtn.classList.add('active'));
-        sidebar.addEventListener('hide.bs.offcanvas', () => hamburgerBtn.classList.remove('active'));
-    }
-
-    // Active nav state
-    const navLinks = document.querySelectorAll('.sidebar .nav-link');
-    const currentPage = window.location.pathname.split('/').pop();
-
-    navLinks.forEach(link => {
-        if (link.getAttribute('href') === currentPage) {
-            navLinks.forEach(l => l.classList.remove('active'));
-            link.classList.add('active');
+        if (hamburgerBtn && sidebar) {
+            sidebar.addEventListener('show.bs.offcanvas', () => hamburgerBtn.classList.add('active'));
+            sidebar.addEventListener('hide.bs.offcanvas', () => hamburgerBtn.classList.remove('active'));
         }
-        
-        // Close sidebar on mobile after click
-        link.addEventListener('click', () => {
-            if (window.innerWidth <= 992) {
-                const offcanvas = bootstrap.Offcanvas.getInstance(sidebar);
-                if (offcanvas) offcanvas.hide();
-            }
-        });
-    });
 
-    // Search functionality
-    document.getElementById('searchInput').addEventListener('input', function() {
-        const term = this.value.toLowerCase();
+        // Active nav state - EXACTLY matching dashboard
+        const navLinks = document.querySelectorAll('.sidebar .nav-link');
+        const currentPage = window.location.pathname.split('/').pop();
         
-        <?php if ($activeTab == 'quizzes'): ?>
-            // Search in quiz results table
-            document.querySelectorAll('.quiz-row').forEach(row => {
-                const text = row.textContent.toLowerCase();
-                row.style.display = text.includes(term) ? '' : 'none';
-            });
-        <?php else: ?>
-            // Search in course progress
-            document.querySelectorAll('.course-card').forEach(card => {
-                const title = card.querySelector('.fw-bold').textContent.toLowerCase();
-                const container = card.closest('.col-12.col-md-6.col-lg-4');
-                if (title.includes(term)) {
-                    container.style.display = '';
-                } else {
-                    container.style.display = 'none';
+        navLinks.forEach(link => {
+            if (link.getAttribute('href') === currentPage) {
+                navLinks.forEach(l => l.classList.remove('active'));
+                link.classList.add('active');
+            }
+            
+            // Close sidebar
+            link.addEventListener('click', () => {
+                if (window.innerWidth <= 992) {
+                    const offcanvas = bootstrap.Offcanvas.getInstance(sidebar);
+                    if (offcanvas) offcanvas.hide();
                 }
             });
-        <?php endif; ?>
-    });
+        });
 
-    // Initialize tooltips
-    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
+        // Initialize Bootstrap tabs with URL support
+        const studentTabs = document.querySelectorAll('#studentTabs button[data-bs-toggle="tab"]');
+        studentTabs.forEach(tab => {
+            tab.addEventListener('shown.bs.tab', event => {
+                const activeTab = event.target.getAttribute('id').replace('-tab', '');
+                const url = new URL(window.location);
+                url.searchParams.set('tab', activeTab);
+                window.history.pushState({}, '', url);
+            });
+        });
+
+        // Restore active tab from URL on page load
+        const activeTabFromUrl = '<?php echo $activeTab; ?>';
+        if (activeTabFromUrl) {
+            const tabElement = document.getElementById(`${activeTabFromUrl}-tab`);
+            if (tabElement) {
+                new bootstrap.Tab(tabElement).show();
+            }
+        }
+
+        // Search functionality for quiz results
+        const searchInput = document.getElementById('searchInput');
+        const quizResultsBody = document.getElementById('quizResultsBody');
+        
+        if (searchInput && quizResultsBody) {
+            searchInput.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                const rows = quizResultsBody.querySelectorAll('tr');
+                
+                rows.forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    row.style.display = text.includes(searchTerm) ? '' : 'none';
+                });
+            });
+        }
     </script>
 </body>
 </html>

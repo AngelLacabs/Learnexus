@@ -25,26 +25,10 @@ if (!$quiz) {
     exit();
 }
 
-// Get course statistics for dashboard
-$courseID = $quiz['courseID'];
-$stmt = $conn->prepare("SELECT COUNT(*) as count FROM enrollments WHERE courseID = ?");
-$stmt->execute([$courseID]);
-$enrolledStudents = $stmt->fetch()['count'];
-
-$stmt = $conn->prepare("SELECT COUNT(*) as count FROM lessons WHERE courseID = ?");
-$stmt->execute([$courseID]);
-$totalLessons = $stmt->fetch()['count'];
-
-$stmt = $conn->prepare("SELECT COUNT(*) as count FROM enrollments WHERE courseID = ? AND (status = 'completed' OR completedAt IS NOT NULL)");
-$stmt->execute([$courseID]);
-$completedStudents = (int)$stmt->fetch()['count'];
-
-$totalQuizQuestions = 0; // Will be calculated later
-
-// Get instructor data including avatar
-$stmt = $conn->prepare("SELECT * FROM users WHERE userID = ?");
+// Get user avatar
+$stmt = $conn->prepare("SELECT avatar FROM users WHERE userID = ?");
 $stmt->execute([$teacherID]);
-$user = $stmt->fetch();
+$userAvatar = $stmt->fetchColumn();
 
 // Handle adding a question
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_question'])) {
@@ -55,14 +39,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_question'])) {
         'C' => trim($_POST['optionC']),
         'D' => trim($_POST['optionD']),
     ];
-    $correctOption = $_POST['correct_option']; // This will be 'A', 'B', 'C', or 'D'
+    $correctOption = $_POST['correct_option'];
 
     if (!in_array($correctOption, ['A','B','C','D'])) {
         die('Invalid correct option.');
     }
 
     // Convert letter to number (A=0, B=1, C=2, D=3) for storage
-    $correctOptionNumber = ord($correctOption) - ord('A'); // A=0, B=1, C=2, D=3
+    $correctOptionNumber = ord($correctOption) - ord('A');
 
     $stmt = $conn->prepare("
         INSERT INTO quizquestions 
@@ -76,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_question'])) {
         $options['B'],
         $options['C'],
         $options['D'],
-        $correctOptionNumber  // Store as number: 0, 1, 2, or 3
+        $correctOptionNumber
     ]);
 
     $_SESSION['success'] = "Question added successfully!";
@@ -146,7 +130,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_quiz'])) {
         
         // Redirect to manage course page
         $_SESSION['success'] = "Quiz deleted successfully!";
-        header("Location: manage_course.php?id=$courseID&tab=quizzes");
+        header("Location: manage_course.php?id={$quiz['courseID']}&tab=quizzes");
         exit();
         
     } catch (Exception $e) {
@@ -163,7 +147,7 @@ $totalQuizQuestions = count($questions);
 
 // Helper function to convert number to letter
 function numberToLetter($num) {
-    return chr(65 + intval($num)); // 0=A, 1=B, 2=C, 3=D
+    return chr(65 + intval($num));
 }
 
 // Check for success message from session
@@ -177,7 +161,7 @@ if (isset($_SESSION['success'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Quiz - <?= htmlspecialchars($quiz['title']) ?> - Learnexus</title>
+    <title><?php echo htmlspecialchars($quiz['title']); ?> - Edit Quiz - Learnexus</title>
     <link rel="icon" type="image/png" href="../images/Learnexus.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
@@ -192,7 +176,7 @@ if (isset($_SESSION['success'])) {
             min-height: 100vh;
         }
 
-        /* Sidebar - Matching courses.php design */
+        /* Sidebar - EXACTLY matching dashboard */
         .sidebar {
             background: linear-gradient(180deg, #e8f0fe 0%, #f0f4ff 50%, #f8f9fa 100%);
             box-shadow: 4px 0 20px rgba(0,0,0,0.08);
@@ -207,7 +191,7 @@ if (isset($_SESSION['success'])) {
             background-clip: text;
         }
 
-        /* Navigation - Matching courses.php design */
+        /* Navigation - EXACTLY matching dashboard */
         .nav-link {
             border-radius: 12px;
             transition: all 0.2s ease;
@@ -241,7 +225,7 @@ if (isset($_SESSION['success'])) {
             display: none;
         }
 
-        /* Hamburger - Matching courses.php design */
+        /* Hamburger - EXACTLY matching dashboard */
         .hamburger-btn {
             width: 50px;
             height: 50px;
@@ -273,14 +257,24 @@ if (isset($_SESSION['success'])) {
             transform: translateY(-8px) rotate(-45deg);
         }
 
-        /* Main Content Margin */
+        /* Main Content Margin - EXACTLY matching dashboard */
         @media (min-width: 992px) {
             .main-content {
                 margin-left: var(--sidebar-width);
             }
         }
 
-        /* Stats Cards - Matching courses.php design */
+        /* Card Hover Effects */
+        .card-hover {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12) !important;
+        }
+
+        /* Stats Cards */
         .stat-card {
             border-radius: 16px;
             border: none;
@@ -293,85 +287,26 @@ if (isset($_SESSION['success'])) {
             box-shadow: 0 8px 24px rgba(0,0,0,0.12);
         }
 
-        /* Quiz Header - New design matching courses.php */
-        .quiz-header-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-radius: 16px;
-            border: none;
-            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
-            margin-bottom: 30px;
-        }
-
-        .quiz-badge {
-            background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(10px);
-            color: white;
-            font-weight: 500;
-            padding: 6px 16px;
-            border-radius: 20px;
-            font-size: 0.875rem;
-        }
-
-        /* Form Cards - Matching courses.php design */
-        .form-card {
-            border-radius: 16px;
-            border: none;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            transition: transform 0.2s;
-        }
-
-        .form-card:hover {
-            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-        }
-
-        /* Section Cards */
-        .section-card {
-            background: #f8f9fa;
-            border-radius: 16px;
-            padding: 24px;
-            margin-bottom: 20px;
-            border: 1px solid #eaeaea;
-        }
-
-        .section-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: #2d3436;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
         /* Form Styles */
-        .form-label {
-            font-weight: 500;
-            color: #374151;
-            margin-bottom: 8px;
-        }
-
-        .form-control {
+        .form-control, .form-select {
             padding: 12px 16px;
             border: 1px solid #e5e7eb;
             border-radius: 12px;
             transition: border-color 0.2s;
-            width: 100%;
         }
 
-        .form-control:focus {
-            outline: none;
+        .form-control:focus, .form-select:focus {
             border-color: #667eea;
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
-        /* Buttons - Matching courses.php design */
+        /* Buttons */
         .btn-gradient {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border: none;
             color: white;
             border-radius: 12px;
-            padding: 10px 24px;
+            padding: 12px 24px;
             font-weight: 500;
             transition: all 0.2s;
         }
@@ -388,7 +323,7 @@ if (isset($_SESSION['success'])) {
             border: none;
             color: white;
             border-radius: 12px;
-            padding: 10px 24px;
+            padding: 12px 24px;
             font-weight: 500;
             transition: all 0.2s;
         }
@@ -397,6 +332,7 @@ if (isset($_SESSION['success'])) {
             background: linear-gradient(135deg, #0da271 0%, #047857 100%);
             color: white;
             transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
         }
 
         .btn-danger {
@@ -404,7 +340,7 @@ if (isset($_SESSION['success'])) {
             border: none;
             color: white;
             border-radius: 12px;
-            padding: 10px 24px;
+            padding: 12px 24px;
             font-weight: 500;
             transition: all 0.2s;
         }
@@ -468,17 +404,6 @@ if (isset($_SESSION['success'])) {
             transform: translateY(-1px);
         }
 
-        .btn-outline-info {
-            border-color: #17a2b8;
-            color: #17a2b8;
-        }
-
-        .btn-outline-info:hover {
-            background: #17a2b8;
-            color: white;
-            transform: translateY(-1px);
-        }
-
         /* Badges */
         .badge {
             padding: 6px 12px;
@@ -493,10 +418,6 @@ if (isset($_SESSION['success'])) {
 
         .bg-primary {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-
-        .bg-warning {
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
         }
 
         /* Danger Zone */
@@ -533,51 +454,35 @@ if (isset($_SESSION['success'])) {
             margin-bottom: 16px;
         }
 
-        /* Search Input - Matching courses.php */
-        .search-input {
-            border: 1px solid #dee2e6;
-            background: rgba(255, 255, 255, 0.9);
-        }
-
-        .search-input:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25);
-        }
-
-        .search-icon {
-            color: #6c757d;
-        }
-
-        /* User Avatar - Matching courses.php */
-        .user-avatar {
-            width: 45px;
-            height: 45px;
-            min-width: 45px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-        }
-
-        /* Back Button */
-        .btn-back {
+        /* Section Cards */
+        .section-card {
             background: white;
-            color: #666;
-            border: 1px solid #e5e7eb;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-weight: 500;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
+            border-radius: 16px;
+            padding: 24px;
             margin-bottom: 20px;
-            text-decoration: none;
-            transition: all 0.2s;
+            border: 1px solid #eaeaea;
             box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
 
-        .btn-back:hover {
-            background: #f8f9fa;
-            color: #374151;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2d3436;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Quiz Header */
+        .quiz-badge {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            color: white;
+            font-weight: 500;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.875rem;
         }
 
         /* Option Items */
@@ -586,7 +491,7 @@ if (isset($_SESSION['success'])) {
             align-items: center;
             gap: 10px;
             margin-bottom: 10px;
-            padding: 10px;
+            padding: 12px;
             background: #f8f9fa;
             border-radius: 8px;
             border: 1px solid #eaeaea;
@@ -598,8 +503,8 @@ if (isset($_SESSION['success'])) {
         }
 
         .option-number {
-            width: 30px;
-            height: 30px;
+            width: 32px;
+            height: 32px;
             background: #667eea;
             color: white;
             border-radius: 50%;
@@ -608,16 +513,25 @@ if (isset($_SESSION['success'])) {
             justify-content: center;
             font-weight: bold;
             font-size: 14px;
+            flex-shrink: 0;
         }
 
         .option-text {
             flex: 1;
             margin: 0;
+            font-size: 15px;
+        }
+
+        /* Form Labels */
+        .form-label {
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 8px;
         }
     </style>
 </head>
 <body>
-    <!-- Hamburger Button (Mobile) -->
+    <!-- Hamburger Button (Mobile) - EXACTLY matching dashboard -->
     <div class="position-fixed top-0 start-0 p-3 d-lg-none" style="z-index: 1100;">
         <button class="hamburger-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" id="hamburgerBtn">
             <div class="hamburger-icon d-flex flex-column align-items-center justify-content-center">
@@ -628,7 +542,7 @@ if (isset($_SESSION['success'])) {
         </button>
     </div>
 
-    <!-- Sidebar -->
+    <!-- Sidebar - EXACTLY matching dashboard -->
     <aside class="sidebar offcanvas-lg offcanvas-start position-fixed top-0 start-0 h-100" style="width: var(--sidebar-width);" id="sidebar">
         <div class="offcanvas-header d-lg-none border-bottom">
             <h5 class="offcanvas-title sidebar-brand">LEARNEXUS</h5>
@@ -643,6 +557,9 @@ if (isset($_SESSION['success'])) {
                 </a>
                 <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium" href="courses.php">
                     <i class="bi bi-book fs-5"></i><span>My Courses</span>
+                </a>
+                <a class="nav-link active d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium" href="quizzes.php">
+                    <i class="bi bi-patch-question fs-5"></i><span>Quizzes</span>
                 </a>
                 <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium" href="enrollees.php">
                     <i class="bi bi-people fs-5"></i><span>Enrollees</span>
@@ -662,23 +579,28 @@ if (isset($_SESSION['success'])) {
 
     <!-- Main Content -->
     <main class="main-content p-3 p-lg-4">
-        <div class="container-fluid">
-            <!-- Header with Search and Profile -->
+        <div class="container-fluid" style="max-width: 1200px;">
+            <!-- Breadcrumb & User -->
             <div class="row mb-4">
                 <div class="col-12">
                     <div class="card border-0 rounded-4 shadow-sm">
-                        <div class="card-body p-3 d-flex justify-content-between align-items-center gap-3">
-                            <a href="quizzes.php?id=<?php echo $courseID; ?>&tab=quizzes" class="btn-back d-flex align-items-center gap-2 text-decoration-none">
-                                <i class="bi bi-arrow-left"></i> Back to Quizzes
-                            </a>
+                        <div class="card-body p-3 d-flex justify-content-between align-items-center">
+                            <nav aria-label="breadcrumb">
+                                <ol class="breadcrumb mb-0">
+                                    <li class="breadcrumb-item"><a href="courses.php" class="text-decoration-none">My Courses</a></li>
+                                    <li class="breadcrumb-item"><a href="quizzes.php?id=<?php echo $quiz['courseID']; ?>&tab=quizzes" class="text-decoration-none"><?php echo htmlspecialchars($quiz['courseTitle']); ?></a></li>
+                                    <li class="breadcrumb-item active">Edit Quiz</li>
+                                </ol>
+                            </nav>
                             
                             <div class="d-flex align-items-center gap-3" onclick="window.location.href='settings.php'" role="button" style="flex-shrink: 0;">
                                 <span class="fw-semibold d-none d-sm-inline text-nowrap">
                                     <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>
                                 </span>
-                                <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold user-avatar">
-                                    <?php if (!empty($user['avatar']) && file_exists($user['avatar'])): ?>
-                                        <img src="<?php echo htmlspecialchars($user['avatar']); ?>" alt="Avatar" 
+                                <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold" 
+                                     style="width: 45px; height: 45px; min-width: 45px; background: linear-gradient(135deg, #667eea, #764ba2);">
+                                    <?php if (!empty($userAvatar) && file_exists($userAvatar)): ?>
+                                        <img src="<?php echo htmlspecialchars($userAvatar); ?>" alt="Avatar" 
                                              class="w-100 h-100 rounded-circle object-fit-cover">
                                     <?php else: ?>
                                         <?php echo strtoupper(substr($_SESSION['first_name'], 0, 1)); ?>
@@ -690,18 +612,10 @@ if (isset($_SESSION['success'])) {
                 </div>
             </div>
 
-            <!-- Page Title -->
-            <div class="row mb-4">
-                <div class="col-12">
-                    <h1 class="h3 fw-bold"><i class="bi bi-pencil me-2"></i>Edit Quiz</h1>
-                    <p class="text-muted">Edit quiz details and manage questions</p>
-                </div>
-            </div>
-
             <!-- Quiz Header -->
             <div class="row mb-4">
                 <div class="col-12">
-                    <div class="card quiz-header-card">
+                    <div class="card border-0 rounded-4 shadow-sm card-hover" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
                         <div class="card-body p-4">
                             <div class="d-flex justify-content-between align-items-start mb-3">
                                 <div>
@@ -709,21 +623,22 @@ if (isset($_SESSION['success'])) {
                                     <p class="mb-0 opacity-75"><?php echo htmlspecialchars($quiz['description']); ?></p>
                                 </div>
                                 <span class="quiz-badge">
-                                    <?php echo count($questions); ?> Questions
+                                    <?php echo $totalQuizQuestions; ?> Questions
                                 </span>
                             </div>
-                            <div class="d-flex gap-4 text-white opacity-75">
-                                <div>
-                                    <i class="bi bi-book-fill me-1"></i>
-                                    <?php echo htmlspecialchars($quiz['courseTitle']); ?>
+                            
+                            <div class="d-flex flex-wrap gap-4 opacity-75">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi bi-book"></i>
+                                    <span><?php echo htmlspecialchars($quiz['courseTitle']); ?></span>
                                 </div>
-                                <div>
-                                    <i class="bi bi-check-circle-fill me-1"></i>
-                                    Passing: <?php echo isset($quiz['passingScore']) ? $quiz['passingScore'] . '%' : 'Not Set'; ?>
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi bi-check-circle"></i>
+                                    <span>Passing: <?php echo isset($quiz['passingScore']) ? $quiz['passingScore'] . '%' : 'Not Set'; ?></span>
                                 </div>
-                                <div>
-                                    <i class="bi bi-clock-fill me-1"></i>
-                                    Time: <?php echo isset($quiz['timeLimitMinutes']) && $quiz['timeLimitMinutes'] > 0 ? $quiz['timeLimitMinutes'] . 'm' : 'Unlimited'; ?>
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi bi-clock"></i>
+                                    <span>Time: <?php echo isset($quiz['timeLimitMinutes']) && $quiz['timeLimitMinutes'] > 0 ? $quiz['timeLimitMinutes'] . 'm' : 'Unlimited'; ?></span>
                                 </div>
                             </div>
                         </div>
@@ -731,213 +646,278 @@ if (isset($_SESSION['success'])) {
                 </div>
             </div>
 
-            <!-- Add New Question Form -->
-            <div class="form-card p-4 mb-4">
-                <div class="section-title">
-                    <i class="bi bi-plus-circle"></i> Add New Question
-                </div>
-                
-                <form method="POST">
-                    <input type="hidden" name="add_question" value="1">
-                    
-                    <div class="mb-4">
-                        <label class="form-label">Question Text</label>
-                        <textarea name="question_text" class="form-control" rows="3" placeholder="Enter your question here..." required></textarea>
-                    </div>
-                    
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <label class="form-label">Option A</label>
-                            <input type="text" name="optionA" class="form-control" placeholder="Enter option A" required>
+            <!-- Two Column Layout -->
+            <div class="row g-4">
+                <!-- Left Column: Add Question & Questions List -->
+                <div class="col-12 col-lg-8">
+                    <!-- Add New Question Form -->
+                    <div class="section-card mb-4">
+                        <div class="section-title">
+                            <i class="bi bi-plus-circle"></i> Add New Question
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Option B</label>
-                            <input type="text" name="optionB" class="form-control" placeholder="Enter option B" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Option C</label>
-                            <input type="text" name="optionC" class="form-control" placeholder="Enter option C" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Option D</label>
-                            <input type="text" name="optionD" class="form-control" placeholder="Enter option D" required>
-                        </div>
-                    </div>
-                    
-                    <div class="mb-4">
-                        <label class="form-label">Correct Answer</label>
-                        <select name="correct_option" class="form-control" required>
-                            <option value="">Select correct answer</option>
-                            <option value="A">Option A</option>
-                            <option value="B">Option B</option>
-                            <option value="C">Option C</option>
-                            <option value="D">Option D</option>
-                        </select>
-                    </div>
-                    
-                    <button type="submit" class="btn-success">
-                        <i class="bi bi-plus-lg me-2"></i> Add Question
-                    </button>
-                </form>
-            </div>
-
-            <!-- Questions Section -->
-            <div class="form-card p-4 mb-4">
-                <div class="section-title">
-                    <i class="bi bi-list"></i> Quiz Questions (<?php echo count($questions); ?>)
-                </div>
-                
-                <?php if (count($questions) > 0): ?>
-                    <?php foreach ($questions as $index => $question): ?>
-                        <div class="question-item">
-                            <div class="d-flex justify-content-between align-items-start mb-3">
-                                <div>
-                                    <h5 class="fw-bold mb-1">Question <?php echo $index + 1; ?></h5>
-                                    <p class="mb-2"><?php echo htmlspecialchars($question['question']); ?></p>
+                        
+                        <form method="POST">
+                            <input type="hidden" name="add_question" value="1">
+                            
+                            <div class="mb-4">
+                                <label class="form-label">Question Text</label>
+                                <textarea name="question_text" class="form-control" rows="3" placeholder="Enter your question here..." required></textarea>
+                            </div>
+                            
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <label class="form-label">Option A</label>
+                                    <input type="text" name="optionA" class="form-control" placeholder="Enter option A" required>
                                 </div>
-                                <div class="d-flex gap-2">
-                                    <form method="POST" style="display: inline;">
-                                        <input type="hidden" name="delete_question" value="1">
-                                        <input type="hidden" name="question_id" value="<?php echo $question['questionID']; ?>">
-                                        <button type="button" class="btn-action btn-outline-danger" onclick="confirmDeleteQuestion(this)">
-                                            <i class="bi bi-trash"></i> Delete
-                                        </button>
-                                    </form>
+                                <div class="col-md-6">
+                                    <label class="form-label">Option B</label>
+                                    <input type="text" name="optionB" class="form-control" placeholder="Enter option B" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Option C</label>
+                                    <input type="text" name="optionC" class="form-control" placeholder="Enter option C" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Option D</label>
+                                    <input type="text" name="optionD" class="form-control" placeholder="Enter option D" required>
                                 </div>
                             </div>
                             
-                            <div class="options-list">
-                                <?php 
-                                $correctNum = intval($question['correct_option']);
-                                $options = [
-                                    $question['option1'],
-                                    $question['option2'],
-                                    $question['option3'],
-                                    $question['option4']
-                                ];
-                                ?>
-                                
-                                <?php foreach ($options as $optIndex => $optText): ?>
-                                    <div class="option-item <?php echo $optIndex === $correctNum ? 'correct' : ''; ?>">
-                                        <div class="option-number"><?php echo numberToLetter($optIndex); ?></div>
-                                        <p class="option-text mb-0"><?php echo htmlspecialchars($optText); ?></p>
-                                        <?php if ($optIndex === $correctNum): ?>
-                                            <span class="badge bg-success ms-2">Correct</span>
-                                        <?php endif; ?>
-                                    </div>
-                                <?php endforeach; ?>
+                            <div class="mb-4">
+                                <label class="form-label">Correct Answer</label>
+                                <select name="correct_option" class="form-control" required>
+                                    <option value="">Select correct answer</option>
+                                    <option value="A">Option A</option>
+                                    <option value="B">Option B</option>
+                                    <option value="C">Option C</option>
+                                    <option value="D">Option D</option>
+                                </select>
                             </div>
-                        </div>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <div class="empty-state">
-                        <i class="bi bi-patch-question empty-state-icon"></i>
-                        <h3 class="h5 fw-bold mb-3">No Questions Yet</h3>
-                        <p class="text-muted mb-4">Add questions to your quiz to get started!</p>
+                            
+                            <button type="submit" class="btn-success">
+                                <i class="bi bi-plus-lg me-2"></i> Add Question
+                            </button>
+                        </form>
                     </div>
-                <?php endif; ?>
-            </div>
 
-            <!-- Danger Zone -->
-            <div class="form-card p-4">
-                <div class="danger-zone">
-                    <div class="danger-zone-title">
-                        <i class="bi bi-exclamation-triangle"></i> Danger Zone
+                    <!-- Questions Section -->
+                    <div class="section-card">
+                        <div class="section-title">
+                            <i class="bi bi-list"></i> Quiz Questions (<?php echo $totalQuizQuestions; ?>)
+                        </div>
+                        
+                        <?php if (count($questions) > 0): ?>
+                            <?php foreach ($questions as $index => $question): ?>
+                                <div class="question-item">
+                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <div>
+                                            <h5 class="fw-bold mb-1">Question <?php echo $index + 1; ?></h5>
+                                            <p class="mb-2"><?php echo htmlspecialchars($question['question']); ?></p>
+                                        </div>
+                                        <div class="d-flex gap-2">
+                                            <form method="POST" style="display: inline;">
+                                                <input type="hidden" name="delete_question" value="1">
+                                                <input type="hidden" name="question_id" value="<?php echo $question['questionID']; ?>">
+                                                <button type="button" class="btn btn-outline-danger btn-sm" onclick="confirmDeleteQuestion(this)">
+                                                    <i class="bi bi-trash me-1"></i> Delete
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="options-list">
+                                        <?php 
+                                        $correctNum = intval($question['correct_option']);
+                                        $options = [
+                                            $question['option1'],
+                                            $question['option2'],
+                                            $question['option3'],
+                                            $question['option4']
+                                        ];
+                                        ?>
+                                        
+                                        <?php foreach ($options as $optIndex => $optText): ?>
+                                            <div class="option-item <?php echo $optIndex === $correctNum ? 'correct' : ''; ?>">
+                                                <div class="option-number"><?php echo numberToLetter($optIndex); ?></div>
+                                                <p class="option-text mb-0"><?php echo htmlspecialchars($optText); ?></p>
+                                                <?php if ($optIndex === $correctNum): ?>
+                                                    <span class="badge bg-success ms-2">Correct</span>
+                                                <?php endif; ?>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <div class="empty-state">
+                                <i class="bi bi-patch-question empty-state-icon"></i>
+                                <h3 class="h5 fw-bold mb-3">No Questions Yet</h3>
+                                <p class="text-muted mb-4">Add questions to your quiz to get started!</p>
+                            </div>
+                        <?php endif; ?>
                     </div>
-                    <p class="text-muted mb-3">This action cannot be undone! All quiz data, questions, and student results will be permanently deleted.</p>
-                    
-                    <form method="POST" id="deleteQuizForm">
-                        <input type="hidden" name="delete_quiz" value="1">
-                        <button type="button" class="btn-danger" onclick="confirmDeleteQuiz()">
-                            <i class="bi bi-trash me-2"></i> Delete Quiz
-                        </button>
-                    </form>
+                </div>
+
+                <!-- Right Column: Quiz Settings & Danger Zone -->
+                <div class="col-12 col-lg-4">
+                    <!-- Quiz Settings -->
+                    <div class="section-card mb-4">
+                        <div class="section-title">
+                            <i class="bi bi-gear"></i> Quiz Settings
+                        </div>
+                        
+                        <form method="POST">
+                            <input type="hidden" name="update_quiz" value="1">
+                            
+                            <div class="mb-4">
+                                <label class="form-label">Quiz Title</label>
+                                <input type="text" name="title" class="form-control" value="<?php echo htmlspecialchars($quiz['title']); ?>" required>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label class="form-label">Description</label>
+                                <textarea name="description" class="form-control" rows="3"><?php echo htmlspecialchars($quiz['description']); ?></textarea>
+                            </div>
+                            
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <label class="form-label">Passing Score (%)</label>
+                                    <input type="number" name="passingScore" class="form-control" min="0" max="100" value="<?php echo isset($quiz['passingScore']) ? $quiz['passingScore'] : 70; ?>" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Time Limit (minutes)</label>
+                                    <input type="number" name="timeLimitMinutes" class="form-control" min="0" value="<?php echo isset($quiz['timeLimitMinutes']) ? $quiz['timeLimitMinutes'] : 0; ?>">
+                                    <small class="text-muted">Set to 0 for no time limit</small>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn-gradient w-100">
+                                <i class="bi bi-save me-2"></i> Save Settings
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Danger Zone -->
+                    <div class="section-card">
+                        <div class="danger-zone">
+                            <div class="danger-zone-title">
+                                <i class="bi bi-exclamation-triangle"></i> Danger Zone
+                            </div>
+                            <p class="text-muted mb-3">This action cannot be undone! All quiz data, questions, and student results will be permanently deleted.</p>
+                            
+                            <form method="POST" id="deleteQuizForm">
+                                <input type="hidden" name="delete_quiz" value="1">
+                                <button type="button" class="btn-danger w-100" onclick="confirmDeleteQuiz()">
+                                    <i class="bi bi-trash me-2"></i> Delete Quiz
+                                </button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </main>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-// Hamburger animation
-const hamburgerBtn = document.getElementById('hamburgerBtn');
-const sidebar = document.getElementById('sidebar');
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Hamburger animation - EXACTLY matching dashboard
+        const hamburgerBtn = document.getElementById('hamburgerBtn');
+        const sidebar = document.getElementById('sidebar');
 
-if (hamburgerBtn && sidebar) {
-    sidebar.addEventListener('show.bs.offcanvas', () => hamburgerBtn.classList.add('active'));
-    sidebar.addEventListener('hide.bs.offcanvas', () => hamburgerBtn.classList.remove('active'));
-}
-
-<?php if (isset($success)): ?>
-Swal.fire({
-    icon: 'success',
-    title: 'Success!',
-    text: '<?php echo addslashes($success); ?>',
-    timer: 3000,
-    showConfirmButton: true
-});
-<?php endif; ?>
-
-<?php if (isset($error)): ?>
-Swal.fire({
-    icon: 'error',
-    title: 'Error!',
-    text: '<?php echo addslashes($error); ?>',
-    showConfirmButton: true
-});
-<?php endif; ?>
-
-function confirmDeleteQuestion(button) {
-    Swal.fire({
-        title: 'Delete Question?',
-        text: "This action cannot be undone!",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Yes, delete it!'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            button.closest('form').submit();
+        if (hamburgerBtn && sidebar) {
+            sidebar.addEventListener('show.bs.offcanvas', () => hamburgerBtn.classList.add('active'));
+            sidebar.addEventListener('hide.bs.offcanvas', () => hamburgerBtn.classList.remove('active'));
         }
-    });
-}
 
-function confirmDeleteQuiz() {
-    Swal.fire({
-        title: 'Delete Quiz?',
-        html: `
-            <div style="text-align: left;">
-                <p>This action will permanently delete:</p>
-                <ul>
-                    <li>The quiz: <strong><?php echo htmlspecialchars($quiz['title']); ?></strong></li>
-                    <li>All questions (<?php echo count($questions); ?> questions)</li>
-                    <li>All student results</li>
-                </ul>
-                <p class="text-danger"><strong>This action cannot be undone!</strong></p>
-                <p>Type <strong>"DELETE"</strong> to confirm:</p>
-                <input type="text" id="confirmDeleteInput" class="swal2-input" placeholder="Type DELETE here">
-            </div>
-        `,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Yes, delete everything',
-        cancelButtonText: 'Cancel',
-        preConfirm: () => {
-            const confirmValue = document.getElementById('confirmDeleteInput').value;
-            if (confirmValue !== 'DELETE') {
-                Swal.showValidationMessage('You must type "DELETE" to confirm');
+        // Active nav state - EXACTLY matching dashboard
+        const navLinks = document.querySelectorAll('.sidebar .nav-link');
+        const currentPage = window.location.pathname.split('/').pop();
+        
+        navLinks.forEach(link => {
+            if (link.getAttribute('href') === currentPage) {
+                navLinks.forEach(l => l.classList.remove('active'));
+                link.classList.add('active');
             }
-            return confirmValue === 'DELETE';
+            
+            // Close sidebar
+            link.addEventListener('click', () => {
+                if (window.innerWidth <= 992) {
+                    const offcanvas = bootstrap.Offcanvas.getInstance(sidebar);
+                    if (offcanvas) offcanvas.hide();
+                }
+            });
+        });
+
+        <?php if (isset($success)): ?>
+        Swal.fire({
+            icon: 'success',
+            title: 'Success!',
+            text: '<?php echo addslashes($success); ?>',
+            timer: 3000,
+            showConfirmButton: true
+        });
+        <?php endif; ?>
+
+        <?php if (isset($error)): ?>
+        Swal.fire({
+            icon: 'error',
+            title: 'Error!',
+            text: '<?php echo addslashes($error); ?>',
+            showConfirmButton: true
+        });
+        <?php endif; ?>
+
+        function confirmDeleteQuestion(button) {
+            Swal.fire({
+                title: 'Delete Question?',
+                text: "This action cannot be undone!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    button.closest('form').submit();
+                }
+            });
         }
-    }).then((result) => {
-        if (result.isConfirmed) {
-            document.getElementById('deleteQuizForm').submit();
+
+        function confirmDeleteQuiz() {
+            Swal.fire({
+                title: 'Delete Quiz?',
+                html: `
+                    <div style="text-align: left;">
+                        <p>This action will permanently delete:</p>
+                        <ul>
+                            <li>The quiz: <strong><?php echo htmlspecialchars($quiz['title']); ?></strong></li>
+                            <li>All questions (<?php echo $totalQuizQuestions; ?> questions)</li>
+                            <li>All student results</li>
+                        </ul>
+                        <p class="text-danger"><strong>This action cannot be undone!</strong></p>
+                        <p>Type <strong>"DELETE"</strong> to confirm:</p>
+                        <input type="text" id="confirmDeleteInput" class="swal2-input" placeholder="Type DELETE here">
+                    </div>
+                `,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete everything',
+                cancelButtonText: 'Cancel',
+                preConfirm: () => {
+                    const confirmValue = document.getElementById('confirmDeleteInput').value;
+                    if (confirmValue !== 'DELETE') {
+                        Swal.showValidationMessage('You must type "DELETE" to confirm');
+                    }
+                    return confirmValue === 'DELETE';
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('deleteQuizForm').submit();
+                }
+            });
         }
-    });
-}
-</script>
+    </script>
 </body>
 </html>
