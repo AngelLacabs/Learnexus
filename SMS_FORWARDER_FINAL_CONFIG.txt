@@ -1,0 +1,150 @@
+═══════════════════════════════════════════════════════════════
+   SMS FORWARDER - FINAL CONFIGURATION (UPDATED)
+═══════════════════════════════════════════════════════════════
+
+✅ TESTED AT WORKING - Complete setup para sa two-way SMS system
+
+═══════════════════════════════════════════════════════════════
+   SMS FORWARDER APP CONFIGURATION
+═══════════════════════════════════════════════════════════════
+
+1. ROUTING PARAMETERS
+   ──────────────────
+   Sender (number or text): *
+   
+   ⚠️  IMPORTANT: Gamitin ang asterisk (*) para ma-catch ang 
+       LAHAT ng incoming SMS, hindi lang mula sa specific number.
+   
+   Hint: "Use * symbol to catch any SMS"
+
+2. WEBHOOK URL
+   ────────────
+   http://192.168.18.34/Learnexus/sms_feedback_webhook.php
+   
+   ⚠️  IMPORTANT: 
+   - Gamitin ang HTTP (hindi HTTPS)
+   - Dapat nasa parehong WiFi network ang phone at computer
+   - Kung hindi same network, gamitin ang ngrok
+
+3. JSON PAYLOAD TEMPLATE
+   ──────────────────────
+   {"from":"%from%","text":"%text%","sim":"%sim%"}
+   
+   ⚠️  EXACT format - walang extra spaces o characters
+
+4. HEADERS
+   ────────
+   Header 1:
+     Name:  User-Agent
+     Value: SMS Forwarder App
+   
+   Header 2:
+     Name:  Content-Type
+     Value: application/json
+
+5. ADVANCED PARAMETERS
+   ────────────────────
+   SIM Slot:        any
+   Number Retries:  100
+   Chunked Mode:    ON (checked/enabled)
+   Ignore SSL/TLS certificate errors: OFF (unchecked)
+
+═══════════════════════════════════════════════════════════════
+   QUICK COPY-PASTE PARA SA SMS FORWARDER APP
+═══════════════════════════════════════════════════════════════
+
+Routing Parameter (Sender):
+*
+
+Webhook URL:
+http://192.168.18.34/Learnexus/sms_feedback_webhook.php
+
+JSON Payload Template:
+{"from":"%from%","text":"%text%","sim":"%sim%"}
+
+Headers:
+User-Agent: SMS Forwarder App
+Content-Type: application/json
+
+Advanced Settings:
+- SIM Slot: any
+- Number Retries: 100
+- Chunked Mode: ON
+- Ignore SSL/TLS: OFF
+
+═══════════════════════════════════════════════════════════════
+   SYSTEM FEATURES
+═══════════════════════════════════════════════════════════════
+
+✅ RECEIVE SMS (User to System)
+   - Users send SMS sa: 09954778940
+   - Auto-forwarded sa webhook
+   - Saved sa database
+   - Visible sa Admin Panel → Feedback
+
+✅ SEND SMS (System to User)
+   - Admin can send SMS from Admin Panel
+   - Click "Send SMS" button
+   - Enter phone number and message
+   - Sent via SMS Gateway
+   - Logged sa database
+   - Visible sa Admin Panel → Feedback (Sent tab)
+
+✅ TWO-WAY SMS SYSTEM
+   - All messages (received and sent) visible sa admin panel
+   - Filter by: All, Received, Sent, Unread
+   - Reply button for quick responses
+   - Search functionality
+   - Statistics dashboard
+
+═══════════════════════════════════════════════════════════════
+   TESTING CHECKLIST
+═══════════════════════════════════════════════════════════════
+
+□ Database migration run: 2026-01-16-add-sms-sent-tracking.sql
+□ SMS Forwarder configured with settings above
+□ Routing Parameter set to: * (asterisk)
+□ Webhook URL: http://192.168.18.34/Learnexus/sms_feedback_webhook.php
+□ Phone at computer nasa same WiFi network
+□ XAMPP Apache running
+□ Test receive: Send SMS sa 09954778940 → Check admin panel
+□ Test send: Admin Panel → Send SMS → Check admin panel
+
+═══════════════════════════════════════════════════════════════
+   TROUBLESHOOTING
+═══════════════════════════════════════════════════════════════
+
+❌ Problem: Hindi na-receive ang incoming SMS
+   Solution:
+   - I-check ang Routing Parameter: dapat * (asterisk)
+   - I-check ang SMS Forwarder permissions
+   - I-check ang webhook log: logs/sms_feedback_webhook.log
+
+❌ Problem: Hindi ma-send ang SMS from admin
+   Solution:
+   - I-check kung na-run na ang database migration
+   - I-check ang SMS Gateway connection
+   - I-check ang error message sa admin panel
+
+❌ Problem: Webhook hindi accessible
+   Solution:
+   - I-test sa phone browser: http://192.168.18.34/Learnexus/sms_feedback_webhook.php
+   - I-check kung same WiFi network
+   - I-check ang Windows Firewall settings
+
+═══════════════════════════════════════════════════════════════
+   ADMIN PANEL ACCESS
+═══════════════════════════════════════════════════════════════
+
+View SMS Messages:
+http://localhost/Learnexus/admin/feedback.php
+
+Features:
+- View all messages (received and sent)
+- Filter by direction (All, Received, Sent, Unread)
+- Send new SMS
+- Reply to received messages
+- Mark as read/archived
+- Search functionality
+
+═══════════════════════════════════════════════════════════════

@@ -1,0 +1,191 @@
+═══════════════════════════════════════════════════════════════
+   SMS FORWARDER - TROUBLESHOOTING GUIDE
+═══════════════════════════════════════════════════════════════
+
+✅ WEBHOOK AY GUMAGANA (may natanggap na message)
+❌ Pero kapag ikaw ang nag-send, hindi na-forward
+
+═══════════════════════════════════════════════════════════════
+   COMMON ISSUES AT SOLUTIONS
+═══════════════════════════════════════════════════════════════
+
+ISSUE 1: ROUTING PARAMETER AY HINDI TAMA
+─────────────────────────────────────────
+
+✅ I-check sa SMS Forwarder app:
+   - Dapat ang Routing Parameter ay: 09954778940
+   - Dapat EXACT match (walang space, walang dash)
+   - I-check kung may leading zero (0995... hindi 995...)
+
+✅ I-verify:
+   - I-send ang SMS sa: 09954778940 (dapat may zero sa unahan)
+   - Hindi dapat: 9954778940 (walang zero)
+
+───────────────────────────────────────────────────────────────
+
+ISSUE 2: SMS FORWARDER AY HINDI NAKA-ENABLE
+────────────────────────────────────────────
+
+✅ I-check sa SMS Forwarder app:
+   1. Dapat naka-ON ang "Forwarding" o "Webhook"
+   2. Dapat naka-ON ang "Auto Forward"
+   3. I-check kung may "Enable" toggle - dapat ON
+
+───────────────────────────────────────────────────────────────
+
+ISSUE 3: PHONE NUMBER FORMAT
+─────────────────────────────
+
+✅ I-check kung pareho ang format:
+   - Kung ang natanggap ay: 123456789 (9 digits)
+   - Pero ang number mo ay: 09123456789 (11 digits)
+   
+   Baka may filter sa SMS Forwarder na hindi nagfo-forward
+   ng messages mula sa certain number format.
+
+✅ Solution:
+   - I-try mag-send mula sa ibang number
+   - O i-check ang SMS Forwarder settings kung may
+     "Number Format" o "Filter" settings
+
+───────────────────────────────────────────────────────────────
+
+ISSUE 4: SIM SLOT SETTINGS
+──────────────────────────
+
+✅ I-check sa SMS Forwarder:
+   - Kung may "SIM Slot" filter, dapat naka-set sa "any"
+   - O kung may specific SIM slot, dapat match sa SIM mo
+   - I-check kung may "Source SIM" filter
+
+───────────────────────────────────────────────────────────────
+
+ISSUE 5: WHITELIST/BLACKLIST
+─────────────────────────────
+
+✅ I-check kung may:
+   - "Whitelist" - dapat kasama ang number mo
+   - "Blacklist" - dapat wala ang number mo
+   - "Allowed Numbers" - dapat kasama ang number mo
+   - "Blocked Numbers" - dapat wala ang number mo
+
+───────────────────────────────────────────────────────────────
+
+ISSUE 6: MESSAGE FILTER
+────────────────────────
+
+✅ I-check kung may:
+   - "Message Filter" o "Keyword Filter"
+   - "Minimum Length" requirement
+   - "Maximum Length" limit
+   - Dapat walang filter na nagba-block
+
+───────────────────────────────────────────────────────────────
+
+ISSUE 7: WEBHOOK URL AY HINDI TAMA
+───────────────────────────────────
+
+✅ I-verify ang Webhook URL:
+   - Dapat: http://192.168.18.34/Learnexus/sms_feedback_webhook.php
+   - I-test sa phone browser (dapat may error - normal yan)
+   - I-check kung may typo sa URL
+
+───────────────────────────────────────────────────────────────
+
+ISSUE 8: SMS FORWARDER AY HINDI NAKA-CONNECT SA INTERNET
+─────────────────────────────────────────────────────────
+
+✅ I-check:
+   - Dapat may internet connection ang phone
+   - Dapat pareho ang WiFi network ng phone at computer
+   - I-test kung ma-access ang webhook URL sa phone browser
+
+═══════════════════════════════════════════════════════════════
+   STEP-BY-STEP TROUBLESHOOTING
+═══════════════════════════════════════════════════════════════
+
+STEP 1: I-VERIFY ANG ROUTING PARAMETER
+───────────────────────────────────────
+
+1. Buksan ang SMS Forwarder app
+2. Hanapin ang "Routing" o "Forwarding" settings
+3. I-verify na ang number ay: 09954778940
+4. Dapat EXACT match (walang space, walang dash)
+
+STEP 2: I-CHECK ANG WEBHOOK SETTINGS
+─────────────────────────────────────
+
+1. Buksan ang SMS Forwarder app
+2. Hanapin ang "Webhook" o "HTTP" settings
+3. I-verify ang URL: http://192.168.18.34/Learnexus/sms_feedback_webhook.php
+4. I-check kung naka-ON ang webhook forwarding
+
+STEP 3: I-TEST ANG WEBHOOK URL
+───────────────────────────────
+
+1. Sa phone browser, i-open ang:
+   http://192.168.18.34/Learnexus/sms_feedback_webhook.php
+2. Dapat may error message (normal yan - nag-e-expect ng POST)
+3. Kung "Cannot connect" - i-check ang WiFi connection
+
+STEP 4: I-CHECK ANG SMS FORWARDER LOGS
+──────────────────────────────────────
+
+1. Sa SMS Forwarder app, hanapin ang "Logs" o "History"
+2. I-check kung may entry para sa message mo
+3. I-check kung may error message
+4. I-check kung na-send ang webhook request
+
+STEP 5: I-TEST MULA SA IBANG NUMBER
+─────────────────────────────────────
+
+1. I-ask ang ibang tao na mag-send sa 09954778940
+2. I-check kung na-receive
+3. Kung oo - may issue sa number mo o sa SMS Forwarder settings
+4. Kung hindi - may issue sa routing parameter
+
+═══════════════════════════════════════════════════════════════
+   QUICK CHECKLIST
+═══════════════════════════════════════════════════════════════
+
+□ Routing Parameter: 09954778940 (EXACT match)
+□ Webhook URL: http://192.168.18.34/Learnexus/sms_feedback_webhook.php
+□ Webhook Forwarding: ON
+□ Auto Forward: ON
+□ SIM Slot: any (o match sa SIM mo)
+□ No Whitelist/Blacklist blocking your number
+□ No Message Filter blocking your message
+□ Phone ay may internet connection
+□ Phone at computer ay same WiFi network
+□ SMS Forwarder app ay updated at running
+
+═══════════════════════════════════════════════════════════════
+   TESTING STEPS
+═══════════════════════════════════════════════════════════════
+
+1. I-send ang SMS sa: 09954778940
+   Message: "Test from my number"
+
+2. I-check ang SMS Forwarder app logs
+   - Dapat may entry para sa message mo
+   - I-check kung may error
+
+3. I-check ang webhook log:
+   logs/sms_feedback_webhook.log
+   - Dapat may entry kung na-receive ng webhook
+
+4. I-check sa Admin Panel:
+   http://localhost/Learnexus/admin/feedback.php
+   - Dapat makita ang message mo
+
+═══════════════════════════════════════════════════════════════
+   KUNG HINDI PA RIN GUMAGANA
+═══════════════════════════════════════════════════════════════
+
+1. I-restart ang SMS Forwarder app
+2. I-restart ang phone
+3. I-check kung may update sa SMS Forwarder app
+4. I-try mag-send mula sa ibang phone/number
+5. I-check ang SMS Forwarder app documentation
+
+═══════════════════════════════════════════════════════════════

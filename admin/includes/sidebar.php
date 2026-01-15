@@ -62,6 +62,14 @@
                 <i class="bi bi-ticket-perforated fs-5"></i>
                 <span>Vouchers</span>
             </a>
+
+            <!-- Feedback -->
+            <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium 
+                      <?php echo basename($_SERVER['PHP_SELF']) == 'feedback.php' ? 'active' : ''; ?>" 
+               href="feedback.php">
+                <i class="bi bi-chat-dots fs-5"></i>
+                <span>Feedback</span>
+            </a>
         </nav>
         
         <div class="p-3 mt-auto">

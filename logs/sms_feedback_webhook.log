@@ -1,0 +1,60 @@
+[2026-01-15 19:23:05] SMS Feedback webhook request received | {"method":"GET","ip":"192.168.18.34","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0","payload_size":0,"raw_payload":""}
+[2026-01-15 19:23:05] ERROR: Invalid request method | {"method":"GET"}
+[2026-01-15 19:23:27] SMS Feedback webhook request received | {"method":"POST","ip":"192.168.18.217","user_agent":"SMS Forwarder App","payload_size":55,"raw_payload":"{\"from\":\"123456789\",\"text\":\"test message\",\"sim\":\"sim1\"}"}
+[2026-01-15 19:23:27] Processing SMS feedback | {"from":"123456789","message_length":12,"sim":"sim1"}
+[2026-01-15 19:23:27] SUCCESS: SMS feedback saved | {"feedback_id":"1","from":"123456789","sim":"sim1"}
+[2026-01-15 19:25:34] SMS Feedback webhook request received | {"method":"GET","ip":"192.168.18.34","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0","payload_size":0,"raw_payload":""}
+[2026-01-15 19:25:34] ERROR: Invalid request method | {"method":"GET"}
+[2026-01-15 19:35:42] SMS Feedback webhook request received | {"method":"POST","ip":"192.168.18.217","user_agent":"Dalvik/2.1.0 (Linux; U; Android 13; M2101K6G Build/TKQ1.221013.002)","payload_size":47,"raw_payload":"{\"sim\":\"%sim%\",\"from\":\"%from%\",\"text\":\"%text%\"}"}
+[2026-01-15 19:35:42] Processing SMS feedback | {"from":"","message_length":6,"sim":"%sim%"}
+[2026-01-15 19:35:42] SUCCESS: SMS feedback saved | {"feedback_id":"2","from":"","sim":"%sim%"}
+[2026-01-15 19:37:42] SMS Feedback webhook request received | {"method":"POST","ip":"192.168.18.217","user_agent":"Dalvik/2.1.0 (Linux; U; Android 13; M2101K6G Build/TKQ1.221013.002)","payload_size":47,"raw_payload":"{\"sim\":\"%sim%\",\"from\":\"%from%\",\"text\":\"%text%\"}"}
+[2026-01-15 19:37:42] Processing SMS feedback | {"from":"","message_length":6,"sim":"%sim%"}
+[2026-01-15 19:37:42] SUCCESS: SMS feedback saved | {"feedback_id":"3","from":"","sim":"%sim%"}
+[2026-01-15 19:43:24] SMS Feedback webhook request received | {"method":"POST","ip":"192.168.18.217","user_agent":"SMS Forwarder App","payload_size":55,"raw_payload":"{\"from\":\"123456789\",\"text\":\"test message\",\"sim\":\"sim1\"}"}
+[2026-01-15 19:43:24] Processing SMS feedback | {"from":"123456789","message_length":12,"sim":"sim1"}
+[2026-01-15 19:43:24] SUCCESS: SMS feedback saved | {"feedback_id":"4","from":"123456789","sim":"sim1"}
+[2026-01-15 19:46:45] SMS Feedback webhook request received | {"method":"POST","ip":"192.168.18.217","user_agent":"SMS Forwarder App","payload_size":58,"raw_payload":"   {\"from\":\"123456789\",\"text\":\"test message\",\"sim\":\"sim1\"}"}
+[2026-01-15 19:46:45] Processing SMS feedback | {"from":"123456789","message_length":12,"sim":"sim1"}
+[2026-01-15 19:46:45] SUCCESS: SMS feedback saved | {"feedback_id":"5","from":"123456789","sim":"sim1"}
+[2026-01-15 19:54:57] SMS Feedback webhook request received | {"method":"GET","ip":"192.168.18.34","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0","payload_size":0,"raw_payload":""}
+[2026-01-15 19:54:57] ERROR: Invalid request method | {"method":"GET"}
+[2026-01-15 20:11:13] SMS Feedback webhook request received | {"method":"POST","ip":"192.168.18.217","user_agent":"SMS Forwarder App","payload_size":55,"raw_payload":"{\"from\":\"123456789\",\"text\":\"test message\",\"sim\":\"sim1\"}"}
+[2026-01-15 20:11:13] Processing SMS feedback | {"from":"123456789","message_length":12,"sim":"sim1"}
+[2026-01-15 20:11:13] SUCCESS: SMS feedback saved | {"feedback_id":"8","from":"123456789","sim":"sim1"}
+[2026-01-15 20:11:52] SMS Feedback webhook request received | {"method":"POST","ip":"192.168.18.217","user_agent":"SMS Forwarder App","payload_size":53,"raw_payload":"{\"from\":\"+639913487886\",\"text\":\"hello \",\"sim\":\"sim1\"}"}
+[2026-01-15 20:11:52] Processing SMS feedback | {"from":"+639913487886","message_length":5,"sim":"sim1"}
+[2026-01-15 20:11:52] SUCCESS: SMS feedback saved | {"feedback_id":"9","from":"+639913487886","sim":"sim1"}
+[2026-01-15 20:12:08] SMS Feedback webhook request received | {"method":"POST","ip":"192.168.18.217","user_agent":"SMS Forwarder App","payload_size":52,"raw_payload":"{\"from\":\"+639913487886\",\"text\":\"hello\",\"sim\":\"sim1\"}"}
+[2026-01-15 20:12:08] Processing SMS feedback | {"from":"+639913487886","message_length":5,"sim":"sim1"}
+[2026-01-15 20:12:08] SUCCESS: SMS feedback saved | {"feedback_id":"10","from":"+639913487886","sim":"sim1"}
+[2026-01-15 20:13:09] SMS Feedback webhook request received | {"method":"POST","ip":"192.168.18.217","user_agent":"SMS Forwarder App","payload_size":52,"raw_payload":"   {\"from\":\"+639954778940\",\"text\":\"Aw\",\"sim\":\"sim1\"}"}
+[2026-01-15 20:13:09] Processing SMS feedback | {"from":"+639954778940","message_length":2,"sim":"sim1"}
+[2026-01-15 20:13:09] SUCCESS: SMS feedback saved | {"feedback_id":"11","from":"+639954778940","sim":"sim1"}
+[2026-01-15 20:13:30] SMS Feedback webhook request received | {"method":"POST","ip":"192.168.18.217","user_agent":"SMS Forwarder App","payload_size":52,"raw_payload":"{\"from\":\"+639913487886\",\"text\":\"hello\",\"sim\":\"sim1\"}"}
+[2026-01-15 20:13:30] Processing SMS feedback | {"from":"+639913487886","message_length":5,"sim":"sim1"}
+[2026-01-15 20:13:30] SUCCESS: SMS feedback saved | {"feedback_id":"12","from":"+639913487886","sim":"sim1"}
+[2026-01-15 20:13:34] SMS Feedback webhook request received | {"method":"POST","ip":"192.168.18.217","user_agent":"SMS Forwarder App","payload_size":57,"raw_payload":"   {\"from\":\"+639940695628\",\"text\":\"Jsjsnss\",\"sim\":\"sim1\"}"}
+[2026-01-15 20:13:34] Processing SMS feedback | {"from":"+639940695628","message_length":7,"sim":"sim1"}
+[2026-01-15 20:13:34] SUCCESS: SMS feedback saved | {"feedback_id":"13","from":"+639940695628","sim":"sim1"}
+[2026-01-15 20:13:40] SMS Feedback webhook request received | {"method":"POST","ip":"192.168.18.217","user_agent":"SMS Forwarder App","payload_size":51,"raw_payload":"{\"from\":\"+639913487886\",\"text\":\"aaaa\",\"sim\":\"sim1\"}"}
+[2026-01-15 20:13:40] Processing SMS feedback | {"from":"+639913487886","message_length":4,"sim":"sim1"}
+[2026-01-15 20:13:40] SUCCESS: SMS feedback saved | {"feedback_id":"14","from":"+639913487886","sim":"sim1"}
+[2026-01-15 20:14:38] SMS Feedback webhook request received | {"method":"POST","ip":"192.168.18.217","user_agent":"SMS Forwarder App","payload_size":66,"raw_payload":"{\"from\":\"+639913487886\",\"text\":\"ANG GALING MOOOOOOO\",\"sim\":\"sim1\"}"}
+[2026-01-15 20:14:38] Processing SMS feedback | {"from":"+639913487886","message_length":19,"sim":"sim1"}
+[2026-01-15 20:14:38] SUCCESS: SMS feedback saved | {"feedback_id":"15","from":"+639913487886","sim":"sim1"}
+[2026-01-15 20:14:58] SMS Feedback webhook request received | {"method":"POST","ip":"192.168.18.217","user_agent":"SMS Forwarder App","payload_size":54,"raw_payload":"{\"from\":\"+639913487886\",\"text\":\"YEHEYYY\",\"sim\":\"sim1\"}"}
+[2026-01-15 20:14:58] Processing SMS feedback | {"from":"+639913487886","message_length":7,"sim":"sim1"}
+[2026-01-15 20:14:58] SUCCESS: SMS feedback saved | {"feedback_id":"16","from":"+639913487886","sim":"sim1"}
+[2026-01-15 20:15:09] SMS Feedback webhook request received | {"method":"POST","ip":"192.168.18.217","user_agent":"SMS Forwarder App","payload_size":53,"raw_payload":"{\"from\":\"+639940695628\",\"text\":\"Nxksns\",\"sim\":\"sim1\"}"}
+[2026-01-15 20:15:09] Processing SMS feedback | {"from":"+639940695628","message_length":6,"sim":"sim1"}
+[2026-01-15 20:15:09] SUCCESS: SMS feedback saved | {"feedback_id":"17","from":"+639940695628","sim":"sim1"}
+[2026-01-15 20:15:25] SMS Feedback webhook request received | {"method":"POST","ip":"192.168.18.217","user_agent":"SMS Forwarder App","payload_size":51,"raw_payload":"{\"from\":\"+639940695628\",\"text\":\"Hxhs\",\"sim\":\"sim1\"}"}
+[2026-01-15 20:15:25] Processing SMS feedback | {"from":"+639940695628","message_length":4,"sim":"sim1"}
+[2026-01-15 20:15:25] SUCCESS: SMS feedback saved | {"feedback_id":"18","from":"+639940695628","sim":"sim1"}
+[2026-01-15 20:28:28] SMS Feedback webhook request received | {"method":"POST","ip":"192.168.18.217","user_agent":"SMS Forwarder App","payload_size":54,"raw_payload":"{\"from\":\"+639940286393\",\"text\":\"Aray mo\",\"sim\":\"sim1\"}"}
+[2026-01-15 20:28:28] Processing SMS feedback | {"from":"+639940286393","message_length":7,"sim":"sim1"}
+[2026-01-15 20:28:28] SUCCESS: SMS feedback saved | {"feedback_id":"19","from":"+639940286393","sim":"sim1"}
+[2026-01-15 20:28:36] SMS Feedback webhook request received | {"method":"POST","ip":"192.168.18.217","user_agent":"SMS Forwarder App","payload_size":58,"raw_payload":"{\"from\":\"+639913487886\",\"text\":\"aray kooooo\",\"sim\":\"sim1\"}"}
+[2026-01-15 20:28:36] Processing SMS feedback | {"from":"+639913487886","message_length":11,"sim":"sim1"}
+[2026-01-15 20:28:36] SUCCESS: SMS feedback saved | {"feedback_id":"20","from":"+639913487886","sim":"sim1"}

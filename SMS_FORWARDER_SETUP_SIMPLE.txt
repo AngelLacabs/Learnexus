@@ -1,0 +1,146 @@
+═══════════════════════════════════════════════════════════════
+   SMS FORWARDER - SIMPLE SETUP (WALANG NGROK)
+═══════════════════════════════════════════════════════════════
+
+⚠️  IMPORTANT: Dapat nasa parehong WiFi network ang phone at computer
+
+═══════════════════════════════════════════════════════════════
+   STEP 1: HANAPIN ANG LOCAL IP NG COMPUTER MO
+═══════════════════════════════════════════════════════════════
+
+1. I-press ang Windows Key + R
+2. I-type: cmd
+3. I-press Enter
+4. I-type: ipconfig
+5. I-press Enter
+6. Hanapin ang "IPv4 Address" - ganito ang format:
+   192.168.1.100 (o 192.168.0.100, depende sa router mo)
+
+   KOPYAHIN ANG IP NA ITO!
+
+═══════════════════════════════════════════════════════════════
+   STEP 2: SMS FORWARDER CONFIGURATION
+═══════════════════════════════════════════════════════════════
+
+1. ROUTING PARAMETER:
+   ──────────────────
+   09954778940
+
+2. WEBHOOK URL:
+   ────────────
+   http://[YOUR-LOCAL-IP]/Learnexus/sms_feedback_webhook.php
+   
+   Halimbawa kung ang IP mo ay 192.168.1.100:
+   http://192.168.1.100/Learnexus/sms_feedback_webhook.php
+
+   ⚠️  IMPORTANT: 
+   - Gamitin ang HTTP (hindi HTTPS)
+   - Palitan ang [YOUR-LOCAL-IP] sa actual IP ng computer mo
+
+3. JSON PAYLOAD TEMPLATE:
+   ──────────────────────
+   {"from":"%from%","text":"%text%","sim":"%sim%"}
+
+4. HEADERS:
+   ────────
+   Header 1:
+     Name:  User-Agent
+     Value: SMS Forwarder App
+   
+   Header 2:
+     Name:  Content-Type
+     Value: application/json
+
+5. ADVANCED PARAMETERS:
+   ────────────────────
+   SIM Slot:        any
+   Number Retries:  100
+   Chunked Mode:    ON (enabled)
+
+═══════════════════════════════════════════════════════════════
+   STEP 3: RUN DATABASE MIGRATION
+═══════════════════════════════════════════════════════════════
+
+1. Buksan ang phpMyAdmin: http://localhost/phpmyadmin
+
+2. Piliin ang database: lmslearnexus
+
+3. I-click ang "SQL" tab
+
+4. I-paste ang SQL mula sa:
+   database/migrations/2026-01-15-create-sms-feedback.sql
+
+5. I-click "Go" para i-execute
+
+═══════════════════════════════════════════════════════════════
+   STEP 4: TESTING
+═══════════════════════════════════════════════════════════════
+
+1. Siguraduhin na:
+   ✅ XAMPP Apache ay running
+   ✅ Phone at computer ay nasa parehong WiFi
+   ✅ Database migration ay na-run na
+
+2. I-send ang SMS sa: 09954778940
+   Message: "Test feedback"
+
+3. I-check ang log file:
+   logs/sms_feedback_webhook.log
+
+4. I-view sa Admin Panel:
+   http://localhost/Learnexus/admin/feedback.php
+
+═══════════════════════════════════════════════════════════════
+   TROUBLESHOOTING
+═══════════════════════════════════════════════════════════════
+
+❌ Problem: Hindi ma-access ang webhook
+   Solution: 
+   - I-check kung pareho ang WiFi network
+   - I-test sa phone browser: http://[YOUR-IP]/Learnexus/sms_feedback_webhook.php
+   - Dapat may error message (normal yan - nag-e-expect ng POST)
+
+❌ Problem: "Connection refused" o "Cannot connect"
+   Solution:
+   - I-check ang Windows Firewall - dapat i-allow ang Apache
+   - I-restart ang XAMPP Apache
+
+❌ Problem: "404 Not Found"
+   Solution:
+   - I-check ang webhook URL - dapat may /Learnexus/ sa path
+   - I-verify na tama ang IP address
+
+═══════════════════════════════════════════════════════════════
+   QUICK COPY-PASTE PARA SA SMS FORWARDER APP
+═══════════════════════════════════════════════════════════════
+
+Routing Parameter:
+09954778940
+
+Webhook URL (palitan ang [YOUR-IP] sa local IP ng computer mo):
+http://[YOUR-IP]/Learnexus/sms_feedback_webhook.php
+
+JSON Payload:
+{"from":"%from%","text":"%text%","sim":"%sim%"}
+
+Headers:
+User-Agent: SMS Forwarder App
+Content-Type: application/json
+
+Settings:
+- SIM Slot: any
+- Number Retries: 100
+- Chunked Mode: ON
+
+═══════════════════════════════════════════════════════════════
+   ALTERNATIVE: KUNG HINDI GUMAGANA ANG LOCAL IP
+═══════════════════════════════════════════════════════════════
+
+Kung hindi gumagana ang local IP (hindi same network o blocked ng firewall),
+gamitin ang ngrok:
+
+1. Download ngrok: https://ngrok.com/download
+2. I-run: ngrok http 80
+3. Gamitin ang ngrok URL sa webhook (https://abc123.ngrok.io/...)
+
+═══════════════════════════════════════════════════════════════

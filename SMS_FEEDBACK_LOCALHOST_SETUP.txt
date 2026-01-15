@@ -1,0 +1,127 @@
+═══════════════════════════════════════════════════════════════
+   SMS FEEDBACK SYSTEM - LOCALHOST CONFIGURATION
+═══════════════════════════════════════════════════════════════
+
+⚠️  IMPORTANT: SMS Forwarder ay external service, kailangan ng 
+   tunnel para ma-access ang localhost. Gamitin ang ngrok.
+
+═══════════════════════════════════════════════════════════════
+   STEP 1: I-SETUP ANG NGROK (Para ma-access ang localhost)
+═══════════════════════════════════════════════════════════════
+
+1. Download ngrok: https://ngrok.com/download
+
+2. I-extract at i-run ang ngrok:
+   ```
+   ngrok http 80
+   ```
+
+3. Makikita mo ang URL na ganito:
+   ```
+   Forwarding: https://abc123.ngrok.io -> http://localhost:80
+   ```
+
+4. Kopyahin ang ngrok URL (halimbawa: https://abc123.ngrok.io)
+
+═══════════════════════════════════════════════════════════════
+   STEP 2: SMS FORWARDER CONFIGURATION
+═══════════════════════════════════════════════════════════════
+
+1. ROUTING PARAMETER:
+   ──────────────────
+   09954778940
+
+2. WEBHOOK URL:
+   ────────────
+   https://[YOUR-NGROK-URL]/Learnexus/sms_feedback_webhook.php
+   
+   Halimbawa:
+   https://abc123.ngrok.io/Learnexus/sms_feedback_webhook.php
+
+3. JSON PAYLOAD TEMPLATE:
+   ──────────────────────
+   {"from":"%from%","text":"%text%","sim":"%sim%"}
+
+4. HEADERS:
+   ────────
+   Header 1:
+     Name:  User-Agent
+     Value: SMS Forwarder App
+   
+   Header 2:
+     Name:  Content-Type
+     Value: application/json
+
+5. ADVANCED PARAMETERS:
+   ────────────────────
+   SIM Slot:        any
+   Number Retries:  100
+   Chunked Mode:    ON (enabled)
+
+═══════════════════════════════════════════════════════════════
+   STEP 3: RUN DATABASE MIGRATION
+═══════════════════════════════════════════════════════════════
+
+1. Buksan ang phpMyAdmin: http://localhost/phpmyadmin
+
+2. Piliin ang database: lmslearnexus
+
+3. I-click ang "SQL" tab
+
+4. I-paste ang SQL mula sa:
+   database/migrations/2026-01-15-create-sms-feedback.sql
+
+5. I-click "Go" para i-execute
+
+═══════════════════════════════════════════════════════════════
+   STEP 4: TESTING
+═══════════════════════════════════════════════════════════════
+
+1. Siguraduhin na:
+   ✅ XAMPP Apache ay running
+   ✅ ngrok ay running at may active URL
+   ✅ Database migration ay na-run na
+
+2. I-send ang SMS sa: 09954778940
+   Message: "Test feedback"
+
+3. I-check ang log file:
+   logs/sms_feedback_webhook.log
+
+4. I-view sa Admin Panel:
+   http://localhost/Learnexus/admin/feedback.php
+
+═══════════════════════════════════════════════════════════════
+   ALTERNATIVE: KUNG GUSTO MO NG PERMANENT URL
+═══════════════════════════════════════════════════════════════
+
+Kung gusto mo ng permanent URL (hindi nagbabago), pwede mong:
+
+1. Gamitin ang Cloudflare Tunnel (may domain ka na: learnexus.online)
+   Webhook URL: https://learnexus.learnexus.online/sms_feedback_webhook.php
+
+2. O kaya i-deploy sa production server na may domain
+
+═══════════════════════════════════════════════════════════════
+   QUICK COPY-PASTE PARA SA SMS FORWARDER
+═══════════════════════════════════════════════════════════════
+
+Routing Parameter:
+09954778940
+
+Webhook URL (palitan ang [NGROK-URL]):
+https://[NGROK-URL]/Learnexus/sms_feedback_webhook.php
+
+JSON Payload:
+{"from":"%from%","text":"%text%","sim":"%sim%"}
+
+Headers:
+User-Agent: SMS Forwarder App
+Content-Type: application/json
+
+Settings:
+- SIM Slot: any
+- Number Retries: 100
+- Chunked Mode: ON
+
+═══════════════════════════════════════════════════════════════

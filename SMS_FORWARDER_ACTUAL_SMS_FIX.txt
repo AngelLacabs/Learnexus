@@ -1,0 +1,198 @@
+═══════════════════════════════════════════════════════════════
+   SMS FORWARDER - ACTUAL SMS HINDI NA-FORWARD
+═══════════════════════════════════════════════════════════════
+
+✅ Test sa SMS Forwarder app: GUMAGANA
+❌ Actual SMS mula sa ibang phone: HINDI NA-FORWARD
+
+═══════════════════════════════════════════════════════════════
+   COMMON CAUSES
+═══════════════════════════════════════════════════════════════
+
+ISSUE 1: ROUTING PARAMETER AY HINDI MATCH SA ACTUAL NUMBER
+─────────────────────────────────────────────────────────────
+
+✅ I-check:
+   - Ang Routing Parameter sa SMS Forwarder: 09954778940
+   - Ang actual number na naka-receive ng SMS: dapat 09954778940
+   - Dapat EXACT match (walang space, walang dash)
+
+✅ I-verify:
+   - I-check kung ang number na naka-receive ay: 09954778940
+   - Hindi dapat: +639954778940, 9954778940, o ibang format
+   - Dapat may leading zero (0995... hindi 995...)
+
+───────────────────────────────────────────────────────────────
+
+ISSUE 2: SMS FORWARDER AY HINDI NAKA-ENABLE PARA SA INCOMING SMS
+─────────────────────────────────────────────────────────────────
+
+✅ I-check sa SMS Forwarder app:
+   1. Dapat naka-ON ang "Forward Incoming SMS"
+   2. Dapat naka-ON ang "Auto Forward SMS"
+   3. Dapat naka-ON ang "Monitor Incoming Messages"
+   4. I-check kung may "Enable SMS Forwarding" toggle
+
+───────────────────────────────────────────────────────────────
+
+ISSUE 3: SMS PERMISSIONS AY HINDI GRANTED
+──────────────────────────────────────────
+
+✅ I-check sa Android Settings:
+   1. Settings → Apps → SMS Forwarder
+   2. Permissions → Dapat naka-ON ang:
+      - SMS (Read SMS)
+      - Phone (Read Phone State)
+      - Notifications
+   3. I-check kung may "Allow SMS Access" permission
+
+───────────────────────────────────────────────────────────────
+
+ISSUE 4: SMS FORWARDER AY HINDI NAKA-RUN SA BACKGROUND
+───────────────────────────────────────────────────────
+
+✅ I-check:
+   1. Dapat naka-ON ang "Run in Background"
+   2. Dapat naka-ON ang "Battery Optimization" exemption
+   3. Dapat naka-ON ang "Auto-start" o "Start on Boot"
+   4. I-check kung may notification na "SMS Forwarder is running"
+
+───────────────────────────────────────────────────────────────
+
+ISSUE 5: NUMBER FORMAT AY HINDI MATCH
+──────────────────────────────────────
+
+✅ I-check:
+   - Kung ang natanggap na SMS ay galing sa: 09123456789
+   - Pero ang routing parameter ay: 09954778940
+   - Dapat match ang format (may leading zero)
+
+✅ I-test:
+   - I-send ang SMS sa: 09954778940 (dapat may zero)
+   - Hindi dapat: 9954778940 (walang zero)
+   - Hindi dapat: +639954778940 (may country code)
+
+───────────────────────────────────────────────────────────────
+
+ISSUE 6: SMS FORWARDER AY HINDI NAKA-DETECT NG INCOMING SMS
+────────────────────────────────────────────────────────────
+
+✅ I-check sa SMS Forwarder app:
+   1. Hanapin ang "Logs" o "History"
+   2. I-check kung may entry para sa incoming SMS
+   3. I-check kung may error message
+   4. I-check kung na-detect ang SMS
+
+───────────────────────────────────────────────────────────────
+
+ISSUE 7: SIM CARD AY HINDI NAKA-INSERT O HINDI ACTIVE
+──────────────────────────────────────────────────────
+
+✅ I-check:
+   - Dapat may SIM card na naka-insert
+   - Dapat active ang SIM card (may signal)
+   - Dapat may load o active ang plan
+   - I-check kung may "No SIM" error
+
+═══════════════════════════════════════════════════════════════
+   STEP-BY-STEP FIX
+═══════════════════════════════════════════════════════════════
+
+STEP 1: I-VERIFY ANG ROUTING PARAMETER
+───────────────────────────────────────
+
+1. Buksan ang SMS Forwarder app
+2. Hanapin ang "Routing" o "Forwarding" settings
+3. I-verify na ang number ay: 09954778940
+4. Dapat EXACT match (walang space, walang dash)
+5. I-save ang settings
+
+STEP 2: I-CHECK ANG SMS PERMISSIONS
+────────────────────────────────────
+
+1. Settings → Apps → SMS Forwarder
+2. Permissions → I-check:
+   - SMS: ALLOWED
+   - Phone: ALLOWED
+   - Notifications: ALLOWED
+3. Kung hindi, i-click "Allow"
+
+STEP 3: I-ENABLE ANG BACKGROUND RUNNING
+────────────────────────────────────────
+
+1. Settings → Apps → SMS Forwarder
+2. Battery → I-disable ang "Battery Optimization"
+3. I-enable ang "Allow Background Activity"
+4. I-enable ang "Auto-start" o "Start on Boot"
+
+STEP 4: I-CHECK ANG SMS FORWARDER SETTINGS
+──────────────────────────────────────────
+
+1. Buksan ang SMS Forwarder app
+2. I-check kung naka-ON ang:
+   - "Forward Incoming SMS"
+   - "Auto Forward SMS"
+   - "Monitor Incoming Messages"
+   - "Enable SMS Forwarding"
+3. I-save ang settings
+
+STEP 5: I-TEST ANG ACTUAL SMS
+──────────────────────────────
+
+1. Gamit ang ibang phone, i-send ang SMS sa: 09954778940
+   Message: "Test actual SMS"
+   
+2. I-check sa SMS Forwarder app:
+   - Logs/History - dapat may entry
+   - I-check kung may error
+   
+3. I-check ang webhook log:
+   logs/sms_feedback_webhook.log
+   - Dapat may entry kung na-receive
+
+4. I-check sa Admin Panel:
+   http://localhost/Learnexus/admin/feedback.php
+   - Dapat makita ang message
+
+═══════════════════════════════════════════════════════════════
+   QUICK CHECKLIST
+═══════════════════════════════════════════════════════════════
+
+□ Routing Parameter: 09954778940 (EXACT match)
+□ SMS Permissions: ALLOWED (SMS, Phone, Notifications)
+□ Background Running: ENABLED
+□ Battery Optimization: DISABLED
+□ Auto-start: ENABLED
+□ Forward Incoming SMS: ON
+□ Auto Forward SMS: ON
+□ Monitor Incoming Messages: ON
+□ SIM Card: INSERTED at ACTIVE
+□ Phone ay may signal at load
+□ Webhook URL: http://192.168.18.34/Learnexus/sms_feedback_webhook.php
+□ SMS Forwarder app ay updated at running
+
+═══════════════════════════════════════════════════════════════
+   TESTING PROCEDURE
+═══════════════════════════════════════════════════════════════
+
+1. I-restart ang SMS Forwarder app
+2. I-verify na naka-ON ang lahat ng settings
+3. Gamit ang ibang phone, i-send ang SMS sa: 09954778940
+   Message: "Test from other phone"
+4. I-wait ng 5-10 seconds
+5. I-check ang SMS Forwarder app logs
+6. I-check ang webhook log: logs/sms_feedback_webhook.log
+7. I-check sa Admin Panel: admin/feedback.php
+
+═══════════════════════════════════════════════════════════════
+   KUNG HINDI PA RIN GUMAGANA
+═══════════════════════════════════════════════════════════════
+
+1. I-uninstall at i-reinstall ang SMS Forwarder app
+2. I-grant ulit ang lahat ng permissions
+3. I-configure ulit ang routing at webhook
+4. I-restart ang phone
+5. I-try sa ibang SMS Forwarder app (kung available)
+6. I-check ang SMS Forwarder app documentation
+
+═══════════════════════════════════════════════════════════════

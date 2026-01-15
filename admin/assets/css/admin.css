@@ -14,7 +14,7 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: #212925;
+    background: #f8f9fa;
     min-height: 100vh;
 }
 
@@ -223,6 +223,7 @@ body {
 .main-content {
     margin-left: var(--sidebar-width);
     min-height: 100vh;
+    background: #f8f9fa;
 }
 
 @media (min-width: 992px) {
