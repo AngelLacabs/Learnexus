@@ -346,10 +346,10 @@ unset($_SESSION['new_voucher_code']);
                                             Redeemed on <?= date('M d, Y', strtotime($voucher['redeemed_at'])) ?>
                                         </div>
                                     <?php elseif ($voucher['voucherStatus'] === 'active'): ?>
-                                        <a href="https://dev.art2cart.shop/pages/shop.php?voucher=<?= urlencode($voucher['voucherCode']) ?>"
-                                            target="_blank" class="btn btn-primary w-100 rounded-pill fw-semibold">
-                                            <i class="bi bi-bag-fill me-2"></i>Shop at SoleSource
-                                        </a>
+                                        <a href="https://dev.art2cart.shop/?voucher=<?= urlencode($voucher['voucherCode']) ?>"
+   target="_blank" class="btn btn-primary w-100 rounded-pill fw-semibold">
+    <i class="bi bi-bag-fill me-2"></i>Shop at SoleSource
+</a>
                                     <?php else: ?>
                                         <div class="alert alert-danger small mb-0">
                                             <i class="bi bi-exclamation-triangle-fill"></i> This voucher has expired
