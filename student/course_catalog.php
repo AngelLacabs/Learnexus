@@ -332,7 +332,7 @@ $totalPublished = $stmt->fetch()['total'];
                             <div class="col-12 col-md-6 col-lg-4">
                                 <div class="card border-0 rounded-4 shadow-sm card-hover h-100" 
                                      onclick="window.location.href='course_details.php?id=<?php echo $course['courseID']; ?>'">
-                                    <div class="course-image position-relative d-flex align-items-center justify-content-center">
+                                    <div class="course-image position-relative d-flex align-items-center justify-content-center rounded-top-4">
                                         <?php if ($course['lessonCount'] > 0): ?>
                                             <span class="badge bg-white text-dark position-absolute top-0 end-0 m-2 shadow-sm">
                                                 <i class="bi bi-file-earmark-text"></i> <?php echo $course['lessonCount']; ?> Lessons
