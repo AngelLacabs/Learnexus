@@ -64,27 +64,103 @@ if (isset($_SESSION['error'])) unset($_SESSION['error']);
         background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 100%);
         z-index: 1;
     }
-    /* Background pattern matching index.php */
+    /* Updated background pattern exactly like index.php */
     .left-side::after {
         content: '';
         position: absolute;
         top: 0;
         left: 0;
-        right: 0;
-        bottom: 0;
+        width: 100%;
+        height: 100%;
         background-image: 
-            radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.1) 2px, transparent 2px),
-            radial-gradient(circle at 80% 70%, rgba(255, 255, 255, 0.1) 2px, transparent 2px),
-            radial-gradient(circle at 40% 60%, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
-            radial-gradient(circle at 60% 40%, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
-        background-size: 100px 100px, 120px 120px, 80px 80px, 90px 90px;
-        background-position: 0 0, 60px 30px, 30px 60px, 90px 90px;
+            radial-gradient(circle at 15% 25%, rgba(255, 255, 255, 0.15) 2px, transparent 2px),
+            radial-gradient(circle at 85% 75%, rgba(255, 255, 255, 0.15) 2px, transparent 2px),
+            radial-gradient(circle at 35% 65%, rgba(255, 255, 255, 0.12) 1.5px, transparent 1.5px),
+            radial-gradient(circle at 65% 35%, rgba(255, 255, 255, 0.12) 1.5px, transparent 1.5px),
+            radial-gradient(circle at 25% 50%, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+            radial-gradient(circle at 75% 50%, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+            radial-gradient(circle at 50% 15%, rgba(255, 255, 255, 0.08) 0.5px, transparent 0.5px),
+            radial-gradient(circle at 50% 85%, rgba(255, 255, 255, 0.08) 0.5px, transparent 0.5px);
+        background-size: 120px 120px;
+        background-position: 
+            0 0,
+            60px 30px,
+            30px 60px,
+            90px 90px,
+            120px 120px,
+            180px 150px,
+            150px 180px,
+            210px 210px;
         z-index: 0;
-        animation: floatBackground 20s infinite linear;
+        animation: floatBackground 25s infinite linear;
     }
     @keyframes floatBackground {
-        0% { background-position: 0 0, 60px 30px, 30px 60px, 90px 90px; }
-        100% { background-position: 100px 100px, 160px 130px, 130px 160px, 190px 190px; }
+        0% { 
+            background-position: 
+                0 0,
+                60px 30px,
+                30px 60px,
+                90px 90px,
+                120px 120px,
+                180px 150px,
+                150px 180px,
+                210px 210px;
+        }
+        100% { 
+            background-position: 
+                120px 120px,
+                180px 150px,
+                150px 180px,
+                210px 210px,
+                240px 240px,
+                300px 270px,
+                270px 300px,
+                330px 330px;
+        }
+    }
+    /* Floating dots effect */
+    .left-side .floating-dots {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+    }
+    .left-side .dot {
+        position: absolute;
+        width: 6px;
+        height: 6px;
+        background: rgba(255, 255, 255, 0.4);
+        border-radius: 50%;
+        animation: floatDot 15s infinite linear;
+    }
+    .left-side .dot:nth-child(1) { top: 20%; left: 15%; animation-delay: 0s; }
+    .left-side .dot:nth-child(2) { top: 70%; left: 85%; animation-delay: 1s; }
+    .left-side .dot:nth-child(3) { top: 40%; left: 60%; animation-delay: 2s; }
+    .left-side .dot:nth-child(4) { top: 85%; left: 25%; animation-delay: 3s; }
+    .left-side .dot:nth-child(5) { top: 15%; left: 75%; animation-delay: 4s; }
+    .left-side .dot:nth-child(6) { top: 65%; left: 40%; animation-delay: 5s; }
+    .left-side .dot:nth-child(7) { top: 30%; left: 90%; animation-delay: 6s; }
+    .left-side .dot:nth-child(8) { top: 80%; left: 10%; animation-delay: 7s; }
+    .left-side .dot:nth-child(9) { top: 45%; left: 30%; animation-delay: 8s; }
+    .left-side .dot:nth-child(10) { top: 55%; left: 70%; animation-delay: 9s; }
+    
+    @keyframes floatDot {
+        0%, 100% { 
+            transform: translate(0, 0) scale(1);
+            opacity: 0.4;
+        }
+        25% { 
+            transform: translate(20px, -15px) scale(1.2);
+            opacity: 0.6;
+        }
+        50% { 
+            transform: translate(-15px, 20px) scale(0.8);
+            opacity: 0.3;
+        }
+        75% { 
+            transform: translate(10px, 10px) scale(1.1);
+            opacity: 0.5;
+        }
     }
     .register-container {
         max-width: 500px;
@@ -160,7 +236,7 @@ if (isset($_SESSION['error'])) unset($_SESSION['error']);
         transform: translateY(-1px);
         box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
     }
-    /* Glint effect for Next button (matching index.php) */
+    /* Glint effect for Next button and Create Account button */
     #nextBtn, .btn-register[type="submit"] {
         position: relative;
         overflow: hidden;
