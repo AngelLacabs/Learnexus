@@ -239,19 +239,25 @@ $dailyMotivationTeacher = $teacherMotivations[$dayOfYear % count($teacherMotivat
             display: block;
         }
 
-        /* Course Cards */
+        /* Course Cards - FIXED: All corners rounded */
+        .course-card {
+            border-radius: 16px;
+            border: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transition: transform 0.2s;
+            height: 100%;
+            overflow: hidden; /* Ensures child elements respect the border radius */
+        }
+
+        .course-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        }
+
         .course-header {
             height: 160px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-
-        .card-hover {
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .card-hover:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 12px 28px rgba(0,0,0,0.15) !important;
+            border-radius: 16px 16px 0 0; /* Only top corners rounded */
         }
 
         /* Hide/Show Animations */
@@ -466,7 +472,8 @@ $dailyMotivationTeacher = $teacherMotivations[$dayOfYear % count($teacherMotivat
                                     <div class="col-12 col-md-6 col-lg-4 course-card-wrapper" 
                                          data-course-title="<?php echo strtolower(htmlspecialchars($course['title'])); ?>"
                                          data-course-status="<?php echo strtolower(htmlspecialchars($course['status'])); ?>">
-                                        <div class="card border-0 rounded-4 shadow-sm card-hover h-100">
+                                        <!-- FIXED: Changed from .card to .course-card for consistent styling -->
+                                        <div class="course-card">
                                             <!-- Course Header -->
                                             <div class="course-header position-relative d-flex align-items-center justify-content-center">
                                                 <span class="badge status-<?php echo strtolower($course['status']); ?> position-absolute top-0 end-0 m-2 shadow-sm fw-bold">
