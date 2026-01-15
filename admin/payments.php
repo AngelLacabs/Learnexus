@@ -144,19 +144,11 @@ include 'includes/header.php';
 include 'includes/sidebar.php';
 ?>
 
-<div class="main-content">
+<div class="main-content pb-3 pb-lg-4 ps-3 ps-lg-4 pe-3 pe-lg-4 pt-3">
     <div class="container-fluid">
-        <!-- Page Header -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h1 class="h3 mb-0">Payment Management</h1>
-                <p class="text-muted mb-0">Manage all payment transactions and verify payments</p>
-            </div>
-        </div>
-
         <!-- Success/Error Messages -->
         <?php if (isset($_SESSION['success'])): ?>
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
                 <?php echo $_SESSION['success']; ?>
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
@@ -164,122 +156,113 @@ include 'includes/sidebar.php';
         <?php endif; ?>
         
         <?php if (isset($_SESSION['error'])): ?>
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
                 <?php echo $_SESSION['error']; ?>
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
             <?php unset($_SESSION['error']); ?>
         <?php endif; ?>
 
-        <!-- 3x3 Statistics Grid -->
-        <div class="row g-3 mb-4">
-            <div class="col-lg-4 col-md-6">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="text-muted mb-1">Total Payments</h6>
-                                <h3 class="mb-0"><?php echo number_format($stats['total']); ?></h3>
-                            </div>
-                            <div class="text-primary">
-                                <i class="bi bi-cash-stack fs-2"></i>
-                            </div>
-                        </div>
+        <!-- Box 1: Page Header -->
+        <div class="card border-0 rounded-4 shadow-sm mb-5">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="h3 mb-0">Payment Management</h1>
+                        <p class="text-muted mb-0">Manage all payment transactions and verify payments</p>
                     </div>
                 </div>
             </div>
-
-            <div class="col-lg-4 col-md-6">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="text-muted mb-1">Total Revenue</h6>
-                                <h3 class="mb-0">₱<?php echo number_format($stats['total_revenue'] ?? 0, 2); ?></h3>
-                            </div>
-                            <div class="text-success">
-                                <i class="bi bi-currency-dollar fs-2"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-lg-4 col-md-6">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="text-muted mb-1">Completed</h6>
-                                <h3 class="mb-0"><?php echo number_format($stats['completed']); ?></h3>
-                            </div>
-                            <div class="text-success">
-                                <span class="badge bg-success">●</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-lg-4 col-md-6">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="text-muted mb-1">Pending</h6>
-                                <h3 class="mb-0"><?php echo number_format($stats['pending']); ?></h3>
-                            </div>
-                            <div class="text-warning">
-                                <span class="badge bg-warning">●</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-lg-4 col-md-6">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="text-muted mb-1">Failed</h6>
-                                <h3 class="mb-0"><?php echo number_format($stats['failed']); ?></h3>
-                            </div>
-                            <div class="text-danger">
-                                <span class="badge bg-danger">●</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-lg-4 col-md-6">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="text-muted mb-1">Refunded</h6>
-                                <h3 class="mb-0"><?php echo number_format($stats['refunded']); ?></h3>
-                            </div>
-                            <div class="text-secondary">
-                                <span class="badge bg-secondary">●</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-
         </div>
 
-        <!-- Filters Card -->
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-body">
+        <!-- Box 2: Statistics Cards - Separate Boxes -->
+        <div class="row g-4 mb-5">
+            <!-- Total Payments -->
+            <div class="col-lg-3 col-md-6">
+                <div class="card border-0 rounded-4 h-100 text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15), 0 4px 8px rgba(0, 0, 0, 0.1);">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-2 text-white-50" style="font-size: 0.875rem; font-weight: 500;">Total Payments</h6>
+                                <h2 class="mb-0 text-white fw-bold" style="font-size: 2rem;"><?php echo number_format($stats['total']); ?></h2>
+                            </div>
+                            <div class="ms-3" style="opacity: 0.9;">
+                                <i class="bi bi-cash-stack" style="font-size: 2.5rem;"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Total Revenue -->
+            <div class="col-lg-3 col-md-6">
+                <div class="card border-0 rounded-4 h-100 text-white" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15), 0 4px 8px rgba(0, 0, 0, 0.1);">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-2 text-white-50" style="font-size: 0.875rem; font-weight: 500;">Total Revenue</h6>
+                                <h2 class="mb-0 text-white fw-bold" style="font-size: 2rem;">₱<?php echo number_format($stats['total_revenue'] ?? 0, 2); ?></h2>
+                            </div>
+                            <div class="ms-3" style="opacity: 0.9;">
+                                <i class="bi bi-currency-dollar" style="font-size: 2.5rem;"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Completed Payments -->
+            <div class="col-lg-3 col-md-6">
+                <div class="card border-0 rounded-4 h-100 text-white" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15), 0 4px 8px rgba(0, 0, 0, 0.1);">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-2 text-white-50" style="font-size: 0.875rem; font-weight: 500;">Completed</h6>
+                                <h2 class="mb-0 text-white fw-bold" style="font-size: 2rem;"><?php echo number_format($stats['completed']); ?></h2>
+                            </div>
+                            <div class="ms-3" style="opacity: 0.9;">
+                                <i class="bi bi-check-circle" style="font-size: 2.5rem;"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Unique Payers -->
+            <div class="col-lg-3 col-md-6">
+                <div class="card border-0 rounded-4 h-100 text-white" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15), 0 4px 8px rgba(0, 0, 0, 0.1);">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-2 text-white-50" style="font-size: 0.875rem; font-weight: 500;">Unique Payers</h6>
+                                <h2 class="mb-0 text-white fw-bold" style="font-size: 2rem;"><?php echo number_format($stats['unique_payers']); ?></h2>
+                            </div>
+                            <div class="ms-3" style="opacity: 0.9;">
+                                <i class="bi bi-people-fill" style="font-size: 2.5rem;"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Box 3: Filters Card -->
+        <div class="card border-0 rounded-4 shadow-sm mb-5">
+            <div class="card-body p-4">
                 <form method="GET" action="" class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Search</label>
+                        <input type="text" 
+                               class="form-control" 
+                               name="search" 
+                               placeholder="Student, Email, or Course"
+                               value="<?php echo htmlspecialchars($search); ?>">
+                    </div>
+                    
                     <div class="col-md-2">
                         <label class="form-label">Course</label>
                         <select class="form-select" name="course">
-                            <option value="0">Select Course</option>
+                            <option value="0">All Courses</option>
                             <?php foreach ($courses as $courseData): ?>
                                 <option value="<?php echo $courseData['courseID']; ?>" 
                                     <?php echo $course == $courseData['courseID'] ? 'selected' : ''; ?>>
@@ -300,6 +283,19 @@ include 'includes/sidebar.php';
                         </select>
                     </div>
                     
+                    <div class="col-md-2">
+                        <label class="form-label">Student</label>
+                        <select class="form-select" name="student">
+                            <option value="0">All Students</option>
+                            <?php foreach ($students as $studentData): ?>
+                                <option value="<?php echo $studentData['userID']; ?>" 
+                                    <?php echo $student == $studentData['userID'] ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($studentData['firstName'] . ' ' . $studentData['lastName']); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
                     <div class="col-md-3">
                         <label class="form-label">Transaction Reference</label>
                         <input type="text" 
@@ -308,7 +304,7 @@ include 'includes/sidebar.php';
                                placeholder="Transaction ID"
                                value="<?php echo htmlspecialchars($transaction_ref); ?>">
                     </div>
-                    
+
                     <div class="col-md-2">
                         <label class="form-label">Date From</label>
                         <input type="date" 
@@ -325,9 +321,9 @@ include 'includes/sidebar.php';
                                value="<?php echo htmlspecialchars($date_to); ?>">
                     </div>
                     
-                    <div class="col-md-1 d-flex align-items-end">
+                    <div class="col-md-3 d-flex align-items-end">
                         <div class="d-flex gap-2 w-100">
-                            <button type="submit" class="btn btn-primary w-100">
+                            <button type="submit" class="btn w-100 text-white border-0" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                                 <i class="bi bi-funnel me-2"></i>Filter
                             </button>
                             <a href="payments.php" class="btn btn-outline-secondary">
@@ -339,12 +335,12 @@ include 'includes/sidebar.php';
             </div>
         </div>
 
-        <!-- Payments Table -->
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white border-0 py-3">
+        <!-- Box 4: Payments Table -->
+        <div class="card border-0 rounded-4 shadow-sm">
+            <div class="card-header bg-white border-0 py-3 px-4">
                 <h5 class="mb-0">Payment Transactions</h5>
             </div>
-            <div class="card-body">
+            <div class="card-body px-4">
                 <?php if (empty($payments)): ?>
                     <div class="text-center py-5">
                         <i class="bi bi-cash-stack fs-1 text-muted"></i>
@@ -381,13 +377,16 @@ include 'includes/sidebar.php';
                                                 <div>
                                                     <h6 class="mb-0"><?php echo htmlspecialchars($payment['firstName'] . ' ' . $payment['lastName']); ?></h6>
                                                     <small class="text-muted d-block"><?php echo htmlspecialchars($payment['email']); ?></small>
+                                                    <?php if (!empty($payment['phone'])): ?>
+                                                        <small class="text-muted"><?php echo htmlspecialchars($payment['phone']); ?></small>
+                                                    <?php endif; ?>
                                                 </div>
                                             </div>
                                         </td>
                                         <td>
                                             <h6 class="mb-0"><?php echo htmlspecialchars($payment['courseTitle']); ?></h6>
                                             <small class="text-muted">ID: <?php echo $payment['courseID']; ?></small>
-                                            <br><small class="text-muted">Price: ₱<?php echo number_format($payment['price'], 2); ?></small>
+                                            <br><small class="text-success">₱<?php echo number_format($payment['price'], 2); ?></small>
                                         </td>
                                         <td>
                                             <h5 class="mb-0 text-success">₱<?php echo number_format($payment['amount'], 2); ?></h5>
@@ -424,62 +423,12 @@ include 'includes/sidebar.php';
                                             <?php endif; ?>
                                         </td>
                                         <td>
-                                            <div class="btn-group btn-group-sm">
-                                                <a href="payment_view.php?id=<?php echo $payment['paymentID']; ?>" 
-                                                   class="btn btn-outline-primary" 
-                                                   data-bs-toggle="tooltip" 
-                                                   title="View Details">
-                                                    <i class="bi bi-eye"></i>
-                                                </a>
-                                                <button type="button" 
-                                                        class="btn btn-outline-secondary dropdown-toggle" 
-                                                        data-bs-toggle="dropdown" 
-                                                        aria-expanded="false">
-                                                    <i class="bi bi-gear"></i>
-                                                </button>
-                                                <ul class="dropdown-menu">
-                                                    <?php if ($payment['status'] !== 'completed'): ?>
-                                                        <li>
-                                                            <a href="payment_actions.php?action=complete&id=<?php echo $payment['paymentID']; ?>" 
-                                                               class="dropdown-item text-success">
-                                                                <i class="bi bi-check-circle me-2"></i>Mark as Completed
-                                                            </a>
-                                                        </li>
-                                                    <?php endif; ?>
-                                                    <?php if ($payment['status'] !== 'failed'): ?>
-                                                        <li>
-                                                            <a href="payment_actions.php?action=fail&id=<?php echo $payment['paymentID']; ?>" 
-                                                               class="dropdown-item text-danger">
-                                                                <i class="bi bi-x-circle me-2"></i>Mark as Failed
-                                                            </a>
-                                                        </li>
-                                                    <?php endif; ?>
-                                                    <?php if ($payment['status'] !== 'refunded'): ?>
-                                                        <li>
-                                                            <a href="payment_actions.php?action=refund&id=<?php echo $payment['paymentID']; ?>" 
-                                                               class="dropdown-item text-secondary">
-                                                                <i class="bi bi-arrow-counterclockwise me-2"></i>Mark as Refunded
-                                                            </a>
-                                                        </li>
-                                                    <?php endif; ?>
-                                                    <?php if ($payment['status'] !== 'pending'): ?>
-                                                        <li>
-                                                            <a href="payment_actions.php?action=pending&id=<?php echo $payment['paymentID']; ?>" 
-                                                               class="dropdown-item text-warning">
-                                                                <i class="bi bi-clock me-2"></i>Mark as Pending
-                                                            </a>
-                                                        </li>
-                                                    <?php endif; ?>
-                                                    <li><hr class="dropdown-divider"></li>
-                                                    <li>
-                                                        <a href="payment_actions.php?action=delete&id=<?php echo $payment['paymentID']; ?>" 
-                                                           class="dropdown-item text-danger"
-                                                           data-confirm-delete="Are you sure you want to delete this payment record? This action cannot be undone.">
-                                                            <i class="bi bi-trash me-2"></i>Delete Payment
-                                                        </a>
-                                                    </li>
-                                                </ul>
-                                            </div>
+                                            <a href="payment_view.php?id=<?php echo $payment['paymentID']; ?>" 
+                                               class="btn btn-outline-primary btn-sm" 
+                                               data-bs-toggle="tooltip" 
+                                               title="View Details">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -493,11 +442,7 @@ include 'includes/sidebar.php';
                             <ul class="pagination justify-content-center">
                                 <?php if ($page > 1): ?>
                                     <li class="page-item">
-                                        <a class="page-link" href="?<?php 
-                                            $query = $_GET;
-                                            $query['page'] = $page - 1;
-                                            echo http_build_query($query); 
-                                        ?>">
+                                        <a class="page-link" href="?<?php echo http_build_query(array_merge($_GET, ['page' => $page - 1])); ?>">
                                             <i class="bi bi-chevron-left"></i>
                                         </a>
                                     </li>
@@ -506,11 +451,7 @@ include 'includes/sidebar.php';
                                 <?php for ($i = 1; $i <= $totalPages; $i++): ?>
                                     <?php if ($i == 1 || $i == $totalPages || ($i >= $page - 2 && $i <= $page + 2)): ?>
                                         <li class="page-item <?php echo $i == $page ? 'active' : ''; ?>">
-                                            <a class="page-link" href="?<?php 
-                                                $query = $_GET;
-                                                $query['page'] = $i;
-                                                echo http_build_query($query); 
-                                            ?>">
+                                            <a class="page-link" href="?<?php echo http_build_query(array_merge($_GET, ['page' => $i])); ?>">
                                                 <?php echo $i; ?>
                                             </a>
                                         </li>
@@ -523,11 +464,7 @@ include 'includes/sidebar.php';
                                 
                                 <?php if ($page < $totalPages): ?>
                                     <li class="page-item">
-                                        <a class="page-link" href="?<?php 
-                                            $query = $_GET;
-                                            $query['page'] = $page + 1;
-                                            echo http_build_query($query); 
-                                        ?>">
+                                        <a class="page-link" href="?<?php echo http_build_query(array_merge($_GET, ['page' => $page + 1])); ?>">
                                             <i class="bi bi-chevron-right"></i>
                                         </a>
                                     </li>
@@ -547,16 +484,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
-
-    // Confirm delete for payment deletion
-    const deleteLinks = document.querySelectorAll('[data-confirm-delete]');
-    deleteLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
-            if (!confirm(this.getAttribute('data-confirm-delete'))) {
-                e.preventDefault();
-            }
-        });
     });
 });
 </script>

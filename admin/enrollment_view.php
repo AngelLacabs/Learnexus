@@ -91,11 +91,11 @@ try {
     $stmt = $conn->prepare("SELECT COUNT(*) as totalQuizzes FROM quizzes WHERE courseID = ?");
     $stmt->execute([$enrollment['courseID']]);
     $totalQuizzes = $stmt->fetchColumn();
-    
+
     // Calculate progress metrics
     $completedLessons = count($lessoncompletion);
     $lessonProgress = $totalLessons > 0 ? round(($completedLessons / $totalLessons) * 100, 1) : 0;
-    
+
     // Get average quiz score
     $avgQuizScore = 0;
     $passedQuizzes = 0;
@@ -109,7 +109,7 @@ try {
         }
         $avgQuizScore = round($totalScore / count($quizResults), 1);
     }
-    
+
 } catch (PDOException $e) {
     error_log("Enrollment View Error: " . $e->getMessage());
     $_SESSION['error'] = 'Error loading enrollment details';
@@ -122,77 +122,104 @@ include 'includes/header.php';
 include 'includes/sidebar.php';
 ?>
 
-<div class="main-content">
+<div class="main-content pb-3 pb-lg-4 ps-3 ps-lg-4 pe-3 pe-lg-4 pt-3">
     <div class="container-fluid">
-        <!-- Page Header -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div class="d-flex align-items-center">
-                <a href="enrollments.php" class="btn btn-outline-secondary me-3">
-                    <i class="bi bi-arrow-left"></i>
-                </a>
-                <div>
-                    <h1 class="h3 mb-0">Enrollment Details</h1>
-                    <nav aria-label="breadcrumb">
-                        <ol class="breadcrumb mb-0">
-                            <li class="breadcrumb-item"><a href="dashboard.php">Dashboard</a></li>
-                            <li class="breadcrumb-item"><a href="enrollments.php">Enrollments</a></li>
-                            <li class="breadcrumb-item active" aria-current="page"><?php echo htmlspecialchars($enrollment['firstName'] . ' ' . $enrollment['lastName']); ?></li>
-                        </ol>
-                    </nav>
-                </div>
+        <!-- Success/Error Messages -->
+        <?php if (isset($_SESSION['success'])): ?>
+            <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+                <?php echo $_SESSION['success']; ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
-            <div class="btn-group">
-                <a href="enrollment_edit.php?id=<?php echo $enrollmentID; ?>" class="btn btn-primary">
-                    <i class="bi bi-pencil me-2"></i>Edit Enrollment
-                </a>
-                <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
-                    <span class="visually-hidden">Toggle Dropdown</span>
-                </button>
-                <ul class="dropdown-menu">
-                    <?php if ($enrollment['status'] !== 'completed' && $enrollment['progressPercentage'] >= 100): ?>
-                        <li>
-                            <a href="enrollment_actions.php?action=complete&id=<?php echo $enrollmentID; ?>" class="dropdown-item text-success">
-                                <i class="bi bi-check-circle me-2"></i>Mark as Completed
-                            </a>
-                        </li>
-                    <?php endif; ?>
-                    <?php if ($enrollment['status'] !== 'dropped'): ?>
-                        <li>
-                            <a href="enrollment_actions.php?action=drop&id=<?php echo $enrollmentID; ?>" class="dropdown-item text-warning">
-                                <i class="bi bi-x-circle me-2"></i>Drop Enrollment
-                            </a>
-                        </li>
-                    <?php endif; ?>
-                    <li><hr class="dropdown-divider"></li>
-                    <li>
-                        <a href="enrollment_actions.php?action=delete&id=<?php echo $enrollmentID; ?>" 
-                           class="dropdown-item text-danger"
-                           data-confirm-delete="Are you sure you want to delete this enrollment? This will permanently delete all related data including quiz results and progress tracking.">
-                            <i class="bi bi-trash me-2"></i>Delete Enrollment
+            <?php unset($_SESSION['success']); ?>
+        <?php endif; ?>
+        
+        <?php if (isset($_SESSION['error'])): ?>
+            <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+                <?php echo $_SESSION['error']; ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            <?php unset($_SESSION['error']); ?>
+        <?php endif; ?>
+
+        <!-- Box 1: Page Header - Updated breadcrumb only -->
+        <div class="card border-0 rounded-4 shadow-sm mb-4">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                        <a href="enrollments.php" class="btn btn-outline-secondary me-3" id="backButton">
+                            <i class="bi bi-arrow-left"></i>
                         </a>
-                    </li>
-                </ul>
+                        <div>
+                            <h1 class="h3 mb-0">Enrollment Details</h1>
+                            <nav aria-label="breadcrumb">
+                                <ol class="breadcrumb mb-0">
+                                    <li class="breadcrumb-item"><a href="dashboard.php" class="fw-bold text-primary">Dashboard</a></li>
+                                    <li class="breadcrumb-item"><a href="enrollments.php" class="fw-bold text-primary">Enrollments</a></li>
+                                    <li class="breadcrumb-item active text-dark" aria-current="page"><?php echo htmlspecialchars($enrollment['firstName'] . ' ' . $enrollment['lastName']); ?></li>
+                                </ol>
+                            </nav>
+                        </div>
+                    </div>
+                    <!-- Actions button stays in its original position -->
+                    <div class="btn-group">
+                        <button type="button" class="btn text-white border-0 dropdown-toggle" 
+                                data-bs-toggle="dropdown" 
+                                aria-expanded="false"
+                                style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <i class="bi bi-gear me-2"></i>Actions
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a href="enrollment_edit.php?id=<?php echo $enrollmentID; ?>" class="dropdown-item">
+                                    <i class="bi bi-pencil me-2"></i>Edit Enrollment
+                                </a>
+                            </li>
+                            <?php if ($enrollment['status'] !== 'completed' && $enrollment['progressPercentage'] >= 100): ?>
+                                <li>
+                                    <a href="enrollment_actions.php?action=complete&id=<?php echo $enrollmentID; ?>" class="dropdown-item text-success">
+                                        <i class="bi bi-check-circle me-2"></i>Mark as Completed
+                                    </a>
+                                </li>
+                            <?php endif; ?>
+                            <?php if ($enrollment['status'] !== 'dropped'): ?>
+                                <li>
+                                    <a href="enrollment_actions.php?action=drop&id=<?php echo $enrollmentID; ?>" class="dropdown-item text-warning">
+                                        <i class="bi bi-x-circle me-2"></i>Drop Enrollment
+                                    </a>
+                                </li>
+                            <?php endif; ?>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a href="enrollment_actions.php?action=delete&id=<?php echo $enrollmentID; ?>" 
+                                   class="dropdown-item text-danger"
+                                   data-confirm-delete="Are you sure you want to delete this enrollment? This will permanently delete all related data including quiz results and progress tracking.">
+                                    <i class="bi bi-trash me-2"></i>Delete Enrollment
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Enrollment Overview -->
         <div class="row mb-4">
             <div class="col-lg-8">
-                <div class="card border-0 shadow-sm mb-4">
-                    <div class="card-header bg-white border-0">
+                <!-- Box 2: Enrollment Information -->
+                <div class="card border-0 rounded-4 shadow-sm mb-4">
+                    <div class="card-header bg-white border-0 py-3 px-4">
                         <h5 class="mb-0">Enrollment Information</h5>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body p-4">
                         <div class="row">
-                            <div class="col-md-6">
-                                <h6>Student Information</h6>
+                            <div class="col-md-6 mb-4">
+                                <h6 class="mb-3">Student Information</h6>
                                 <div class="d-flex align-items-center mb-3">
-                                    <?php if (!empty($enrollment['avatar'])): ?>
-                                        <img src="<?php echo htmlspecialchars($enrollment['avatar']); ?>" 
-                                             class="rounded-circle me-3" 
-                                             width="60" 
-                                             height="60"
-                                             alt="Avatar">
+                                    <?php if (!empty($enrollment['avatar']) && file_exists($enrollment['avatar'])): ?>
+                                        <div class="avatar-lg me-3" style="overflow: hidden;">
+                                            <img src="<?php echo htmlspecialchars($enrollment['avatar']); ?>" 
+                                                 class="w-100 h-100 rounded-circle object-fit-cover"
+                                                 alt="Avatar">
+                                        </div>
                                     <?php else: ?>
                                         <div class="avatar-lg bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3">
                                             <?php echo strtoupper(substr($enrollment['firstName'], 0, 1)); ?>
@@ -213,12 +240,12 @@ include 'includes/sidebar.php';
                                 </div>
                             </div>
                             
-                            <div class="col-md-6">
-                                <h6>Course Information</h6>
+                            <div class="col-md-6 mb-4">
+                                <h6 class="mb-3">Course Information</h6>
                                 <h5 class="mb-2"><?php echo htmlspecialchars($enrollment['courseTitle']); ?></h5>
-                                <p class="text-muted"><?php echo htmlspecialchars(substr($enrollment['courseDescription'], 0, 150)) . (strlen($enrollment['courseDescription']) > 150 ? '...' : ''); ?></p>
+                                <p class="text-muted mb-3"><?php echo htmlspecialchars(substr($enrollment['courseDescription'], 0, 150)) . (strlen($enrollment['courseDescription']) > 150 ? '...' : ''); ?></p>
                                 
-                                <div class="row">
+                                <div class="row mb-2">
                                     <div class="col-6">
                                         <small class="text-muted d-block">Category</small>
                                         <p class="mb-0"><?php echo !empty($enrollment['category']) ? htmlspecialchars($enrollment['category']) : 'N/A'; ?></p>
@@ -229,9 +256,10 @@ include 'includes/sidebar.php';
                                     </div>
                                 </div>
                                 
-                                <div class="mt-2">
+                                <div class="mb-2">
                                     <small class="text-muted d-block">Teacher</small>
                                     <p class="mb-0"><?php echo htmlspecialchars($enrollment['teacherFirstName'] . ' ' . $enrollment['teacherLastName']); ?></p>
+                                    <small class="text-muted"><?php echo htmlspecialchars($enrollment['teacherEmail']); ?></small>
                                 </div>
                             </div>
                         </div>
@@ -239,49 +267,45 @@ include 'includes/sidebar.php';
                         <hr class="my-4">
                         
                         <div class="row">
-                            <div class="col-md-3">
-                                <div class="text-center">
-                                    <h2 class="text-primary mb-0"><?php echo number_format($enrollment['progressPercentage'], 1); ?>%</h2>
-                                    <small class="text-muted">Overall Progress</small>
+                            <div class="col-md-3 mb-3 mb-md-0">
+                                <div class="text-center p-3 rounded-3" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                    <h2 class="text-white mb-0"><?php echo number_format($enrollment['progressPercentage'], 1); ?>%</h2>
+                                    <small class="text-white-50">Overall Progress</small>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-3 mb-3 mb-md-0">
+                                <div class="text-center p-3 rounded-3" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                                    <h2 class="text-white mb-0"><?php echo $completedLessons; ?>/<?php echo $totalLessons; ?></h2>
+                                    <small class="text-white-50">Lessons Completed</small>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-3 mb-3 mb-md-0">
+                                <div class="text-center p-3 rounded-3" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                                    <h2 class="text-white mb-0"><?php echo $avgQuizScore; ?>%</h2>
+                                    <small class="text-white-50">Avg Quiz Score</small>
                                 </div>
                             </div>
                             
                             <div class="col-md-3">
-                                <div class="text-center">
-                                    <h2 class="text-success mb-0"><?php echo $completedLessons; ?>/<?php echo $totalLessons; ?></h2>
-                                    <small class="text-muted">Lessons Completed</small>
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-3">
-                                <div class="text-center">
-                                    <h2 class="text-info mb-0"><?php echo $avgQuizScore; ?>%</h2>
-                                    <small class="text-muted">Avg Quiz Score</small>
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-3">
-                                <div class="text-center">
-                                    <span class="badge bg-<?php 
-                                        echo $enrollment['status'] === 'completed' ? 'success' : 
-                                            ($enrollment['status'] === 'active' ? 'primary' : 
-                                            ($enrollment['status'] === 'dropped' ? 'danger' : 'warning')); 
-                                    ?> fs-5">
+                                <div class="text-center p-3 rounded-3" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                                    <span class="badge text-dark fs-5 px-3 py-2">
                                         <?php echo ucfirst($enrollment['status']); ?>
                                     </span>
-                                    <small class="text-muted d-block">Status</small>
+                                    <small class="text-white-50 d-block mt-1">Status</small>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 
-                <!-- Progress Timeline -->
-                <div class="card border-0 shadow-sm mb-4">
-                    <div class="card-header bg-white border-0">
+                <!-- Box 3: Progress Timeline -->
+                <div class="card border-0 rounded-4 shadow-sm mb-4">
+                    <div class="card-header bg-white border-0 py-3 px-4">
                         <h5 class="mb-0">Progress Timeline</h5>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body p-4">
                         <div class="timeline">
                             <!-- Enrollment Date -->
                             <div class="timeline-item">
@@ -376,7 +400,10 @@ include 'includes/sidebar.php';
                         
                         <?php if (count($lessoncompletion) > 3 || count($quizResults) > 3): ?>
                             <div class="text-center mt-3">
-                                <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="collapse" data-bs-target="#fullTimeline">
+                                <button type="button" class="btn btn-sm text-white border-0" 
+                                        data-bs-toggle="collapse" 
+                                        data-bs-target="#fullTimeline"
+                                        style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                                     Show All Activities
                                 </button>
                             </div>
@@ -425,12 +452,12 @@ include 'includes/sidebar.php';
             </div>
             
             <div class="col-lg-4">
-                <!-- Detailed Progress Stats -->
-                <div class="card border-0 shadow-sm mb-4">
-                    <div class="card-header bg-white border-0">
+                <!-- Box 4: Progress Details -->
+                <div class="card border-0 rounded-4 shadow-sm mb-4">
+                    <div class="card-header bg-white border-0 py-3 px-4">
                         <h5 class="mb-0">Progress Details</h5>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body p-4">
                         <!-- Lesson Progress -->
                         <div class="mb-4">
                             <h6>Lesson Progress</h6>
@@ -439,7 +466,7 @@ include 'includes/sidebar.php';
                                 <span><?php echo $completedLessons; ?>/<?php echo $totalLessons; ?> (<?php echo $lessonProgress; ?>%)</span>
                             </div>
                             <div class="progress" style="height: 10px;">
-                                <div class="progress-bar bg-info" 
+                                <div class="progress-bar bg-info rounded" 
                                      role="progressbar" 
                                      style="width: <?php echo $lessonProgress; ?>%"
                                      aria-valuenow="<?php echo $lessonProgress; ?>" 
@@ -454,12 +481,16 @@ include 'includes/sidebar.php';
                             <h6>Quiz Performance</h6>
                             <div class="row text-center">
                                 <div class="col-6 mb-3">
-                                    <h2 class="text-primary mb-1"><?php echo count($quizResults); ?></h2>
-                                    <small class="text-muted">Attempts</small>
+                                    <div class="p-3 rounded-3" style="background: linear-gradient(135deg, #667eea20 0%, #764ba220 100%);">
+                                        <h2 class="text-primary mb-1"><?php echo count($quizResults); ?></h2>
+                                        <small class="text-muted">Attempts</small>
+                                    </div>
                                 </div>
                                 <div class="col-6 mb-3">
-                                    <h2 class="text-success mb-1"><?php echo $passedQuizzes; ?></h2>
-                                    <small class="text-muted">Passed</small>
+                                    <div class="p-3 rounded-3" style="background: linear-gradient(135deg, #11998e20 0%, #38ef7d20 100%);">
+                                        <h2 class="text-success mb-1"><?php echo $passedQuizzes; ?></h2>
+                                        <small class="text-muted">Passed</small>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -472,13 +503,16 @@ include 'includes/sidebar.php';
                                 <span><?php echo number_format($enrollment['progressPercentage'], 1); ?>%</span>
                             </div>
                             <div class="progress" style="height: 12px;">
-                                <div class="progress-bar bg-<?php 
-                                    echo $enrollment['progressPercentage'] >= 100 ? 'success' : 
-                                        ($enrollment['progressPercentage'] >= 70 ? 'primary' : 
-                                        ($enrollment['progressPercentage'] >= 50 ? 'info' : 'warning')); 
-                                ?>" 
+                                <div class="progress-bar rounded" 
                                      role="progressbar" 
-                                     style="width: <?php echo min($enrollment['progressPercentage'], 100); ?>%"
+                                     style="width: <?php echo min($enrollment['progressPercentage'], 100); ?>%;
+                                            background: linear-gradient(135deg, 
+                                            <?php 
+                                                if ($enrollment['progressPercentage'] >= 100) echo '#11998e 0%, #38ef7d 100%';
+                                                elseif ($enrollment['progressPercentage'] >= 70) echo '#667eea 0%, #764ba2 100%';
+                                                elseif ($enrollment['progressPercentage'] >= 50) echo '#4facfe 0%, #00f2fe 100%';
+                                                else echo '#f093fb 0%, #f5576c 100%';
+                                            ?>);"
                                      aria-valuenow="<?php echo $enrollment['progressPercentage']; ?>" 
                                      aria-valuemin="0" 
                                      aria-valuemax="100">
@@ -488,17 +522,17 @@ include 'includes/sidebar.php';
                     </div>
                 </div>
                 
-                <!-- Quiz Results Summary -->
+                <!-- Box 5: Recent Quiz Results -->
                 <?php if (!empty($quizResults)): ?>
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-header bg-white border-0">
+                    <div class="card border-0 rounded-4 shadow-sm">
+                        <div class="card-header bg-white border-0 py-3 px-4">
                             <h5 class="mb-0">Recent Quiz Results</h5>
                         </div>
-                        <div class="card-body">
+                        <div class="card-body p-4">
                             <div class="list-group list-group-flush">
                                 <?php foreach ($quizResults as $index => $quiz): ?>
                                     <?php if ($index < 3): ?>
-                                        <div class="list-group-item px-0">
+                                        <div class="list-group-item px-0 border-0 mb-2">
                                             <div class="d-flex justify-content-between align-items-center">
                                                 <div>
                                                     <h6 class="mb-1"><?php echo htmlspecialchars($quiz['quizTitle']); ?></h6>
@@ -507,7 +541,7 @@ include 'includes/sidebar.php';
                                                     </small>
                                                 </div>
                                                 <div class="text-end">
-                                                    <span class="badge bg-<?php echo (float)$quiz['percentage'] >= $quiz['passingScore'] ? 'success' : 'danger'; ?>">
+                                                    <span class="badge bg-<?php echo (float)$quiz['percentage'] >= $quiz['passingScore'] ? 'success' : 'danger'; ?> px-3 py-2">
                                                         <?php echo number_format($quiz['percentage'], 1); ?>%
                                                     </span>
                                                     <br>
@@ -521,7 +555,10 @@ include 'includes/sidebar.php';
                                 <?php endforeach; ?>
                             </div>
                             <?php if (count($quizResults) > 3): ?>
-                                <a href="#" class="btn btn-sm btn-outline-info w-100 mt-3" data-bs-toggle="modal" data-bs-target="#quizResultsModal">
+                                <a href="#" class="btn btn-sm text-white border-0 w-100 mt-3" 
+                                   data-bs-toggle="modal" 
+                                   data-bs-target="#quizResultsModal"
+                                   style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                                     View All Quiz Results
                                 </a>
                             <?php endif; ?>
@@ -561,7 +598,7 @@ include 'includes/sidebar.php';
                                             <h6 class="mb-0"><?php echo htmlspecialchars($quiz['quizTitle']); ?></h6>
                                         </td>
                                         <td>
-                                            <span class="badge bg-<?php echo (float)$quiz['percentage'] >= $quiz['passingScore'] ? 'success' : 'danger'; ?> fs-6">
+                                            <span class="badge bg-<?php echo (float)$quiz['percentage'] >= $quiz['passingScore'] ? 'success' : 'danger'; ?> fs-6 px-3 py-2">
                                                 <?php echo number_format($quiz['percentage'], 1); ?>%
                                             </span>
                                         </td>
@@ -592,6 +629,62 @@ include 'includes/sidebar.php';
 <?php endif; ?>
 
 <style>
+/* Back button styling to match user_edit.php */
+#backButton.btn-outline-secondary {
+    border-color: #fbb6ce !important;
+    color: #6c757d !important;
+    transition: all 0.2s ease !important;
+}
+
+#backButton.btn-outline-secondary:active {
+    background-color: #fbb6ce !important;
+    color: #fff !important;
+    border-color: #fbb6ce !important;
+}
+
+#backButton.btn-outline-secondary:hover {
+    background-color: rgba(251, 182, 206, 0.1) !important;
+}
+
+/* Breadcrumb styling */
+.breadcrumb {
+    background-color: transparent !important;
+    padding: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+.breadcrumb-item a {
+    text-decoration: none;
+    color: #6c757d;
+    transition: color 0.2s ease;
+}
+
+.breadcrumb-item a:hover {
+    color: #0d6efd;
+}
+
+.breadcrumb-item a.fw-bold.text-primary {
+    font-weight: 600 !important;
+    color: #0d6efd !important;
+}
+
+.breadcrumb-item a.fw-bold.text-primary:hover {
+    color: #0a58ca !important;
+    text-decoration: underline;
+}
+
+.breadcrumb-item.active.text-dark {
+    color: #212529 !important;
+    font-weight: 500;
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+    color: #adb5bd;
+    content: "›";
+    font-size: 1.1em;
+}
+
+/* ORIGINAL STYLES FROM YOUR FILE - KEEP THESE EXACTLY THE SAME */
 .timeline {
     position: relative;
     padding-left: 30px;
@@ -603,7 +696,7 @@ include 'includes/sidebar.php';
     top: 0;
     bottom: 0;
     width: 2px;
-    background: #e9ecef;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 .timeline-item {
     position: relative;
@@ -620,9 +713,19 @@ include 'includes/sidebar.php';
     align-items: center;
     justify-content: center;
     z-index: 1;
+    border: 3px solid white;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 .timeline-content {
     padding-left: 10px;
+}
+.avatar-lg {
+    width: 70px;
+    height: 70px;
+}
+.avatar-sm {
+    width: 40px;
+    height: 40px;
 }
 </style>
 
@@ -632,6 +735,20 @@ document.addEventListener('DOMContentLoaded', function() {
     const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Confirm delete action
+    const deleteLinks = document.querySelectorAll('[data-confirm-delete]');
+    deleteLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const message = this.getAttribute('data-confirm-delete');
+            const url = this.getAttribute('href');
+            
+            if (confirm(message)) {
+                window.location.href = url;
+            }
+        });
     });
 });
 </script>

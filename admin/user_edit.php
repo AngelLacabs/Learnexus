@@ -116,20 +116,22 @@ include 'includes/sidebar.php';
     <div class="container-fluid">
         <!-- Page Header -->
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <div class="d-flex align-items-center">
-                <a href="user_view.php?id=<?php echo $userID; ?>" class="btn btn-outline-secondary me-3">
-                    <i class="bi bi-arrow-left"></i>
-                </a>
-                <div>
-                    <h1 class="h3 mb-0">Edit User</h1>
-                    <nav aria-label="breadcrumb">
-                        <ol class="breadcrumb mb-0">
-                            <li class="breadcrumb-item"><a href="dashboard.php">Dashboard</a></li>
-                            <li class="breadcrumb-item"><a href="users.php">Users</a></li>
-                            <li class="breadcrumb-item"><a href="user_view.php?id=<?php echo $userID; ?>"><?php echo htmlspecialchars($user['firstName'] . ' ' . $user['lastName']); ?></a></li>
-                            <li class="breadcrumb-item active" aria-current="page">Edit</li>
-                        </ol>
-                    </nav>
+            <div class="bg-white rounded-3 shadow-sm p-3 w-100">
+                <div class="d-flex align-items-center">
+                    <a href="user_view.php?id=<?php echo $userID; ?>" class="btn btn-outline-secondary me-3" id="backButton">
+                        <i class="bi bi-arrow-left"></i>
+                    </a>
+                    <div class="flex-grow-1">
+                        <h1 class="h3 mb-0">Edit User</h1>
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb mb-0">
+                                <li class="breadcrumb-item"><a href="dashboard.php" class="fw-bold text-primary">Dashboard</a></li>
+                                <li class="breadcrumb-item"><a href="users.php" class="fw-bold text-primary">Users</a></li>
+                                <li class="breadcrumb-item"><a href="user_view.php?id=<?php echo $userID; ?>" class="fw-bold text-primary"><?php echo htmlspecialchars($user['firstName'] . ' ' . $user['lastName']); ?></a></li>
+                                <li class="breadcrumb-item active text-dark" aria-current="page">Edit</li>
+                            </ol>
+                        </nav>
+                    </div>
                 </div>
             </div>
         </div>
@@ -371,21 +373,72 @@ include 'includes/sidebar.php';
 </div>
 
 <style>
-/* Responsive adjustments for Additional Actions */
+
+#backButton.btn-outline-secondary {
+    border-color: #fbb6ce !important;
+    color: #6c757d !important;
+    transition: all 0.2s ease !important;
+}
+
+#backButton.btn-outline-secondary:active {
+    background-color: #fbb6ce !important;
+    color: #fff !important;
+    border-color: #fbb6ce !important;
+}
+
+#backButton.btn-outline-secondary:hover {
+    background-color: rgba(251, 182, 206, 0.1) !important;
+}
+
+.breadcrumb {
+    background-color: transparent !important;
+    padding: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+.breadcrumb-item a {
+    text-decoration: none;
+    color: #6c757d;
+    transition: color 0.2s ease;
+}
+
+.breadcrumb-item a:hover {
+    color: #0d6efd;
+}
+
+.breadcrumb-item a.fw-bold.text-primary {
+    font-weight: 600 !important;
+    color: #0d6efd !important;
+}
+
+.breadcrumb-item a.fw-bold.text-primary:hover {
+    color: #0a58ca !important;
+    text-decoration: underline;
+}
+
+.breadcrumb-item.active.text-dark {
+    color: #212529 !important;
+    font-weight: 500;
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+    color: #adb5bd;
+    content: "›";
+    font-size: 1.1em;
+}
+
 @media (max-width: 991.98px) {
     .col-lg-4.mt-4.mt-lg-0 {
         margin-top: 1.5rem !important;
     }
 }
 
-/* Ensure buttons are full width on mobile */
 @media (max-width: 575.98px) {
     .d-grid.gap-2 .btn {
         width: 100%;
     }
 }
 
-/* Gradient card responsive adjustments */
 @media (max-width: 767.98px) {
     .card-body.p-4 {
         padding: 1.5rem !important;
@@ -418,7 +471,6 @@ include 'includes/sidebar.php';
     }
 }
 
-/* Gradient button styling */
 .btn[style*="linear-gradient"] {
     transition: all 0.3s ease;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -435,7 +487,6 @@ include 'includes/sidebar.php';
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* Form styling improvements */
 .form-label {
     font-weight: 500;
     margin-bottom: 0.5rem;
@@ -463,7 +514,6 @@ include 'includes/sidebar.php';
     margin-left: 0.5rem;
 }
 
-/* Section headers */
 h6.text-muted {
     font-size: 0.875rem;
     font-weight: 600;
@@ -472,7 +522,6 @@ h6.text-muted {
     color: #6c757d !important;
 }
 
-/* Better spacing on mobile */
 @media (max-width: 767.98px) {
     .row.g-3 {
         --bs-gutter-y: 1rem;
@@ -497,6 +546,32 @@ h6.text-muted {
     h6.text-muted {
         font-size: 0.8rem;
     }
+
+    .bg-white.rounded-3.shadow-sm.p-3 {
+        padding: 1rem !important;
+    }
+    
+    .h3.mb-0 {
+        font-size: 1.25rem;
+    }
+    
+    .breadcrumb {
+        font-size: 0.85rem;
+    }
+    
+    #backButton.btn-outline-secondary {
+        padding: 0.375rem 0.75rem;
+        font-size: 0.9rem;
+    }
+    
+    .breadcrumb-item a.fw-bold.text-primary {
+        font-weight: 600 !important;
+        color: #0d6efd !important;
+    }
+    
+    .breadcrumb-item.active.text-dark {
+        color: #212529 !important;
+    }
 }
 </style>
 
@@ -520,6 +595,12 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    
+    [studentFields, instructorFields].forEach(field => {
+        if (field) {
+            field.style.transition = 'opacity 0.3s ease';
+        }
+    });
 });
 </script>
 
