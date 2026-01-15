@@ -629,9 +629,10 @@ if ($currentLessonID) {
                             </div>
                             <h5 class="fw-bold"><?php echo htmlspecialchars($currentLesson['title']); ?>.pdf</h5>
                             <p class="text-muted mb-0">PDF Document</p>
-                            <button class="btn btn-primary btn-lg mt-4 rounded-pill fw-bold px-5" onclick="window.open('<?php echo htmlspecialchars($currentLesson['filename']); ?>', '_blank')">
-                                <i class="bi bi-box-arrow-up-right me-2"></i> Open PDF Viewer
-                            </button>
+                            <button class="btn btn-primary btn-lg mt-4 rounded-pill fw-bold px-5" onclick="window.open('../<?php echo htmlspecialchars($currentLesson['filename']); ?>', '_blank')">
+    <i class="bi bi-box-arrow-up-right me-2"></i> Open PDF Viewer
+</button>
+                                
                         </div>
                         
                         <?php if (!$currentLesson['isCompleted']): ?>
@@ -780,64 +781,70 @@ if ($currentLessonID) {
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        function markComplete(lessonID) {
-            fetch('mark_lesson_complete.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: `lesson_id=${lessonID}&course_id=<?php echo $courseID; ?>`
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Lesson Completed!',
-                        text: 'Great job! Keep learning.',
-                        confirmButtonColor: '#667eea',
-                        background: '#ffffff',
-                        color: '#1a1a1a',
-                        timer: 2000,
-                        showConfirmButton: false
-                    }).then(() => {
-                        window.location.reload();
-                    });
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: data.message || 'Failed to mark lesson as complete',
-                        confirmButtonColor: '#667eea',
-                        background: '#ffffff',
-                        color: '#1a1a1a'
-                    });
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
+<script>
+    function markComplete(lessonID) {
+        fetch('mark_lesson_complete.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `lesson_id=${lessonID}&course_id=<?php echo $courseID; ?>`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Lesson Completed!',
+                    text: 'Great job! Keep learning.',
+                    confirmButtonColor: '#667eea',
+                    background: '#ffffff',
+                    color: '#1a1a1a',
+                    timer: 2000,
+                    showConfirmButton: false
+                }).then(() => {
+                    window.location.reload();
+                });
+            } else {
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
-                    text: 'An error occurred. Please try again.',
+                    text: data.message || 'Failed to mark lesson as complete',
                     confirmButtonColor: '#667eea',
                     background: '#ffffff',
                     color: '#1a1a1a'
                 });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'An error occurred. Please try again.',
+                confirmButtonColor: '#667eea',
+                background: '#ffffff',
+                color: '#1a1a1a'
             });
-        }
+        });
+    }
 
-        // Mobile sidebar toggle
-        document.addEventListener('DOMContentLoaded', function() {
-            if (window.innerWidth <= 768) {
-                const sidebar = document.querySelector('.sidebar');
-                const mainContent = document.querySelector('.main-content');
-                const topBar = document.querySelector('.top-bar');
-                
-                // Create mobile header
+    // Mobile sidebar management
+    let mobileHeaderCreated = false;
+
+    function handleMobileView() {
+        const sidebar = document.querySelector('.sidebar');
+        const courseLayout = document.querySelector('.course-layout');
+        
+        if (window.innerWidth <= 768) {
+            // Mobile view
+            if (!mobileHeaderCreated) {
+                // Create mobile header only once
                 const mobileHeader = document.createElement('div');
                 mobileHeader.className = 'mobile-header d-flex align-items-center justify-content-between p-3 bg-white border-bottom';
+                mobileHeader.style.position = 'sticky';
+                mobileHeader.style.top = '0';
+                mobileHeader.style.zIndex = '1000';
                 mobileHeader.innerHTML = `
                     <button class="btn btn-outline-primary rounded-pill" onclick="toggleSidebar()">
                         <i class="bi bi-list"></i> Menu
@@ -846,22 +853,73 @@ if ($currentLessonID) {
                     <span class="badge" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"><?php echo $progressPercentage; ?>%</span>
                 `;
                 
-                document.body.insertBefore(mobileHeader, document.querySelector('.course-layout'));
-                
-                // Add back button to sidebar for mobile
-                const sidebarHeader = document.querySelector('.sidebar-header');
-                const backBtn = sidebarHeader.querySelector('.back-btn');
-                if (backBtn) {
-                    backBtn.innerHTML = '<i class="bi bi-arrow-left"></i> Back';
-                    backBtn.style.marginBottom = '10px';
-                }
+                document.body.insertBefore(mobileHeader, courseLayout);
+                mobileHeaderCreated = true;
             }
-        });
-
-        function toggleSidebar() {
-            const sidebar = document.querySelector('.sidebar');
-            sidebar.style.display = sidebar.style.display === 'flex' ? 'none' : 'flex';
+            
+            // Hide sidebar initially on mobile
+            sidebar.style.display = 'none';
+            
+            // Make sidebar overlay when visible
+            sidebar.style.position = 'fixed';
+            sidebar.style.top = '0';
+            sidebar.style.left = '0';
+            sidebar.style.width = '85%';
+            sidebar.style.maxWidth = '340px';
+            sidebar.style.height = '100vh';
+            sidebar.style.zIndex = '2000';
+            sidebar.style.boxShadow = '4px 0 20px rgba(0, 0, 0, 0.3)';
+        } else {
+            // Desktop view
+            const mobileHeader = document.querySelector('.mobile-header');
+            if (mobileHeader) {
+                mobileHeader.remove();
+                mobileHeaderCreated = false;
+            }
+            
+            // Reset sidebar styles for desktop
+            sidebar.style.display = 'flex';
+            sidebar.style.position = 'static';
+            sidebar.style.width = '';
+            sidebar.style.maxWidth = '';
+            sidebar.style.height = '';
+            sidebar.style.zIndex = '';
+            sidebar.style.boxShadow = '4px 0 20px rgba(0, 0, 0, 0.08)';
         }
-    </script>
-</body>
-</html>
+    }
+
+    function toggleSidebar() {
+        const sidebar = document.querySelector('.sidebar');
+        const overlay = document.querySelector('.sidebar-overlay');
+        
+        if (sidebar.style.display === 'flex') {
+            sidebar.style.display = 'none';
+            if (overlay) overlay.remove();
+        } else {
+            sidebar.style.display = 'flex';
+            
+            // Create overlay
+            if (!overlay) {
+                const newOverlay = document.createElement('div');
+                newOverlay.className = 'sidebar-overlay';
+                newOverlay.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0, 0, 0, 0.5);
+                    z-index: 1999;
+                `;
+                newOverlay.onclick = toggleSidebar;
+                document.body.appendChild(newOverlay);
+            }
+        }
+    }
+
+    // Initialize on load
+    document.addEventListener('DOMContentLoaded', handleMobileView);
+
+    // Handle window resize
+    window.addEventListener('resize', handleMobileView);
+</script>
