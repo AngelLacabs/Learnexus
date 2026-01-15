@@ -102,24 +102,11 @@ include 'includes/header.php';
 include 'includes/sidebar.php';
 ?>
 
-<div class="main-content">
+<div class="main-content pb-3 pb-lg-4 ps-3 ps-lg-4 pe-3 pe-lg-4 pt-3">
     <div class="container-fluid">
-        <!-- Page Header -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h1 class="h3 mb-0">User Management</h1>
-                <p class="text-muted mb-0">Manage all system users (Students, Teachers, Admins)</p>
-            </div>
-            <div>
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
-                    <i class="bi bi-plus-circle me-2"></i>Add New User
-                </button>
-            </div>
-        </div>
-
         <!-- Success/Error Messages -->
         <?php if (isset($_SESSION['success'])): ?>
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
                 <?php echo $_SESSION['success']; ?>
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
@@ -127,73 +114,97 @@ include 'includes/sidebar.php';
         <?php endif; ?>
         
         <?php if (isset($_SESSION['error'])): ?>
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
                 <?php echo $_SESSION['error']; ?>
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
             <?php unset($_SESSION['error']); ?>
         <?php endif; ?>
 
-        <!-- Statistics Cards -->
-        <div class="row g-3 mb-4">
+        <!-- Box 1: Page Header -->
+        <div class="card border-0 rounded-4 shadow-sm mb-4">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="h3 mb-0">User Management</h1>
+                        <p class="text-muted mb-0">Manage all system users (Students, Teachers, Admins)</p>
+                    </div>
+                    <div>
+                        <button class="btn text-white border-0" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#addUserModal"
+                                style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <i class="bi bi-plus-circle me-2"></i>Add New User
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Box 2: Statistics Cards - Separate Boxes -->
+        <div class="row g-4 mb-5">
+            <!-- Total Users -->
             <div class="col-lg-3 col-md-6">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
+                <div class="card border-0 rounded-4 h-100 text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15), 0 4px 8px rgba(0, 0, 0, 0.1);">
+                    <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="text-muted mb-1">Total Users</h6>
-                                <h3 class="mb-0"><?php echo number_format($stats['total']); ?></h3>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-2 text-white-50" style="font-size: 0.875rem; font-weight: 500;">Total Users</h6>
+                                <h2 class="mb-0 text-white fw-bold" style="font-size: 2rem;"><?php echo number_format($stats['total']); ?></h2>
                             </div>
-                            <div class="text-primary">
-                                <i class="bi bi-people-fill fs-2"></i>
+                            <div class="ms-3" style="opacity: 0.9;">
+                                <i class="bi bi-people-fill" style="font-size: 2.5rem;"></i>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
             
+            <!-- Students -->
             <div class="col-lg-3 col-md-6">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
+                <div class="card border-0 rounded-4 h-100 text-white" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15), 0 4px 8px rgba(0, 0, 0, 0.1);">
+                    <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="text-muted mb-1">Students</h6>
-                                <h3 class="mb-0"><?php echo number_format($stats['students']); ?></h3>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-2 text-white-50" style="font-size: 0.875rem; font-weight: 500;">Students</h6>
+                                <h2 class="mb-0 text-white fw-bold" style="font-size: 2rem;"><?php echo number_format($stats['students']); ?></h2>
                             </div>
-                            <div class="text-success">
-                                <i class="bi bi-mortarboard-fill fs-2"></i>
+                            <div class="ms-3" style="opacity: 0.9;">
+                                <i class="bi bi-mortarboard-fill" style="font-size: 2.5rem;"></i>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
             
+            <!-- Instructors -->
             <div class="col-lg-3 col-md-6">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
+                <div class="card border-0 rounded-4 h-100 text-white" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15), 0 4px 8px rgba(0, 0, 0, 0.1);">
+                    <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="text-muted mb-1">Instructors</h6>
-                                <h3 class="mb-0"><?php echo number_format($stats['instructors']); ?></h3>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-2 text-white-50" style="font-size: 0.875rem; font-weight: 500;">Instructors</h6>
+                                <h2 class="mb-0 text-white fw-bold" style="font-size: 2rem;"><?php echo number_format($stats['instructors']); ?></h2>
                             </div>
-                            <div class="text-warning">
-                                <i class="bi bi-person-badge-fill fs-2"></i>
+                            <div class="ms-3" style="opacity: 0.9;">
+                                <i class="bi bi-person-badge-fill" style="font-size: 2.5rem;"></i>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
             
+            <!-- Active Users -->
             <div class="col-lg-3 col-md-6">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
+                <div class="card border-0 rounded-4 h-100 text-white" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15), 0 4px 8px rgba(0, 0, 0, 0.1);">
+                    <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="text-muted mb-1">Active Users</h6>
-                                <h3 class="mb-0"><?php echo number_format($stats['active']); ?></h3>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-2 text-white-50" style="font-size: 0.875rem; font-weight: 500;">Active Users</h6>
+                                <h2 class="mb-0 text-white fw-bold" style="font-size: 2rem;"><?php echo number_format($stats['active']); ?></h2>
                             </div>
-                            <div class="text-info">
-                                <i class="bi bi-check-circle-fill fs-2"></i>
+                            <div class="ms-3" style="opacity: 0.9;">
+                                <i class="bi bi-check-circle-fill" style="font-size: 2.5rem;"></i>
                             </div>
                         </div>
                     </div>
@@ -201,9 +212,9 @@ include 'includes/sidebar.php';
             </div>
         </div>
 
-        <!-- Filters Card -->
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-body">
+        <!-- Box 3: Filters Card -->
+        <div class="card border-0 rounded-4 shadow-sm mb-5">
+            <div class="card-body p-4">
                 <form method="GET" action="" class="row g-3">
                     <div class="col-md-4">
                         <label class="form-label">Search</label>
@@ -244,7 +255,7 @@ include 'includes/sidebar.php';
                     </div>
                     
                     <div class="col-md-2 d-flex align-items-end">
-                        <button type="submit" class="btn btn-primary w-100">
+                        <button type="submit" class="btn w-100 text-white border-0" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                             <i class="bi bi-funnel me-2"></i>Filter
                         </button>
                     </div>
@@ -252,12 +263,12 @@ include 'includes/sidebar.php';
             </div>
         </div>
 
-        <!-- Users Table -->
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white border-0 py-3">
+        <!-- Box 4: Users Table -->
+        <div class="card border-0 rounded-4 shadow-sm">
+            <div class="card-header bg-white border-0 py-3 px-4">
                 <h5 class="mb-0">Users List</h5>
             </div>
-            <div class="card-body">
+            <div class="card-body px-4">
                 <?php if (empty($users)): ?>
                     <div class="text-center py-5">
                         <i class="bi bi-people fs-1 text-muted"></i>
@@ -283,14 +294,14 @@ include 'includes/sidebar.php';
                                     <tr>
                                         <td>
                                             <div class="d-flex align-items-center">
-                                                <?php if (!empty($user['avatar'])): ?>
-                                                    <img src="<?php echo htmlspecialchars($user['avatar']); ?>" 
-                                                         class="rounded-circle me-3" 
-                                                         width="40" 
-                                                         height="40"
-                                                         alt="Avatar">
+                                                <?php if (!empty($user['avatar']) && file_exists($user['avatar'])): ?>
+                                                    <div class="avatar-sm me-2" style="overflow: hidden;">
+                                                        <img src="<?php echo htmlspecialchars($user['avatar']); ?>" 
+                                                             class="w-100 h-100 rounded-circle object-fit-cover"
+                                                             alt="Avatar">
+                                                    </div>
                                                 <?php else: ?>
-                                                    <div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3">
+                                                    <div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2">
                                                         <?php echo strtoupper(substr($user['firstName'], 0, 1)); ?>
                                                     </div>
                                                 <?php endif; ?>
@@ -341,44 +352,12 @@ include 'includes/sidebar.php';
                                             <br><small class="text-muted"><?php echo date('h:i A', strtotime($user['createdAt'])); ?></small>
                                         </td>
                                         <td>
-                                            <div class="btn-group btn-group-sm">
-                                                <a href="user_view.php?id=<?php echo $user['userID']; ?>&return=<?php echo urlencode($_SERVER['REQUEST_URI']); ?>" 
-                                                   class="btn btn-outline-primary" 
-                                                   data-bs-toggle="tooltip" 
-                                                   title="View">
-                                                    <i class="bi bi-eye"></i>
-                                                </a>
-                                                <!-- <a href="user_edit.php?id=<?php echo $user['userID']; ?>" 
-                                                   class="btn btn-outline-secondary" 
-                                                   data-bs-toggle="tooltip" 
-                                                   title="Edit">
-                                                    <i class="bi bi-pencil"></i>
-                                                </a>
-                                                <?php if ($user['role'] !== 'admin'): ?>
-                                                    <?php if ($user['status'] === 'suspended'): ?>
-                                                        <a href="user_actions.php?action=activate&id=<?php echo $user['userID']; ?>" 
-                                                           class="btn btn-outline-success" 
-                                                           data-bs-toggle="tooltip" 
-                                                           title="Activate">
-                                                            <i class="bi bi-check-circle"></i>
-                                                        </a>
-                                                    <?php else: ?>
-                                                        <a href="user_actions.php?action=suspend&id=<?php echo $user['userID']; ?>" 
-                                                           class="btn btn-outline-warning" 
-                                                           data-bs-toggle="tooltip" 
-                                                           title="Suspend">
-                                                            <i class="bi bi-pause-circle"></i>
-                                                        </a>
-                                                    <?php endif; ?>
-                                                <?php endif; ?>
-                                                <a href="user_actions.php?action=delete&id=<?php echo $user['userID']; ?>" 
-                                                   class="btn btn-outline-danger" 
-                                                   data-confirm-delete="Are you sure you want to delete this user? This will permanently delete all their data including courses, enrollments, and payments."
-                                                   data-bs-toggle="tooltip" 
-                                                   title="Delete">
-                                                    <i class="bi bi-trash"></i>
-                                                </a> -->
-                                            </div>
+                                            <a href="user_view.php?id=<?php echo $user['userID']; ?>&return=<?php echo urlencode($_SERVER['REQUEST_URI']); ?>" 
+                                               class="btn btn-outline-primary btn-sm" 
+                                               data-bs-toggle="tooltip" 
+                                               title="View">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -534,7 +513,11 @@ include 'includes/sidebar.php';
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary" id="modalSubmitBtn">Create User</button>
+                    <button type="submit" class="btn text-white border-0" 
+                            style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"
+                            id="modalSubmitBtn">
+                        Create User
+                    </button>
                 </div>
             </form>
         </div>
