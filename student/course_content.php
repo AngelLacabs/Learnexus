@@ -103,8 +103,17 @@ if ($enrollment['status'] === 'completed') {
 }
 
 // Update progress and check completion
-$stmt = $conn->prepare("UPDATE enrollments SET progressPercentage = ?, completedAt = ? WHERE enrollmentID = ?");
-$stmt->execute([$progressPercentage, $isCompleted ? date('Y-m-d H:i:s') : null, $enrollment['enrollmentID']]);
+// Update progress and check completion
+// Only set completedAt if it's not already set and course is now complete
+if ($isCompleted && empty($enrollment['completedAt'])) {
+    // First time completion
+    $stmt = $conn->prepare("UPDATE enrollments SET progressPercentage = ?, status = 'completed', completedAt = NOW() WHERE enrollmentID = ?");
+    $stmt->execute([100, $enrollment['enrollmentID']]);
+} else {
+    // Just update progress
+    $stmt = $conn->prepare("UPDATE enrollments SET progressPercentage = ? WHERE enrollmentID = ?");
+    $stmt->execute([$progressPercentage, $enrollment['enrollmentID']]);
+}
 
 // Check if certificate exists
 $certificateUUID = null;
