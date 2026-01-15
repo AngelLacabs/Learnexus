@@ -511,12 +511,6 @@ foreach ($enrolledCourses as $course) {
                                                     <i class="bi bi-three-dots-vertical"></i>
                                                 </button>
                                                 <ul class="dropdown-menu dropdown-menu-end">
-                                                    <li><a class="dropdown-item"
-                                                            href="course_content.php?id=<?php echo $course['courseID']; ?>">
-                                                            <i class="bi bi-eye"></i> Review Course
-                                                        </a></li>
-                                                    <li>
-                                                        <hr class="dropdown-divider">
                                                     </li>
                                                     <li><a class="dropdown-item text-danger" href="#"
                                                             onclick="confirmDelete(<?php echo $course['enrollmentID']; ?>, '<?php echo htmlspecialchars(addslashes($course['title'])); ?>'); return false;">

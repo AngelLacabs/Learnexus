@@ -39,6 +39,7 @@ unset($_SESSION['new_voucher_code']);
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -61,7 +62,7 @@ unset($_SESSION['new_voucher_code']);
         .sidebar {
             background: linear-gradient(180deg, #e8f0fe 0%, #f0f4ff 50%, #f8f9fa 100%);
             width: var(--sidebar-width);
-            box-shadow: 4px 0 20px rgba(0,0,0,0.08);
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.08);
         }
 
         .sidebar-brand {
@@ -112,7 +113,7 @@ unset($_SESSION['new_voucher_code']);
             background: white;
             border: none;
             border-radius: 12px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
         }
 
         .hamburger-icon span {
@@ -149,7 +150,7 @@ unset($_SESSION['new_voucher_code']);
 
         .card-hover:hover {
             transform: translateY(-4px);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.12) !important;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12) !important;
         }
 
         .voucher-code {
@@ -176,9 +177,11 @@ unset($_SESSION['new_voucher_code']);
         }
     </style>
 </head>
+
 <body>
     <div class="position-fixed top-0 start-0 p-3 d-lg-none" style="z-index: 1100;">
-        <button class="hamburger-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" id="hamburgerBtn">
+        <button class="hamburger-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar"
+            id="hamburgerBtn">
             <div class="hamburger-icon d-flex flex-column align-items-center justify-content-center">
                 <span></span>
                 <span></span>
@@ -187,31 +190,38 @@ unset($_SESSION['new_voucher_code']);
         </button>
     </div>
 
-    <aside class="sidebar offcanvas-lg offcanvas-start position-fixed top-0 start-0 h-100" style="width: var(--sidebar-width);" id="sidebar">
+    <aside class="sidebar offcanvas-lg offcanvas-start position-fixed top-0 start-0 h-100"
+        style="width: var(--sidebar-width);" id="sidebar">
         <div class="offcanvas-header d-lg-none border-bottom">
             <h5 class="offcanvas-title sidebar-brand">LEARNEXUS</h5>
         </div>
 
         <div class="offcanvas-body p-0 d-flex flex-column h-100">
             <div class="sidebar-brand px-4 py-4 mb-4 d-none d-lg-block">LEARNEXUS</div>
-            
+
             <nav class="flex-grow-1 px-3">
-                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium" href="dashboard.php">
+                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium"
+                    href="dashboard.php">
                     <i class="bi bi-grid fs-5"></i><span>Dashboard</span>
                 </a>
-                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium" href="course_catalog.php">
+                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium"
+                    href="course_catalog.php">
                     <i class="bi bi-book fs-5"></i><span>Course Catalog</span>
                 </a>
-                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium" href="my_courses.php">
+                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium"
+                    href="my_courses.php">
                     <i class="bi bi-journal-bookmark fs-5"></i><span>My Courses</span>
                 </a>
-                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium" href="certificates.php">
+                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium"
+                    href="certificates.php">
                     <i class="bi bi-award fs-5"></i><span>Certificates</span>
                 </a>
-                <a class="nav-link active d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium" href="vouchers.php">
+                <a class="nav-link active d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium"
+                    href="vouchers.php">
                     <i class="bi bi-ticket-perforated fs-5"></i><span>Vouchers</span>
                 </a>
-                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium" href="settings.php">
+                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium"
+                    href="settings.php">
                     <i class="bi bi-gear fs-5"></i><span>Settings</span>
                 </a>
                 <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium"
@@ -219,9 +229,10 @@ unset($_SESSION['new_voucher_code']);
                     <i class="bi bi-robot fs-5"></i><span>AI Tutor</span>
                 </a>
             </nav>
-            
+
             <div class="p-3 mt-auto">
-                <button class="btn btn-outline-danger w-100 rounded-pill fw-semibold" onclick="window.location.href='../logout.php'">
+                <button class="btn btn-outline-danger w-100 rounded-pill fw-semibold"
+                    onclick="window.location.href='../logout.php'">
                     <i class="bi bi-box-arrow-left me-2"></i>Logout
                 </button>
             </div>
@@ -237,15 +248,17 @@ unset($_SESSION['new_voucher_code']);
                             <div>
                                 <h4 class="mb-0 fw-bold"><i class="bi bi-ticket-perforated me-2"></i>My Vouchers</h4>
                             </div>
-                            
-                            <div class="d-flex align-items-center gap-3" onclick="window.location.href='settings.php'" role="button">
+
+                            <div class="d-flex align-items-center gap-3" onclick="window.location.href='settings.php'"
+                                role="button">
                                 <span class="fw-semibold d-none d-sm-inline">
                                     <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>
                                 </span>
-                                <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold" 
-                                     style="width: 45px; height: 45px; background: var(--gradient-primary);">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold"
+                                    style="width: 45px; height: 45px; background: var(--gradient-primary);">
                                     <?php if (!empty($userAvatar) && file_exists($userAvatar)): ?>
-                                        <img src="<?php echo htmlspecialchars($userAvatar); ?>" alt="Avatar" class="w-100 h-100 rounded-circle object-fit-cover">
+                                        <img src="<?php echo htmlspecialchars($userAvatar); ?>" alt="Avatar"
+                                            class="w-100 h-100 rounded-circle object-fit-cover">
                                     <?php else: ?>
                                         <?php echo strtoupper(substr($_SESSION['first_name'], 0, 1)); ?>
                                     <?php endif; ?>
@@ -268,7 +281,8 @@ unset($_SESSION['new_voucher_code']);
                     <div class="col-12">
                         <div class="alert alert-success alert-dismissible fade show">
                             <i class="bi bi-gift-fill me-2"></i>
-                            <strong>Congratulations!</strong> You earned a new voucher: <strong><?= htmlspecialchars($newVoucherCode) ?></strong>
+                            <strong>Congratulations!</strong> You earned a new voucher:
+                            <strong><?= htmlspecialchars($newVoucherCode) ?></strong>
                             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                         </div>
                     </div>
@@ -279,16 +293,19 @@ unset($_SESSION['new_voucher_code']);
                 <div class="row g-4">
                     <?php foreach ($vouchers as $voucher): ?>
                         <div class="col-12 col-md-6 col-lg-4">
-                            <div class="card border-0 rounded-4 shadow-sm card-hover h-100 voucher-border-<?= $voucher['voucherStatus'] ?>">
+                            <div
+                                class="card border-0 rounded-4 shadow-sm card-hover h-100 voucher-border-<?= $voucher['voucherStatus'] ?>">
                                 <div class="card-body p-4">
 
                                     <div class="d-flex justify-content-between align-items-start mb-3">
-                                        <span class="badge bg-<?= $voucher['voucherStatus'] === 'active' ? 'success' : ($voucher['voucherStatus'] === 'redeemed' ? 'secondary' : 'danger') ?>">
+                                        <span
+                                            class="badge bg-<?= $voucher['voucherStatus'] === 'active' ? 'success' : ($voucher['voucherStatus'] === 'redeemed' ? 'secondary' : 'danger') ?>">
                                             <?= strtoupper($voucher['voucherStatus']) ?>
                                         </span>
                                         <?php if ($voucher['voucherStatus'] === 'active'): ?>
                                             <span class="badge bg-warning text-dark">
-                                                <i class="bi bi-clock"></i> <?= floor((strtotime($voucher['expiryDate']) - time()) / 86400) ?> days left
+                                                <i class="bi bi-clock"></i>
+                                                <?= floor((strtotime($voucher['expiryDate']) - time()) / 86400) ?> days left
                                             </span>
                                         <?php endif; ?>
                                     </div>
@@ -302,9 +319,9 @@ unset($_SESSION['new_voucher_code']);
                                         <small class="text-muted d-block mb-2">Voucher Code:</small>
                                         <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded-3">
                                             <span class="voucher-code"><?= htmlspecialchars($voucher['voucherCode']) ?></span>
-                                            <button class="btn btn-sm btn-outline-primary rounded-circle" 
-                                                    onclick="copyCode('<?= htmlspecialchars($voucher['voucherCode']) ?>')" 
-                                                    title="Copy code">
+                                            <button class="btn btn-sm btn-outline-primary rounded-circle"
+                                                onclick="copyCode('<?= htmlspecialchars($voucher['voucherCode']) ?>')"
+                                                title="Copy code">
                                                 <i class="bi bi-clipboard"></i>
                                             </button>
                                         </div>
@@ -314,7 +331,8 @@ unset($_SESSION['new_voucher_code']);
                                         <div class="col-6">
                                             <small class="text-muted d-block">Discount:</small>
                                             <strong class="text-success">
-                                                <?= $voucher['discountPercentage'] ?><?= $voucher['discount_type'] === 'percent' ? '%' : ' PHP' ?> OFF
+                                                <?= $voucher['discountPercentage'] ?>        <?= $voucher['discount_type'] === 'percent' ? '%' : ' PHP' ?>
+                                                OFF
                                             </strong>
                                         </div>
                                         <div class="col-6">
@@ -328,9 +346,8 @@ unset($_SESSION['new_voucher_code']);
                                             Redeemed on <?= date('M d, Y', strtotime($voucher['redeemed_at'])) ?>
                                         </div>
                                     <?php elseif ($voucher['voucherStatus'] === 'active'): ?>
-                                        <a href="https://dev.art2cart.shop/pages/shop.php?voucher=<?= urlencode($voucher['voucherCode']) ?>" 
-                                           target="_blank" 
-                                           class="btn btn-primary w-100 rounded-pill fw-semibold">
+                                        <a href="https://dev.art2cart.shop/pages/shop.php?voucher=<?= urlencode($voucher['voucherCode']) ?>"
+                                            target="_blank" class="btn btn-primary w-100 rounded-pill fw-semibold">
                                             <i class="bi bi-bag-fill me-2"></i>Shop at SoleSource
                                         </a>
                                     <?php else: ?>
@@ -341,7 +358,8 @@ unset($_SESSION['new_voucher_code']);
 
                                     <hr class="my-3">
                                     <small class="text-muted">
-                                        <i class="bi bi-calendar"></i> Issued: <?= date('M d, Y', strtotime($voucher['generatedAt'])) ?>
+                                        <i class="bi bi-calendar"></i> Issued:
+                                        <?= date('M d, Y', strtotime($voucher['generatedAt'])) ?>
                                     </small>
                                 </div>
                             </div>
@@ -356,9 +374,10 @@ unset($_SESSION['new_voucher_code']);
                                 <i class="bi bi-ticket-perforated display-1 text-muted mb-3"></i>
                                 <h3 class="h5 fw-bold mb-3">No Vouchers Yet</h3>
                                 <p class="text-muted mb-4">Complete courses to earn SoleSource discount vouchers!</p>
-                                <a href="course_catalog.php" class="btn btn-primary rounded-pill px-4 fw-semibold" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white !important; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">
-    <i class="bi bi-search me-2"></i>Browse Courses
-</a>
+                                <a href="course_catalog.php" class="btn btn-primary rounded-pill px-4 fw-semibold border-0"
+                                    style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white !important; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">
+                                    <i class="bi bi-search me-2"></i>Browse Courses
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -395,7 +414,7 @@ unset($_SESSION['new_voucher_code']);
                     </div>
                 `;
                 document.body.appendChild(toast);
-                
+
                 setTimeout(() => toast.remove(), 3000);
             }).catch(() => {
                 alert('Failed to copy code');
@@ -403,4 +422,5 @@ unset($_SESSION['new_voucher_code']);
         }
     </script>
 </body>
+
 </html>

@@ -78,6 +78,7 @@ $dailyMotivationStudent = $studentMotivations[date('z') % count($studentMotivati
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -95,10 +96,9 @@ $dailyMotivationStudent = $studentMotivations[date('z') % count($studentMotivati
             min-height: 100vh;
         }
 
-        /* Sidebar */
         .sidebar {
             background: linear-gradient(180deg, #e8f0fe 0%, #f0f4ff 50%, #f8f9fa 100%);
-            box-shadow: 4px 0 20px rgba(0,0,0,0.08);
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.08);
         }
 
         .sidebar-brand {
@@ -110,7 +110,6 @@ $dailyMotivationStudent = $studentMotivations[date('z') % count($studentMotivati
             background-clip: text;
         }
 
-        /* Navigation */
         .nav-link {
             border-radius: 12px;
             transition: all 0.2s ease;
@@ -144,14 +143,13 @@ $dailyMotivationStudent = $studentMotivations[date('z') % count($studentMotivati
             display: none;
         }
 
-        /* Hamburger */
         .hamburger-btn {
             width: 50px;
             height: 50px;
             background: white;
             border: none;
             border-radius: 12px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
         }
 
         .hamburger-icon span {
@@ -176,14 +174,12 @@ $dailyMotivationStudent = $studentMotivations[date('z') % count($studentMotivati
             transform: translateY(-8px) rotate(-45deg);
         }
 
-        /* Main Content Margin */
         @media (min-width: 992px) {
             .main-content {
                 margin-left: var(--sidebar-width);
             }
         }
 
-        /* Search */
         .search-input {
             padding-left: 2.5rem;
             border: 2px solid transparent;
@@ -203,7 +199,7 @@ $dailyMotivationStudent = $studentMotivations[date('z') % count($studentMotivati
             color: #999;
         }
 
-        .search-input:focus ~ .search-icon {
+        .search-input:focus~.search-icon {
             color: #667eea;
         }
 
@@ -223,7 +219,6 @@ $dailyMotivationStudent = $studentMotivations[date('z') % count($studentMotivati
             display: block;
         }
 
-        /* Course Cards */
         .course-header {
             height: 160px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -239,10 +234,9 @@ $dailyMotivationStudent = $studentMotivations[date('z') % count($studentMotivati
 
         .card-hover:hover {
             transform: translateY(-6px);
-            box-shadow: 0 12px 28px rgba(0,0,0,0.15) !important;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15) !important;
         }
 
-        /* Hide/Show Animations */
         .course-card-wrapper {
             transition: opacity 0.3s ease, transform 0.3s ease;
         }
@@ -257,10 +251,11 @@ $dailyMotivationStudent = $studentMotivations[date('z') % count($studentMotivati
         }
     </style>
 </head>
+
 <body>
-    <!-- Hamburger Button (Mobile) -->
     <div class="position-fixed top-0 start-0 p-3 d-lg-none" style="z-index: 1100;">
-        <button class="hamburger-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" id="hamburgerBtn">
+        <button class="hamburger-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar"
+            id="hamburgerBtn">
             <div class="hamburger-icon d-flex flex-column align-items-center justify-content-center">
                 <span></span>
                 <span></span>
@@ -269,41 +264,49 @@ $dailyMotivationStudent = $studentMotivations[date('z') % count($studentMotivati
         </button>
     </div>
 
-    <!-- Sidebar -->
-    <aside class="sidebar offcanvas-lg offcanvas-start position-fixed top-0 start-0 h-100" style="width: var(--sidebar-width);" id="sidebar">
+    <aside class="sidebar offcanvas-lg offcanvas-start position-fixed top-0 start-0 h-100"
+        style="width: var(--sidebar-width);" id="sidebar">
         <div class="offcanvas-header d-lg-none border-bottom">
             <h5 class="offcanvas-title sidebar-brand">LEARNEXUS</h5>
         </div>
 
         <div class="offcanvas-body p-0 d-flex flex-column h-100">
             <div class="sidebar-brand px-4 py-4 mb-4 d-none d-lg-block">LEARNEXUS</div>
-            
+
             <nav class="flex-grow-1 px-3">
-                <a class="nav-link active d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium" href="dashboard.php">
+                <a class="nav-link active d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium"
+                    href="dashboard.php">
                     <i class="bi bi-grid fs-5"></i><span>Dashboard</span>
                 </a>
-                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium" href="course_catalog.php">
+                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium"
+                    href="course_catalog.php">
                     <i class="bi bi-book fs-5"></i><span>Course Catalog</span>
                 </a>
-                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium" href="my_courses.php">
+                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium"
+                    href="my_courses.php">
                     <i class="bi bi-journal-bookmark fs-5"></i><span>My Courses</span>
                 </a>
-                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium" href="certificates.php">
+                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium"
+                    href="certificates.php">
                     <i class="bi bi-award fs-5"></i><span>Certificates</span>
                 </a>
-                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium" href="vouchers.php">
+                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium"
+                    href="vouchers.php">
                     <i class="bi bi-ticket-perforated fs-5"></i><span>Vouchers</span>
                 </a>
-                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium" href="settings.php">
+                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium"
+                    href="settings.php">
                     <i class="bi bi-gear fs-5"></i><span>Settings</span>
                 </a>
-                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium" href="ai_chatbot.php">
+                <a class="nav-link d-flex align-items-center gap-3 px-3 py-3 mb-2 text-dark fw-medium"
+                    href="ai_chatbot.php">
                     <i class="bi bi-robot fs-5"></i><span>AI Tutor</span>
                 </a>
             </nav>
-            
+
             <div class="p-3 mt-auto">
-                <button class="btn btn-outline-danger w-100 rounded-pill fw-semibold" onclick="window.location.href='../logout.php'">
+                <button class="btn btn-outline-danger w-100 rounded-pill fw-semibold"
+                    onclick="window.location.href='../logout.php'">
                     <i class="bi bi-box-arrow-left me-2"></i>Logout
                 </button>
             </div>
@@ -319,23 +322,25 @@ $dailyMotivationStudent = $studentMotivations[date('z') % count($studentMotivati
                     <div class="card border-0 rounded-4 shadow-sm">
                         <div class="card-body p-3 d-flex justify-content-between align-items-center gap-3">
                             <div class="position-relative" style="flex: 1; max-width: 500px;">
-                                <i class="bi bi-search search-icon position-absolute top-50 start-0 translate-middle-y ms-3"></i>
-                                <input type="text" id="courseSearch" class="form-control search-input rounded-pill ps-5" 
-                                       placeholder="Search your courses..." autocomplete="off">
+                                <i
+                                    class="bi bi-search search-icon position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+                                <input type="text" id="courseSearch" class="form-control search-input rounded-pill ps-5"
+                                    placeholder="Search your courses..." autocomplete="off">
                                 <button class="clear-search" id="clearSearch">
                                     <i class="bi bi-x-circle-fill"></i>
                                 </button>
                             </div>
-                            
-                            <div class="d-flex align-items-center gap-3" onclick="window.location.href='settings.php'" role="button" style="flex-shrink: 0;">
+
+                            <div class="d-flex align-items-center gap-3" onclick="window.location.href='settings.php'"
+                                role="button" style="flex-shrink: 0;">
                                 <span class="fw-semibold d-none d-sm-inline text-nowrap">
                                     <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>
                                 </span>
-                                <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold" 
-                                     style="width: 45px; height: 45px; min-width: 45px; background: linear-gradient(135deg, #667eea, #764ba2);">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold"
+                                    style="width: 45px; height: 45px; min-width: 45px; background: linear-gradient(135deg, #667eea, #764ba2);">
                                     <?php if (!empty($userAvatar) && file_exists($userAvatar)): ?>
-                                        <img src="<?php echo htmlspecialchars($userAvatar); ?>" alt="Avatar" 
-                                             class="w-100 h-100 rounded-circle object-fit-cover">
+                                        <img src="<?php echo htmlspecialchars($userAvatar); ?>" alt="Avatar"
+                                            class="w-100 h-100 rounded-circle object-fit-cover">
                                     <?php else: ?>
                                         <?php echo strtoupper(substr($_SESSION['first_name'], 0, 1)); ?>
                                     <?php endif; ?>
@@ -349,8 +354,8 @@ $dailyMotivationStudent = $studentMotivations[date('z') % count($studentMotivati
             <!-- Welcome Banner -->
             <div class="row mb-4">
                 <div class="col-12">
-                    <div class="card border-0 rounded-4 shadow text-white" 
-                         style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <div class="card border-0 rounded-4 shadow text-white"
+                        style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                         <div class="card-body p-4 p-lg-5">
                             <h2 class="h3 fw-bold mb-0"><?php echo $dailyMotivationStudent; ?></h2>
                         </div>
@@ -363,20 +368,21 @@ $dailyMotivationStudent = $studentMotivations[date('z') % count($studentMotivati
                 <div class="col-12 col-md-4">
                     <div class="card border-0 rounded-4 shadow-sm card-hover h-100">
                         <div class="card-body text-center p-4">
-                            <div class="bg-primary bg-opacity-10 text-primary rounded-3 d-flex align-items-center justify-content-center mx-auto mb-3" 
-                                 style="width: 56px; height: 56px; font-size: 1.5rem;">
+                            <div class="bg-primary bg-opacity-10 text-primary rounded-3 d-flex align-items-center justify-content-center mx-auto mb-3"
+                                style="width: 56px; height: 56px; font-size: 1.5rem;">
                                 <i class="bi bi-clock-history"></i>
                             </div>
                             <p class="text-muted small mb-2">Courses in Progress</p>
-                            <h3 class="display-5 fw-bold mb-0" id="inProgressCount"><?php echo count($inProgressCourses); ?></h3>
+                            <h3 class="display-5 fw-bold mb-0" id="inProgressCount">
+                                <?php echo count($inProgressCourses); ?></h3>
                         </div>
                     </div>
                 </div>
                 <div class="col-12 col-md-4">
                     <div class="card border-0 rounded-4 shadow-sm card-hover h-100">
                         <div class="card-body text-center p-4">
-                            <div class="bg-success bg-opacity-10 text-success rounded-3 d-flex align-items-center justify-content-center mx-auto mb-3" 
-                                 style="width: 56px; height: 56px; font-size: 1.5rem;">
+                            <div class="bg-success bg-opacity-10 text-success rounded-3 d-flex align-items-center justify-content-center mx-auto mb-3"
+                                style="width: 56px; height: 56px; font-size: 1.5rem;">
                                 <i class="bi bi-check-circle"></i>
                             </div>
                             <p class="text-muted small mb-2">Completed Courses</p>
@@ -387,8 +393,8 @@ $dailyMotivationStudent = $studentMotivations[date('z') % count($studentMotivati
                 <div class="col-12 col-md-4">
                     <div class="card border-0 rounded-4 shadow-sm card-hover h-100">
                         <div class="card-body text-center p-4">
-                            <div class="bg-warning bg-opacity-10 text-warning rounded-3 d-flex align-items-center justify-content-center mx-auto mb-3" 
-                                 style="width: 56px; height: 56px; font-size: 1.5rem;">
+                            <div class="bg-warning bg-opacity-10 text-warning rounded-3 d-flex align-items-center justify-content-center mx-auto mb-3"
+                                style="width: 56px; height: 56px; font-size: 1.5rem;">
                                 <i class="bi bi-award"></i>
                             </div>
                             <p class="text-muted small mb-2">Certificates Earned</p>
@@ -405,7 +411,7 @@ $dailyMotivationStudent = $studentMotivations[date('z') % count($studentMotivati
                         <div class="card-body p-3 d-flex justify-content-between align-items-center">
                             <div>
                                 <i class="bi bi-search me-2"></i>
-                                Found <strong id="resultCount">0</strong> course(s) matching 
+                                Found <strong id="resultCount">0</strong> course(s) matching
                                 "<span id="searchTerm" class="badge bg-warning text-dark"></span>"
                             </div>
                             <button class="btn btn-sm btn-outline-secondary rounded-pill" onclick="clearSearch()">
@@ -427,17 +433,17 @@ $dailyMotivationStudent = $studentMotivations[date('z') % count($studentMotivati
             <div class="row g-4 mb-5" id="coursesContainer">
                 <?php if (count($inProgressCourses) > 0): ?>
                     <?php foreach ($inProgressCourses as $course): ?>
-                        <div class="col-12 col-md-6 col-lg-4 course-card-wrapper" 
-                             data-course-title="<?php echo strtolower(htmlspecialchars($course['title'])); ?>"
-                             data-course-category="<?php echo strtolower(htmlspecialchars($course['category'] ?? 'general')); ?>"
-                             data-course-instructor="<?php echo strtolower(htmlspecialchars($course['instructorName'])); ?>">
+                        <div class="col-12 col-md-6 col-lg-4 course-card-wrapper"
+                            data-course-title="<?php echo strtolower(htmlspecialchars($course['title'])); ?>"
+                            data-course-category="<?php echo strtolower(htmlspecialchars($course['category'] ?? 'general')); ?>"
+                            data-course-instructor="<?php echo strtolower(htmlspecialchars($course['instructorName'])); ?>">
                             <div class="card border-0 rounded-4 shadow-sm card-hover h-100">
                                 <!-- Course Header -->
                                 <div class="course-header position-relative d-flex align-items-center justify-content-center">
                                     <span class="badge bg-white text-dark position-absolute top-0 end-0 m-2 shadow-sm fw-bold">
                                         <?php echo round($course['progressPercentage']); ?>%
                                     </span>
-                                    
+
                                     <?php if ($course['resultID']): ?>
                                         <?php if ($course['passed'] == 1): ?>
                                             <span class="badge bg-success position-absolute top-0 start-0 m-2 shadow-sm">
@@ -453,17 +459,18 @@ $dailyMotivationStudent = $studentMotivations[date('z') % count($studentMotivati
                                             </span>
                                         <?php endif; ?>
                                     <?php endif; ?>
-                                    
+
                                     <span class="fs-1">📚</span>
                                 </div>
-                                
+
                                 <div class="card-body p-4">
                                     <p class="text-primary small text-uppercase fw-bold mb-2">
                                         <?php echo htmlspecialchars($course['category'] ?? 'General'); ?>
                                     </p>
                                     <h5 class="fw-bold mb-2"><?php echo htmlspecialchars($course['title']); ?></h5>
-                                    <p class="text-muted small mb-3">By Dr. <?php echo htmlspecialchars($course['instructorName']); ?></p>
-                                    
+                                    <p class="text-muted small mb-3">By Dr.
+                                        <?php echo htmlspecialchars($course['instructorName']); ?></p>
+
                                     <?php if ($course['resultID']): ?>
                                         <?php if ($course['passed'] == 1): ?>
                                             <div class="alert alert-success py-2 px-3 small mb-3">
@@ -477,26 +484,26 @@ $dailyMotivationStudent = $studentMotivations[date('z') % count($studentMotivati
                                             </div>
                                         <?php endif; ?>
                                     <?php endif; ?>
-                                    
+
                                     <div class="progress mb-3" style="height: 8px;">
-                                        <div class="progress-bar progress-gradient" role="progressbar" 
-                                             style="width: <?php echo $course['progressPercentage']; ?>%;">
+                                        <div class="progress-bar progress-gradient" role="progressbar"
+                                            style="width: <?php echo $course['progressPercentage']; ?>%;">
                                         </div>
                                     </div>
-                                    
+
                                     <?php if ($course['resultID'] && $course['quizStatus'] == 'failed'): ?>
-                                        <button class="btn btn-warning w-100 rounded-pill fw-semibold" 
-                                                onclick="window.location.href='retake_course.php?id=<?php echo $course['courseID']; ?>'">
+                                        <button class="btn btn-warning w-100 rounded-pill fw-semibold"
+                                            onclick="window.location.href='retake_course.php?id=<?php echo $course['courseID']; ?>'">
                                             <i class="bi bi-credit-card me-2"></i>Pay to Retake
                                         </button>
                                     <?php elseif ($course['passed'] == 1): ?>
-                                        <button class="btn btn-success w-100 rounded-pill fw-semibold" 
-                                                onclick="window.location.href='view_certificate.php?courseID=<?php echo $course['courseID']; ?>'">
+                                        <button class="btn btn-success w-100 rounded-pill fw-semibold"
+                                            onclick="window.location.href='view_certificate.php?courseID=<?php echo $course['courseID']; ?>'">
                                             <i class="bi bi-award me-2"></i>View Certificate
                                         </button>
                                     <?php else: ?>
-                                        <button class="btn btn-primary w-100 rounded-pill fw-semibold" 
-                                                onclick="window.location.href='course_view.php?id=<?php echo $course['courseID']; ?>'">
+                                        <button class="btn btn-primary w-100 rounded-pill fw-semibold"
+                                            onclick="window.location.href='course_view.php?id=<?php echo $course['courseID']; ?>'">
                                             <i class="bi bi-play-circle me-2"></i>Resume Learning
                                         </button>
                                     <?php endif; ?>
@@ -511,7 +518,8 @@ $dailyMotivationStudent = $studentMotivations[date('z') % count($studentMotivati
                                 <i class="bi bi-book display-1 text-muted mb-3"></i>
                                 <h3 class="h5 fw-bold mb-3">No Courses in Progress</h3>
                                 <p class="text-muted mb-4">Start your learning journey today!</p>
-                                <a href="course_catalog.php" class="btn btn-primary rounded-pill px-4 fw-semibold">
+                                <a href="course_catalog.php" class="btn btn-primary rounded-pill px-4 fw-semibold border-0"
+                                    style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white !important; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">
                                     <i class="bi bi-search me-2"></i>Browse Courses
                                 </a>
                             </div>
@@ -552,13 +560,13 @@ $dailyMotivationStudent = $studentMotivations[date('z') % count($studentMotivati
         // Active nav state
         const navLinks = document.querySelectorAll('.sidebar .nav-link');
         const currentPage = window.location.pathname.split('/').pop();
-        
+
         navLinks.forEach(link => {
             if (link.getAttribute('href') === currentPage) {
                 navLinks.forEach(l => l.classList.remove('active'));
                 link.classList.add('active');
             }
-            
+
             link.addEventListener('click', () => {
                 if (window.innerWidth <= 992) {
                     const offcanvas = bootstrap.Offcanvas.getInstance(sidebar);
@@ -579,7 +587,7 @@ $dailyMotivationStudent = $studentMotivations[date('z') % count($studentMotivati
         const courseCards = document.querySelectorAll('.course-card-wrapper');
         const totalCourses = courseCards.length;
 
-        searchInput.addEventListener('input', function() {
+        searchInput.addEventListener('input', function () {
             const searchTerm = this.value.toLowerCase().trim();
             clearSearchBtn.classList.toggle('show', searchTerm.length > 0);
             filterCourses(searchTerm);
@@ -590,7 +598,7 @@ $dailyMotivationStudent = $studentMotivations[date('z') % count($studentMotivati
 
         function filterCourses(searchTerm) {
             let visibleCount = 0;
-            
+
             if (!searchTerm) {
                 courseCards.forEach(card => card.classList.remove('hidden'));
                 searchResultsInfo.classList.add('d-none');
@@ -599,19 +607,19 @@ $dailyMotivationStudent = $studentMotivations[date('z') % count($studentMotivati
                 if (inProgressCountEl) inProgressCountEl.textContent = totalCourses;
                 return;
             }
-            
+
             if (emptyState) emptyState.style.display = 'none';
-            
+
             courseCards.forEach(card => {
                 const title = card.getAttribute('data-course-title') || '';
                 const category = card.getAttribute('data-course-category') || '';
                 const instructor = card.getAttribute('data-course-instructor') || '';
                 const matches = title.includes(searchTerm) || category.includes(searchTerm) || instructor.includes(searchTerm);
-                
+
                 card.classList.toggle('hidden', !matches);
                 if (matches) visibleCount++;
             });
-            
+
             if (visibleCount > 0) {
                 searchResultsInfo.classList.remove('d-none');
                 noResultsEl.classList.add('d-none');
@@ -637,4 +645,5 @@ $dailyMotivationStudent = $studentMotivations[date('z') % count($studentMotivati
         }
     </script>
 </body>
+
 </html>

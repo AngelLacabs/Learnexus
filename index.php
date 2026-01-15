@@ -229,7 +229,7 @@ if (isset($_SESSION['account_deleted'])) {
                         </button>
 
                         <div class="signup-link">
-                            <p class="mb-0">Don't have an account? <a href="register.php">Sign up for free</a></p>
+                            <p class="mb-0">Don't have an account? <a href="register.php">Create Account</a></p>
                         </div>
                     </form>
                 </div>
