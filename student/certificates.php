@@ -225,6 +225,17 @@ $certificates = $stmt->fetchAll();
             padding: 2px 4px;
             border-radius: 3px;
         }
+
+        .btn-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+        }
+
+        .btn-gradient:hover {
+            background: linear-gradient(135deg, #5a6fd8 0%, #6a4098 100%);
+            color: white;
+        }
     </style>
 </head>
 
@@ -375,7 +386,7 @@ $certificates = $stmt->fetchAll();
                         <div class="col-12 col-md-6 col-lg-4">
                             <div class="card border-0 rounded-4 shadow-sm card-hover h-100"
                                 onclick="window.location.href='view_certificate.php?id=<?php echo $cert['certificateUUID']; ?>'">
-                                <div class="cert-header position-relative d-flex flex-column align-items-center justify-content-center text-white text-center p-4"
+                                <div class="cert-header position-relative d-flex flex-column align-items-center justify-content-center text-white text-center p-4 rounded-top-4"
                                     style="background: <?php echo $gradient; ?>">
                                     <div class="rounded-circle bg-white bg-opacity-25 d-flex align-items-center justify-content-center mb-3"
                                         style="width: 60px; height: 60px;">
@@ -399,7 +410,7 @@ $certificates = $stmt->fetchAll();
                                     </div>
 
                                     <div class="d-flex gap-2">
-                                        <button class="btn btn-primary rounded-pill flex-grow-1"
+                                        <button class="btn btn-gradient rounded-pill flex-grow-1"
                                             onclick="event.stopPropagation(); window.location.href='view_certificate.php?id=<?php echo $cert['certificateUUID']; ?>'">
                                             <i class="bi bi-eye me-1"></i>View
                                         </button>
