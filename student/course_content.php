@@ -92,10 +92,17 @@ $totalItems = count($lessons) + count($quizzes);
 $completedLessons = count(array_filter($lessons, fn($l) => $l['isCompleted']));
 $passedQuizzes = count(array_filter($quizzes, fn($q) => $q['hasPassed']));
 $completedItems = $completedLessons + $passedQuizzes;
-$progressPercentage = $totalItems > 0 ? round(($completedItems / $totalItems) * 100) : 0;
+
+// FIX: If course is marked as completed, progress should ALWAYS be 100%
+if ($enrollment['status'] === 'completed') {
+    $progressPercentage = 100;
+    $isCompleted = true;
+} else {
+    $progressPercentage = $totalItems > 0 ? round(($completedItems / $totalItems) * 100) : 0;
+    $isCompleted = ($progressPercentage >= 100);
+}
 
 // Update progress and check completion
-$isCompleted = ($progressPercentage >= 100);
 $stmt = $conn->prepare("UPDATE enrollments SET progressPercentage = ?, completedAt = ? WHERE enrollmentID = ?");
 $stmt->execute([$progressPercentage, $isCompleted ? date('Y-m-d H:i:s') : null, $enrollment['enrollmentID']]);
 
