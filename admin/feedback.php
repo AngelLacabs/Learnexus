@@ -11,43 +11,59 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
 $page_title = "SMS Feedback - Admin Panel";
 
 // Get filter parameters
-$statusFilter = $_GET['status'] ?? 'all';
-$search = $_GET['search'] ?? '';
+$statusFilter = isset($_GET['status']) ? trim($_GET['status']) : 'all';
+$search = isset($_GET['search']) ? trim($_GET['search']) : '';
 
-// Check if direction column exists
-$hasDirectionColumn = false;
-try {
-    $checkStmt = $conn->query("SHOW COLUMNS FROM sms_feedback LIKE 'direction'");
-    $hasDirectionColumn = $checkStmt->rowCount() > 0;
-} catch (PDOException $e) {
-    // Column doesn't exist, continue without it
+// Validate status filter - Add 'archived' to the allowed statuses
+$allowedStatuses = ['all', 'unread', 'read', 'archived', 'sent', 'failed'];
+if (!in_array($statusFilter, $allowedStatuses)) {
+    $statusFilter = 'all';
 }
 
-// Build query - Only show inbound (received) messages if direction column exists
+// Debug: Check what's in the database
+error_log("=== FEEDBACK DEBUG START ===");
+error_log("Status filter from URL: '$statusFilter'");
+
+// First, let's check what statuses exist in the database
+try {
+    $debugStmt = $conn->query("SELECT DISTINCT status, COUNT(*) as count FROM sms_feedback GROUP BY status");
+    $debugResults = $debugStmt->fetchAll(PDO::FETCH_ASSOC);
+    error_log("Statuses in database:");
+    foreach ($debugResults as $row) {
+        error_log("  Status: '{$row['status']}' = {$row['count']} messages");
+    }
+} catch (Exception $e) {
+    error_log("Debug query failed: " . $e->getMessage());
+}
+
+// Build query
 $whereConditions = [];
 $params = [];
 
-if ($hasDirectionColumn) {
-    $whereConditions[] = "(direction = 'inbound' OR direction IS NULL)";
-}
-
+// Apply status filter if not 'all'
 if ($statusFilter !== 'all') {
+    // Remove BINARY - use regular comparison for ENUM fields
     $whereConditions[] = "status = ?";
     $params[] = $statusFilter;
+    error_log("Adding status filter: '$statusFilter'");
 }
 
+// Apply search filter
 if ($search) {
     $searchTerm = "%$search%";
     $whereConditions[] = "(from_number LIKE ? OR message LIKE ?)";
     $params[] = $searchTerm;
     $params[] = $searchTerm;
+    error_log("Adding search filter: '$search'");
 }
 
 $whereClause = !empty($whereConditions) ? "WHERE " . implode(" AND ", $whereConditions) : "";
+error_log("Final WHERE clause: '$whereClause'");
+error_log("Number of parameters: " . count($params));
 
-// Fetch only received feedback with user info (if phone matches)
+// Fetch feedback messages
 try {
-    $stmt = $conn->prepare("
+    $query = "
         SELECT 
             f.*,
             u.userID,
@@ -58,36 +74,95 @@ try {
         LEFT JOIN users u ON f.from_number = u.phone
         $whereClause
         ORDER BY f.createdAt DESC
-    ");
-    $stmt->execute($params);
+    ";
+    
+    error_log("Query: $query");
+    
+    $stmt = $conn->prepare($query);
+    
+    if (!empty($params)) {
+        // Execute with parameters
+        $stmt->execute($params);
+    } else {
+        $stmt->execute();
+    }
+    
     $feedbackList = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
-    // Get statistics
-    if ($hasDirectionColumn) {
-        $statsStmt = $conn->query("
-            SELECT 
-                COUNT(*) as total,
-                SUM(CASE WHEN status = 'unread' THEN 1 ELSE 0 END) as unread,
-                SUM(CASE WHEN status = 'read' THEN 1 ELSE 0 END) as read_count,
-                SUM(CASE WHEN status = 'archived' THEN 1 ELSE 0 END) as archived
-            FROM sms_feedback
-            WHERE direction = 'inbound' OR direction IS NULL
-        ");
+    error_log("Found " . count($feedbackList) . " messages for filter: '$statusFilter'");
+    
+    // Log sample of results
+    if (!empty($feedbackList)) {
+        error_log("Sample messages:");
+        $sampleMessages = array_slice($feedbackList, 0, 3);
+        foreach ($sampleMessages as $index => $msg) {
+            error_log("  [$index] ID: {$msg['feedbackID']}, Status: '{$msg['status']}', Phone: {$msg['from_number']}");
+        }
     } else {
-        $statsStmt = $conn->query("
-            SELECT 
-                COUNT(*) as total,
-                SUM(CASE WHEN status = 'unread' THEN 1 ELSE 0 END) as unread,
-                SUM(CASE WHEN status = 'read' THEN 1 ELSE 0 END) as read_count,
-                SUM(CASE WHEN status = 'archived' THEN 1 ELSE 0 END) as archived
-            FROM sms_feedback
-        ");
+        error_log("No messages found. Let's test the query directly:");
+        
+        // Try a direct query to see what's wrong
+        if ($statusFilter !== 'all') {
+            $testQuery = "SELECT COUNT(*) as count FROM sms_feedback WHERE status = ?";
+            $testStmt = $conn->prepare($testQuery);
+            $testStmt->execute([$statusFilter]);
+            $testResult = $testStmt->fetch(PDO::FETCH_ASSOC);
+            error_log("Direct count query for status '$statusFilter': " . $testResult['count'] . " messages");
+        }
     }
-    $stats = $statsStmt->fetch(PDO::FETCH_ASSOC);
+    
 } catch (PDOException $e) {
-    error_log("Feedback Error: " . $e->getMessage());
+    error_log("Feedback Query Error: " . $e->getMessage());
+    error_log("Query: " . $query);
+    error_log("Params: " . json_encode($params));
     $feedbackList = [];
-    $stats = ['total' => 0, 'unread' => 0, 'read_count' => 0, 'archived' => 0];
+}
+
+// Get statistics - count ALL messages in database
+// Include 'archived' in the statistics query
+try {
+    $statsStmt = $conn->query("
+        SELECT 
+            COUNT(*) as total,
+            COALESCE(SUM(CASE WHEN status = 'unread' THEN 1 ELSE 0 END), 0) as unread,
+            COALESCE(SUM(CASE WHEN status = 'read' THEN 1 ELSE 0 END), 0) as read_count,
+            COALESCE(SUM(CASE WHEN status = 'archived' THEN 1 ELSE 0 END), 0) as archived,
+            COALESCE(SUM(CASE WHEN status = 'sent' THEN 1 ELSE 0 END), 0) as sent,
+            COALESCE(SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END), 0) as failed
+        FROM sms_feedback
+    ");
+    $stats = $statsStmt->fetch(PDO::FETCH_ASSOC);
+    error_log("Statistics - Total: {$stats['total']}, Unread: {$stats['unread']}, Read: {$stats['read_count']}, Archived: {$stats['archived']}");
+} catch (PDOException $e) {
+    error_log("Statistics Query Error: " . $e->getMessage());
+    $stats = null;
+}
+
+error_log("=== FEEDBACK DEBUG END ===");
+
+// Ensure stats always has all required keys with integer values
+if (!isset($stats) || !is_array($stats)) {
+    $stats = ['total' => 0, 'unread' => 0, 'read_count' => 0, 'archived' => 0, 'sent' => 0, 'failed' => 0];
+} else {
+    $stats = array_merge([
+        'total' => 0,
+        'unread' => 0,
+        'read_count' => 0,
+        'archived' => 0,
+        'sent' => 0,
+        'failed' => 0
+    ], $stats);
+}
+
+// Convert all values to integers
+$stats = array_map(function($value) {
+    if ($value === null || $value === false) return 0;
+    return (int)$value;
+}, $stats);
+
+// Ensure feedbackList is always an array
+if (!isset($feedbackList) || !is_array($feedbackList)) {
+    $feedbackList = [];
 }
 
 include 'includes/header.php';
@@ -104,28 +179,13 @@ include 'includes/sidebar.php';
                         <h1 class="h3 mb-0">SMS Feedback</h1>
                         <p class="text-muted mb-0">View and manage feedback messages received from users via SMS</p>
                     </div>
-                    <div class="d-flex align-items-center gap-2">
-                        <form method="GET" class="d-flex">
-                            <input type="hidden" name="status" value="<?php echo htmlspecialchars($statusFilter); ?>">
-                            <div class="input-group">
-                                <input type="text" 
-                                       class="form-control" 
-                                       placeholder="Search by phone or message..." 
-                                       name="search"
-                                       value="<?php echo htmlspecialchars($search); ?>">
-                                <button class="btn btn-outline-secondary" type="submit">
-                                    <i class="bi bi-search"></i>
-                                </button>
-                            </div>
-                        </form>
-                    </div>
                 </div>
             </div>
         </div>
 
         <!-- Statistics Cards -->
         <div class="row g-3 mb-4">
-            <div class="col-xl-4 col-md-6">
+            <div class="col-xl-3 col-md-6">
                 <div class="card border-0 shadow-sm">
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center">
@@ -141,7 +201,7 @@ include 'includes/sidebar.php';
                 </div>
             </div>
             
-            <div class="col-xl-4 col-md-6">
+            <div class="col-xl-3 col-md-6">
                 <div class="card border-0 shadow-sm">
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center">
@@ -159,7 +219,7 @@ include 'includes/sidebar.php';
                 </div>
             </div>
             
-            <div class="col-xl-4 col-md-6">
+            <div class="col-xl-3 col-md-6">
                 <div class="card border-0 shadow-sm">
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center">
@@ -172,6 +232,58 @@ include 'includes/sidebar.php';
                             <div class="bg-info bg-opacity-10 p-3 rounded">
                                 <i class="bi bi-envelope-open text-info" style="font-size: 24px;"></i>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-xl-3 col-md-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted mb-1">Archived</h6>
+                                <h3 class="mb-0 text-secondary">
+                                    <?php echo $stats['archived']; ?>
+                                </h3>
+                            </div>
+                            <div class="bg-secondary bg-opacity-10 p-3 rounded">
+                                <i class="bi bi-archive text-secondary" style="font-size: 24px;"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search and Delete Actions -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 rounded-4 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center gap-3 flex-wrap">
+                            <form method="GET" class="d-flex flex-grow-1" style="min-width: 300px;">
+                                <input type="hidden" name="status" value="<?php echo htmlspecialchars($statusFilter); ?>">
+                                <div class="input-group flex-grow-1">
+                                    <input type="text" 
+                                           class="form-control" 
+                                           placeholder="Search by phone or message..." 
+                                           name="search"
+                                           value="<?php echo htmlspecialchars($search); ?>">
+                                    <button class="btn btn-outline-secondary" type="submit">
+                                        <i class="bi bi-search"></i>
+                                    </button>
+                                </div>
+                            </form>
+                            <?php if (!empty($feedbackList)): ?>
+                                <button type="button" 
+                                        class="btn btn-danger" 
+                                        onclick="deleteSelectedFeedback()"
+                                        id="deleteBtn"
+                                        style="display: none;">
+                                    <i class="bi bi-trash"></i> Delete Selected (<span id="selectedCount">0</span>)
+                                </button>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
@@ -221,25 +333,68 @@ include 'includes/sidebar.php';
                         <i class="bi bi-inbox" style="font-size: 48px; color: #ccc;"></i>
                         <h4 class="mt-3">No Feedback Found</h4>
                         <p class="text-muted">
-                            <?php echo $search || $statusFilter !== 'all' ? 'No feedback matches your criteria.' : 'No feedback messages have been received yet.'; ?>
+                            <?php 
+                            if ($search) {
+                                echo 'No feedback matches your search criteria.';
+                            } elseif ($statusFilter !== 'all') {
+                                echo "No feedback messages with status: <strong>" . htmlspecialchars($statusFilter) . "</strong>";
+                                // Get the correct stats key for the current filter
+                                $statsKey = strtolower($statusFilter);
+                                if ($statsKey === 'read') {
+                                    $statsKey = 'read_count';
+                                }
+                                if (isset($stats[$statsKey]) && $stats[$statsKey] > 0) {
+                                    echo "<br><small class='text-danger'>Statistics show there should be " . $stats[$statsKey] . " messages</small>";
+                                }
+                            } else {
+                                echo 'No feedback messages have been received yet.';
+                            }
+                            ?>
                         </p>
                         <?php if ($search || $statusFilter !== 'all'): ?>
-                            <a href="feedback.php" class="btn btn-primary">
+                            <a href="feedback.php" class="btn btn-primary mt-2">
                                 <i class="bi bi-arrow-left"></i> View All Feedback
                             </a>
+                            <?php if ($statusFilter === 'unread' && $stats['unread'] > 0): ?>
+                                <br>
+                                <small class="text-warning mt-2 d-block">
+                                    <i class="bi bi-exclamation-triangle"></i> 
+                                    Database shows <?php echo $stats['unread']; ?> unread messages, but query returned none.
+                                </small>
+                            <?php endif; ?>
                         <?php endif; ?>
                     </div>
                 <?php else: ?>
                     <div class="list-group list-group-flush">
                         <?php foreach ($feedbackList as $feedback): ?>
-                            <div class="list-group-item px-0 py-3 border-bottom <?php echo $feedback['status'] === 'unread' ? 'bg-light' : ''; ?>">
+                            <div class="list-group-item px-0 py-3 border-bottom <?php echo strtolower($feedback['status']) === 'unread' ? 'bg-light' : ''; ?>">
                                 <div class="d-flex justify-content-between align-items-start">
+                                    <div class="form-check me-3 mt-1">
+                                        <input class="form-check-input feedback-checkbox" 
+                                               type="checkbox" 
+                                               value="<?php echo $feedback['feedbackID']; ?>"
+                                               onchange="updateDeleteButton()">
+                                    </div>
                                     <div class="flex-grow-1">
                                         <div class="d-flex align-items-center mb-2">
                                             <div class="me-3">
-                                                <i class="bi bi-telephone-fill text-primary"></i>
-                                                <strong><?php echo htmlspecialchars($feedback['from_number']); ?></strong>
+                                                <?php if (isset($feedback['direction']) && $feedback['direction'] === 'outbound'): ?>
+                                                    <i class="bi bi-arrow-up-circle-fill text-success"></i>
+                                                    <strong>To: <?php echo htmlspecialchars($feedback['from_number']); ?></strong>
+                                                <?php else: ?>
+                                                    <i class="bi bi-telephone-fill text-primary"></i>
+                                                    <strong>From: <?php echo htmlspecialchars($feedback['from_number']); ?></strong>
+                                                <?php endif; ?>
                                             </div>
+                                            <?php if (isset($feedback['direction']) && $feedback['direction'] === 'outbound'): ?>
+                                                <span class="badge bg-success me-2">
+                                                    <i class="bi bi-send"></i> Outbound
+                                                </span>
+                                            <?php elseif (isset($feedback['direction']) && $feedback['direction'] === 'inbound'): ?>
+                                                <span class="badge bg-primary me-2">
+                                                    <i class="bi bi-inbox"></i> Inbound
+                                                </span>
+                                            <?php endif; ?>
                                             <?php if ($feedback['userID']): ?>
                                                 <span class="badge bg-info me-2">
                                                     <i class="bi bi-person"></i> 
@@ -252,10 +407,15 @@ include 'includes/sidebar.php';
                                                 </span>
                                             <?php endif; ?>
                                             <span class="badge bg-<?php 
-                                                echo $feedback['status'] === 'unread' ? 'warning' : 
-                                                    ($feedback['status'] === 'read' ? 'info' : 'secondary'); 
+                                                $status = strtolower($feedback['status']);
+                                                if ($status === 'unread') echo 'warning';
+                                                elseif ($status === 'read') echo 'info';
+                                                elseif ($status === 'archived') echo 'secondary';
+                                                elseif ($status === 'sent') echo 'success';
+                                                elseif ($status === 'failed') echo 'danger';
+                                                else echo 'secondary';
                                             ?>">
-                                                <?php echo ucfirst($feedback['status']); ?>
+                                                <?php echo htmlspecialchars($feedback['status']); ?>
                                             </span>
                                         </div>
                                         <p class="mb-2 text-dark" style="white-space: pre-wrap;"><?php echo htmlspecialchars($feedback['message']); ?></p>
@@ -275,32 +435,62 @@ include 'includes/sidebar.php';
                                                     echo date('M d, Y h:i A', $createdAt);
                                                 }
                                             ?>
+                                            <?php if ($feedback['readAt'] && strtolower($feedback['status']) === 'read'): ?>
+                                                <br><i class="bi bi-eye"></i> Read: <?php echo date('M d, Y h:i A', strtotime($feedback['readAt'])); ?>
+                                            <?php endif; ?>
                                         </small>
                                     </div>
-                                    <div class="btn-group btn-group-sm ms-3">
-                                        <?php if ($feedback['status'] === 'unread'): ?>
+                                    <div class="d-flex gap-2 ms-3 me-3" style="flex-shrink: 0;">
+                                        <?php 
+                                        $status = strtolower($feedback['status']);
+                                        $canUpdateStatus = in_array($status, ['unread', 'read', 'archived']);
+                                        ?>
+                                        <?php if ($canUpdateStatus && $status === 'unread'): ?>
                                             <button type="button" 
-                                                    class="btn btn-outline-primary" 
+                                                    class="btn btn-sm" 
                                                     onclick="updateFeedbackStatus(<?php echo $feedback['feedbackID']; ?>, 'read')"
-                                                    title="Mark as read">
-                                                <i class="bi bi-check-circle"></i>
+                                                    title="Mark as read"
+                                                    style="background: linear-gradient(135deg,rgb(251, 187, 235) 0%,rgb(160, 67, 180) 100%); border: none; color: white; padding: 0.25rem 0.75rem; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                                Mark as Read
                                             </button>
-                                        <?php endif; ?>
-                                        <?php if ($feedback['status'] !== 'archived'): ?>
+                                        <?php elseif ($canUpdateStatus && $status === 'read'): ?>
                                             <button type="button" 
-                                                    class="btn btn-outline-secondary" 
+                                                    class="btn btn-sm" 
                                                     onclick="updateFeedbackStatus(<?php echo $feedback['feedbackID']; ?>, 'archived')"
-                                                    title="Archive">
-                                                <i class="bi bi-archive"></i>
+                                                    title="Mark as archived"
+                                                    style="background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%); border: none; color: white; padding: 0.25rem 0.75rem; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                                Archive
                                             </button>
-                                        <?php else: ?>
                                             <button type="button" 
-                                                    class="btn btn-outline-info" 
+                                                    class="btn btn-sm" 
+                                                    onclick="updateFeedbackStatus(<?php echo $feedback['feedbackID']; ?>, 'unread')"
+                                                    title="Mark as unread"
+                                                    style="background: linear-gradient(135deg, #fadb61 0%, #f093fb 100%); border: none; color: white; padding: 0.25rem 0.75rem; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                                Mark as Unread
+                                            </button>
+                                        <?php elseif ($canUpdateStatus && $status === 'archived'): ?>
+                                            <button type="button" 
+                                                    class="btn btn-sm" 
                                                     onclick="updateFeedbackStatus(<?php echo $feedback['feedbackID']; ?>, 'read')"
-                                                    title="Restore">
-                                                <i class="bi bi-arrow-counterclockwise"></i>
+                                                    title="Mark as read"
+                                                    style="background: linear-gradient(135deg,rgb(251, 187, 235) 0%,rgb(160, 67, 180) 100%); border: none; color: white; padding: 0.25rem 0.75rem; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                                Mark as Read
+                                            </button>
+                                            <button type="button" 
+                                                    class="btn btn-sm" 
+                                                    onclick="updateFeedbackStatus(<?php echo $feedback['feedbackID']; ?>, 'unread')"
+                                                    title="Mark as unread"
+                                                    style="background: linear-gradient(135deg, #fadb61 0%, #f093fb 100%); border: none; color: white; padding: 0.25rem 0.75rem; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                                Mark as Unread
                                             </button>
                                         <?php endif; ?>
+                                        <button type="button" 
+                                                class="btn btn-sm" 
+                                                onclick="deleteSingleFeedback(<?php echo $feedback['feedbackID']; ?>)"
+                                                title="Delete this feedback"
+                                                style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); border: none; color: white; padding: 0.25rem 0.75rem; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                            Delete
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -310,6 +500,9 @@ include 'includes/sidebar.php';
                     <div class="mt-3">
                         <small class="text-muted">
                             Showing <?php echo count($feedbackList); ?> feedback message<?php echo count($feedbackList) !== 1 ? 's' : ''; ?>
+                            <?php if ($statusFilter !== 'all'): ?>
+                                with status: <strong><?php echo htmlspecialchars($statusFilter); ?></strong>
+                            <?php endif; ?>
                         </small>
                     </div>
                 <?php endif; ?>
@@ -319,6 +512,163 @@ include 'includes/sidebar.php';
 </div>
 
 <script>
+function updateDeleteButton() {
+    const checkboxes = document.querySelectorAll('.feedback-checkbox:checked');
+    const deleteBtn = document.getElementById('deleteBtn');
+    const selectedCount = document.getElementById('selectedCount');
+    if (deleteBtn) {
+        deleteBtn.style.display = checkboxes.length > 0 ? 'inline-block' : 'none';
+    }
+    if (selectedCount) {
+        selectedCount.textContent = checkboxes.length;
+    }
+}
+
+function deleteSingleFeedback(feedbackID) {
+    Swal.fire({
+        icon: 'warning',
+        title: 'Delete Feedback?',
+        text: 'Are you sure you want to delete this feedback message? This action cannot be undone.',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete it!',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch('feedback_action.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `action=delete&feedback_id=${feedbackID}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Deleted!',
+                        text: data.message || 'Feedback deleted successfully',
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(() => {
+                        // Reload page to reflect changes, preserving current filters
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const status = urlParams.get('status') || 'all';
+                        const search = urlParams.get('search') || '';
+                        
+                        let reloadUrl = 'feedback.php';
+                        const params = [];
+                        if (status !== 'all') params.push('status=' + encodeURIComponent(status));
+                        if (search) params.push('search=' + encodeURIComponent(search));
+                        if (params.length > 0) reloadUrl += '?' + params.join('&');
+                        
+                        window.location.href = reloadUrl;
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.message || 'Failed to delete feedback'
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'An error occurred while deleting feedback'
+                });
+            });
+        }
+    });
+}
+
+function deleteSelectedFeedback() {
+    const checkboxes = document.querySelectorAll('.feedback-checkbox:checked');
+    const selectedIds = Array.from(checkboxes).map(cb => cb.value);
+    
+    if (selectedIds.length === 0) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'No Selection',
+            text: 'Please select at least one feedback to delete'
+        });
+        return;
+    }
+    
+    Swal.fire({
+        icon: 'warning',
+        title: 'Delete Feedback?',
+        text: `Are you sure you want to delete ${selectedIds.length} feedback message(s)? This action cannot be undone.`,
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete it!',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Delete each selected feedback
+            const deletePromises = selectedIds.map(id => {
+                return fetch('feedback_action.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `action=delete&feedback_id=${id}`
+                }).then(response => response.json());
+            });
+            
+            Promise.all(deletePromises)
+                .then(results => {
+                    const successCount = results.filter(r => r.success).length;
+                    const failCount = results.length - successCount;
+                    
+                    if (failCount === 0) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Deleted!',
+                            text: `${successCount} feedback message(s) deleted successfully`,
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => {
+                            // Reload page to reflect changes, preserving current filters
+                            const urlParams = new URLSearchParams(window.location.search);
+                            const status = urlParams.get('status') || 'all';
+                            const search = urlParams.get('search') || '';
+                            
+                            let reloadUrl = 'feedback.php';
+                            const params = [];
+                            if (status !== 'all') params.push('status=' + encodeURIComponent(status));
+                            if (search) params.push('search=' + encodeURIComponent(search));
+                            if (params.length > 0) reloadUrl += '?' + params.join('&');
+                            
+                            window.location.href = reloadUrl;
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Partial Success',
+                            text: `${successCount} deleted, ${failCount} failed`
+                        }).then(() => {
+                            window.location.reload();
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'An error occurred while deleting feedback'
+                    });
+                });
+        }
+    });
+}
+
 function updateFeedbackStatus(feedbackID, status) {
     if (!confirm(`Are you sure you want to mark this feedback as ${status}?`)) {
         return;
@@ -342,8 +692,18 @@ function updateFeedbackStatus(feedbackID, status) {
                 timer: 1500,
                 showConfirmButton: false
             }).then(() => {
-                // Reload page to reflect changes
-                window.location.reload();
+                // Reload page to reflect changes, preserving current filters
+                const urlParams = new URLSearchParams(window.location.search);
+                const status = urlParams.get('status') || 'all';
+                const search = urlParams.get('search') || '';
+                
+                let reloadUrl = 'feedback.php';
+                const params = [];
+                if (status !== 'all') params.push('status=' + encodeURIComponent(status));
+                if (search) params.push('search=' + encodeURIComponent(search));
+                if (params.length > 0) reloadUrl += '?' + params.join('&');
+                
+                window.location.href = reloadUrl;
             });
         } else {
             Swal.fire({

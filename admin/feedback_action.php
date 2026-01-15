@@ -35,22 +35,30 @@ try {
                 throw new Exception('Invalid feedback ID');
             }
             
-            // Update status
+            // Update status for ALL messages (both inbound and outbound)
+            // Set readAt only when marking as 'read', clear it when marking as 'unread'
             if ($status === 'read') {
                 $stmt = $conn->prepare("
                     UPDATE sms_feedback 
                     SET status = ?, readAt = NOW() 
                     WHERE feedbackID = ?
                 ");
-            } else {
+                $stmt->execute([$status, $feedbackID]);
+            } elseif ($status === 'unread') {
+                $stmt = $conn->prepare("
+                    UPDATE sms_feedback 
+                    SET status = ?, readAt = NULL 
+                    WHERE feedbackID = ?
+                ");
+                $stmt->execute([$status, $feedbackID]);
+            } else { // archived
                 $stmt = $conn->prepare("
                     UPDATE sms_feedback 
                     SET status = ? 
                     WHERE feedbackID = ?
                 ");
+                $stmt->execute([$status, $feedbackID]);
             }
-            
-            $stmt->execute([$status, $feedbackID]);
             
             if ($stmt->rowCount() > 0) {
                 echo json_encode([
@@ -59,6 +67,34 @@ try {
                 ]);
             } else {
                 throw new Exception('Feedback not found or no changes made');
+            }
+            break;
+            
+        case 'delete':
+            $feedbackID = (int)($_POST['feedback_id'] ?? 0);
+            
+            if ($feedbackID <= 0) {
+                throw new Exception('Invalid feedback ID');
+            }
+            
+            // Check if feedback exists
+            $checkStmt = $conn->prepare("SELECT feedbackID FROM sms_feedback WHERE feedbackID = ?");
+            $checkStmt->execute([$feedbackID]);
+            if ($checkStmt->rowCount() === 0) {
+                throw new Exception('Feedback not found');
+            }
+            
+            // Delete the feedback
+            $stmt = $conn->prepare("DELETE FROM sms_feedback WHERE feedbackID = ?");
+            $stmt->execute([$feedbackID]);
+            
+            if ($stmt->rowCount() > 0) {
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Feedback deleted successfully'
+                ]);
+            } else {
+                throw new Exception('Failed to delete feedback');
             }
             break;
             
