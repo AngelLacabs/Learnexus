@@ -726,16 +726,14 @@ if ($currentLessonID) {
                         
                         <div class="navigation-buttons">
                             <?php if (!empty($lessons)): ?>
-                                <button class="btn btn-outline-secondary" onclick="window.location.href='?id=<?php echo $courseID; ?>&lesson_id=<?php echo $lessons[count($lessons)-1]['lessonID']; ?>'">
-                                    <i class="bi bi-arrow-left me-2"></i> Back to Lessons
-                                </button>
+                                
                             <?php else: ?>
                                 <div></div>
                             <?php endif; ?>
                             
                             <div class="d-flex gap-3">
                                 <?php if (!$currentQuiz['hasPassed'] || ($currentQuiz['lastAttempt'] && !$currentQuiz['hasPassed'])): ?>
-                                    <button class="btn btn-primary btn-lg" onclick="window.location.href='take_quiz.php?quiz_id=<?php echo $currentQuiz['quizID']; ?>&course_id=<?php echo $courseID; ?>'">
+                                    <button class="btn btn-primary btn" onclick="window.location.href='take_quiz.php?quiz_id=<?php echo $currentQuiz['quizID']; ?>&course_id=<?php echo $courseID; ?>'">
                                         <i class="bi bi-play-circle me-2"></i> Start Quiz
                                     </button>
                                 <?php endif; ?>
