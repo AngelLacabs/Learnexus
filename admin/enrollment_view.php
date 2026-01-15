@@ -488,42 +488,6 @@ include 'includes/sidebar.php';
                     </div>
                 </div>
                 
-                <!-- Quick Actions -->
-                <div class="card border-0 shadow-sm mb-4">
-                    <div class="card-header bg-white border-0">
-                        <h5 class="mb-0">Quick Actions</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="d-grid gap-2">
-                            <?php if ($enrollment['status'] !== 'completed' && $enrollment['progressPercentage'] >= 100): ?>
-                                <a href="enrollment_actions.php?action=complete&id=<?php echo $enrollmentID; ?>" class="btn btn-success">
-                                    <i class="bi bi-check-circle me-2"></i>Mark as Completed
-                                </a>
-                            <?php endif; ?>
-                            
-                            <?php if ($enrollment['status'] === 'active'): ?>
-                                <a href="enrollment_actions.php?action=drop&id=<?php echo $enrollmentID; ?>" class="btn btn-warning">
-                                    <i class="bi bi-x-circle me-2"></i>Drop Enrollment
-                                </a>
-                            <?php endif; ?>
-                            
-                            <?php if ($enrollment['status'] === 'dropped'): ?>
-                                <a href="enrollment_actions.php?action=activate&id=<?php echo $enrollmentID; ?>" class="btn btn-primary">
-                                    <i class="bi bi-arrow-clockwise me-2"></i>Reactivate
-                                </a>
-                            <?php endif; ?>
-                            
-                            <a href="user_view.php?id=<?php echo $enrollment['userID']; ?>&return=<?php echo urlencode($_SERVER['REQUEST_URI']); ?>" class="btn btn-outline-primary">
-                                <i class="bi bi-person me-2"></i>View Student Profile
-                            </a>
-                            
-                            <a href="course_view.php?id=<?php echo $enrollment['courseID']; ?>" class="btn btn-outline-success">
-                                <i class="bi bi-book me-2"></i>View Course Details
-                            </a>
-                        </div>
-                    </div>
-                </div>
-                
                 <!-- Quiz Results Summary -->
                 <?php if (!empty($quizResults)): ?>
                     <div class="card border-0 shadow-sm">

@@ -598,7 +598,7 @@ error_log("Completed courses: " . count($completedCourses));
                                                     </li>
                                                     <li><a class="dropdown-item text-danger" href="#"
                                                             onclick="confirmDelete(<?php echo $course['enrollmentID']; ?>, '<?php echo htmlspecialchars(addslashes($course['title'])); ?>'); return false;">
-                                                            <i class="bi bi-trash"></i> Remove
+                                                            <i class="bi bi-trash"></i> Unenroll
                                                         </a></li>
                                                 </ul>
                                             </div>
