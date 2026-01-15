@@ -28,14 +28,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['prompt'])) {
         exit;
     }
 
-    // Fetch course data from database (improvement: dynamic data)
-    $courses = getCoursesFromDatabase($conn);
-
-    if (empty($courses)) {
-        echo "ERROR: No course data available. Please contact administrator.";
-        exit;
-    }
-
     // Check if the question is about courses
     $course_keywords = ['course', 'price', 'cost', 'available', 'cheap', 'expensive', 'category', 'data administration', 'riph', 'web development', 'sad', 'programming', 'design', 'history', 'enrollment', 'lesson', 'instructor'];
 
@@ -49,14 +41,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['prompt'])) {
         }
     }
 
+    // If not course-related, respond with guidance and do NOT query the database
     if (!$is_course_related) {
-        echo "I can only answer questions about courses. Please ask about:\n\n";
+        echo "Sorry, I can only answer questions related to the available courses in the system.\n\n";
+        echo "You can ask me about:\n";
         echo "• Available courses\n";
         echo "• Course prices\n";
         echo "• Course categories\n";
-        echo "• Specific courses\n";
+        echo "• Specific course details\n";
         echo "• Enrollment and lessons\n";
         echo "• Instructors";
+        exit;
+    }
+
+    // For course-related questions, fetch course data from database
+    $courses = getCoursesFromDatabase($conn);
+
+    if (empty($courses)) {
+        echo "Sorry, there's no available course right now.";
         exit;
     }
 

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 14, 2026 at 06:23 PM
+-- Generation Time: Jan 15, 2026 at 09:35 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -21,34 +21,52 @@ SET time_zone = "+00:00";
 -- Database: `lmslearnexus`
 --
 
+DROP PROCEDURE IF EXISTS `reset_all_tables`;
+
 DELIMITER $$
---
--- Procedures
---
-CREATE DEFINER=`root`@`localhost` PROCEDURE `reset_all_tables` ()   BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `reset_all_tables`()
+BEGIN
     DECLARE _foreign_key_checks INT DEFAULT @@FOREIGN_KEY_CHECKS;
     
     SET FOREIGN_KEY_CHECKS = 0;
     
-    TRUNCATE TABLE `vouchers`;
-    TRUNCATE TABLE `certificates`;
-    TRUNCATE TABLE `quizresults`;
-    TRUNCATE TABLE `choices`;
-    TRUNCATE TABLE `questions`;
-    TRUNCATE TABLE `quizzes`;
-    TRUNCATE TABLE `contents`;
-    TRUNCATE TABLE `modules`;
-    TRUNCATE TABLE `payments`;
-    TRUNCATE TABLE `enrollments`;
-    TRUNCATE TABLE `courses`;
-    TRUNCATE TABLE `sms_feedback`;
-    TRUNCATE TABLE `sms_otp`;
-    TRUNCATE TABLE `email_otp`;
-    TRUNCATE TABLE `users`;
+    -- Use DELETE instead of TRUNCATE to avoid FK constraint issues
+    -- Delete child tables first (tables with FK constraints)
+    DELETE FROM `vouchers`;
+    DELETE FROM `certificates`;
+    DELETE FROM `quizanswers`;
+    DELETE FROM `quizresults`;
+    DELETE FROM `lessoncompletion`;
+    DELETE FROM `payments`;
+    DELETE FROM `enrollments`;
+    
+    -- Then delete parent tables
+    DELETE FROM `quizquestions`;
+    DELETE FROM `quizzes`;
+    DELETE FROM `lessons`;
+    DELETE FROM `courses`;
+    DELETE FROM `smsotp`;
+    DELETE FROM `emailotp`;
+    DELETE FROM `users`;
+    
+    -- Reset auto-increment counters
+    ALTER TABLE `vouchers` AUTO_INCREMENT = 1;
+    ALTER TABLE `certificates` AUTO_INCREMENT = 1;
+    ALTER TABLE `quizanswers` AUTO_INCREMENT = 1;
+    ALTER TABLE `quizresults` AUTO_INCREMENT = 1;
+    ALTER TABLE `quizquestions` AUTO_INCREMENT = 1;
+    ALTER TABLE `quizzes` AUTO_INCREMENT = 1;
+    ALTER TABLE `lessoncompletion` AUTO_INCREMENT = 1;
+    ALTER TABLE `lessons` AUTO_INCREMENT = 1;
+    ALTER TABLE `payments` AUTO_INCREMENT = 1;
+    ALTER TABLE `enrollments` AUTO_INCREMENT = 1;
+    ALTER TABLE `courses` AUTO_INCREMENT = 1;
+    ALTER TABLE `smsotp` AUTO_INCREMENT = 1;
+    ALTER TABLE `emailotp` AUTO_INCREMENT = 1;
+    ALTER TABLE `users` AUTO_INCREMENT = 1;
     
     SET FOREIGN_KEY_CHECKS = _foreign_key_checks;
 END$$
-
 DELIMITER ;
 
 -- --------------------------------------------------------
@@ -80,9 +98,9 @@ INSERT INTO `certificates` (`certificateID`, `enrollmentID`, `courseID`, `userID
 (12, 17, 2, 10, '2d5d4f29-8dce-4380-8f88-eff5d97ec66b', '2026-01-13 16:18:26', 'Andrew Coral', 'Angelica R.. Lacaba', 'Data Administration'),
 (13, 19, 2, 11, 'ad55bada-313d-4751-a2c0-ba4af63b5685', '2026-01-14 02:41:23', 'Andrew Coral', 'Angelica Lacaba', 'Data Administration'),
 (14, 21, 7, 11, '9d9af3e3-d7f3-40f2-a393-599a14844ff6', '2026-01-14 11:27:01', 'moana heyhey', 'Angelica Lacaba', 'Hotel Management'),
-(15, 22, 9, 11, 'a0bc0dc4-5ed0-43e5-9dab-8da7362fe78d', '2026-01-14 12:48:34', 'moana heyhey', 'Angelica Lacaba', 'WebDEveloper'),
 (16, 23, 10, 11, 'bba12b41-adba-466b-8a17-1dd3327b5568', '2026-01-14 13:02:36', 'moana heyhey', 'Angelica Lacaba', 'Fundamentals of Research'),
-(17, 20, 6, 11, 'f95d03c7-6745-43ce-9958-dfed5e3af9d9', '2026-01-14 16:44:14', 'moana heyhey', 'Angelica Lacaba', 'Moana study 1');
+(17, 20, 6, 11, 'f95d03c7-6745-43ce-9958-dfed5e3af9d9', '2026-01-14 16:44:14', 'moana heyhey', 'Angelica Lacaba', 'Moana study 1'),
+(18, 24, 4, 11, 'cert_6967d20b133074.25765685', '2026-01-14 17:27:39', NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -186,12 +204,12 @@ INSERT INTO `enrollments` (`enrollmentID`, `userID`, `courseID`, `paymentID`, `p
 (16, 10, 5, 21, 33.00, '2026-01-13 16:13:24', NULL, 'completed'),
 (17, 10, 2, 22, 100.00, '2026-01-13 16:14:21', '2026-01-13 16:14:28', 'completed'),
 (18, 11, 5, 23, 33.00, '2026-01-14 02:39:54', NULL, 'completed'),
-(19, 11, 2, 24, 100.00, '2026-01-14 02:40:45', '2026-01-14 04:36:30', 'completed'),
+(19, 11, 2, 24, 100.00, '2026-01-14 02:40:45', '2026-01-14 10:26:57', 'completed'),
 (20, 11, 6, 25, 100.00, '2026-01-14 06:17:01', '2026-01-14 09:44:12', 'completed'),
 (21, 11, 7, 26, 75.00, '2026-01-14 11:23:45', NULL, 'completed'),
-(22, 11, 9, 27, 75.00, '2026-01-14 12:36:03', NULL, 'active'),
-(23, 11, 10, 28, 100.00, '2026-01-14 13:02:05', '2026-01-14 06:02:34', 'completed'),
-(24, 11, 4, 29, 100.00, '2026-01-14 17:14:04', '2026-01-14 17:15:27', 'completed');
+(23, 11, 10, 28, 0.00, '2026-01-14 13:02:05', NULL, 'completed'),
+(24, 11, 4, 29, 100.00, '2026-01-14 17:14:04', '2026-01-14 11:48:37', 'completed'),
+(25, 11, 8, 30, 100.00, '2026-01-14 18:58:09', '2026-01-14 18:58:19', 'completed');
 
 -- --------------------------------------------------------
 
@@ -223,13 +241,12 @@ INSERT INTO `lessoncompletion` (`id`, `userID`, `lessonID`, `completedAt`) VALUE
 (38, 11, 2, '2026-01-14 10:41:05'),
 (39, 11, 8, '2026-01-14 19:26:41'),
 (40, 11, 9, '2026-01-14 19:26:43'),
-(41, 11, 11, '2026-01-14 20:36:58'),
-(42, 11, 12, '2026-01-14 20:37:00'),
 (44, 11, 13, '2026-01-14 21:02:28'),
 (45, 11, 14, '2026-01-14 21:02:29'),
 (46, 11, 7, '2026-01-15 00:44:03'),
 (47, 11, 6, '2026-01-15 00:44:04'),
-(48, 11, 4, '2026-01-15 01:15:27');
+(48, 11, 4, '2026-01-15 01:15:27'),
+(49, 11, 10, '2026-01-15 02:58:19');
 
 -- --------------------------------------------------------
 
@@ -303,9 +320,9 @@ INSERT INTO `payments` (`paymentID`, `enrollmentID`, `userID`, `courseID`, `amou
 (24, 19, 11, 2, 100.00, '81261375DK2663400', 'completed', '2026-01-14 02:40:45', '2026-01-14 02:40:45'),
 (25, 20, 11, 6, 10.00, '00H798717A8391241', 'completed', '2026-01-14 06:17:01', '2026-01-14 06:17:01'),
 (26, 21, 11, 7, 50.00, '44732611EC205614E', 'completed', '2026-01-14 11:23:45', '2026-01-14 11:23:45'),
-(27, 22, 11, 9, 200.00, '2DJ71596W1646641G', 'completed', '2026-01-14 12:36:03', '2026-01-14 12:36:03'),
 (28, 23, 11, 10, 10.00, '4HT273265M323453X', 'completed', '2026-01-14 13:02:05', '2026-01-14 13:02:05'),
-(29, 24, 11, 4, 10.00, '46C856065R3438514', 'completed', '2026-01-14 17:14:04', '2026-01-14 17:14:04');
+(29, 24, 11, 4, 10.00, '46C856065R3438514', 'completed', '2026-01-14 17:14:04', '2026-01-14 17:14:04'),
+(30, 25, 11, 8, 10.00, '9GE28633WM100402K', 'completed', '2026-01-14 18:58:09', '2026-01-14 18:58:09');
 
 -- --------------------------------------------------------
 
@@ -328,8 +345,6 @@ INSERT INTO `quizanswers` (`answerID`, `quizResultID`, `questionID`, `selectedOp
 (1, 23, 3, 0),
 (2, 23, 4, 0),
 (3, 24, 8, 0),
-(4, 25, 10, 3),
-(5, 25, 11, 0),
 (6, 26, 14, 0),
 (7, 27, 6, 1),
 (8, 27, 7, 2);
@@ -401,7 +416,6 @@ INSERT INTO `quizresults` (`resultID`, `enrollmentID`, `userID`, `quizID`, `scor
 (22, 17, 10, 1, 2.00, NULL, 100.00, 'passed', '2026-01-13 16:14:39', 1, '2026-01-14 00:14:39'),
 (23, 19, 11, 1, 2.00, NULL, 100.00, 'passed', '2026-01-14 02:41:19', 1, '2026-01-14 10:41:19'),
 (24, 21, 11, 5, 1.00, NULL, 100.00, 'passed', '2026-01-14 11:26:49', 1, '2026-01-14 19:26:49'),
-(25, 22, 11, 8, 2.00, NULL, 100.00, 'passed', '2026-01-14 12:37:22', 1, '2026-01-14 20:37:22'),
 (26, 23, 11, 10, 1.00, NULL, 100.00, 'passed', '2026-01-14 13:02:34', 1, '2026-01-14 21:02:34'),
 (27, 20, 11, 4, 2.00, NULL, 100.00, 'passed', '2026-01-14 16:44:12', 1, '2026-01-15 00:44:12');
 
@@ -539,7 +553,7 @@ INSERT INTO `vouchers` (`voucherID`, `voucherCode`, `userID`, `student_identifie
 (4, 'GETSOLE-37WK', 10, 'learnexus-10', 12, 12.00, 'percent', 1, 'SO-20260113172258-7705', '2026-01-13 17:22:58', 'course', '2026-01-20', '2026-01-13 16:18:26'),
 (5, 'GETSOLE-FHEU', 11, 'learnexus-11', 13, 12.00, 'percent', 0, NULL, NULL, 'course', '2026-01-21', '2026-01-14 02:41:23'),
 (6, 'GETSOLE-P336', 11, 'learnexus-11', 14, 12.00, 'percent', 0, NULL, NULL, 'course', '2026-01-21', '2026-01-14 11:27:01'),
-(7, 'GETSOLE-2LZ6', 11, 'learnexus-11', 15, 12.00, 'percent', 0, NULL, NULL, 'course', '2026-01-21', '2026-01-14 12:48:35'),
+(7, 'GETSOLE-2LZ6', 11, 'learnexus-11', NULL, 12.00, 'percent', 0, NULL, NULL, 'course', '2026-01-21', '2026-01-14 12:48:35'),
 (8, 'GETSOLE-AK9P', 11, 'learnexus-11', 16, 12.00, 'percent', 0, NULL, NULL, 'course', '2026-01-21', '2026-01-14 13:02:36'),
 (9, 'REWARD-TL6Y', 11, 'learnexus-11', 17, 12.00, 'percent', 1, 'SO-20260114174622-7620', '2026-01-14 17:46:22', 'course', '2026-01-21', '2026-01-14 16:44:15');
 
@@ -629,7 +643,7 @@ ALTER TABLE `quizresults`
   ADD PRIMARY KEY (`resultID`),
   ADD KEY `enrollmentID` (`enrollmentID`),
   ADD KEY `quizID` (`quizID`),
-  ADD KEY `idx_quizresults_user_quiz` (`userID`,`quizID`);
+  ADD KEY `idx_quiz_results_user_quiz` (`userID`,`quizID`);
 
 --
 -- Indexes for table `quizzes`
@@ -676,7 +690,7 @@ ALTER TABLE `vouchers`
 -- AUTO_INCREMENT for table `certificates`
 --
 ALTER TABLE `certificates`
-  MODIFY `certificateID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+  MODIFY `certificateID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT for table `courses`
@@ -694,13 +708,13 @@ ALTER TABLE `emailotp`
 -- AUTO_INCREMENT for table `enrollments`
 --
 ALTER TABLE `enrollments`
-  MODIFY `enrollmentID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
+  MODIFY `enrollmentID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
 
 --
 -- AUTO_INCREMENT for table `lessoncompletion`
 --
 ALTER TABLE `lessoncompletion`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=49;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=50;
 
 --
 -- AUTO_INCREMENT for table `lessons`
@@ -712,7 +726,7 @@ ALTER TABLE `lessons`
 -- AUTO_INCREMENT for table `payments`
 --
 ALTER TABLE `payments`
-  MODIFY `paymentID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
+  MODIFY `paymentID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
 
 --
 -- AUTO_INCREMENT for table `quizanswers`

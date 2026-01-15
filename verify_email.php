@@ -69,7 +69,7 @@ $userPhone = $pendingData['phone'] ?? '';
 
                             <div class="text-center mt-3">
                                 <p class="text-muted mb-2">Prefer to verify via SMS?</p>
-                                <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#smsModal">
+                                <button type="button" class="btn btn-outline-primary btn-sm" onclick="document.getElementById('smsModal').classList.add('show'); document.getElementById('smsModal').style.display='block'; document.getElementById('smsModal').setAttribute('aria-hidden', 'false');">
                                     Use SMS Instead
                                 </button>
                             </div>
@@ -97,6 +97,18 @@ $userPhone = $pendingData['phone'] ?? '';
         </div>
     </div>
 </div>
+
+<style>
+    #otp {
+        font-size: 24px;
+        letter-spacing: 10px;
+        font-weight: bold;
+    }
+
+    #smsModal.show {
+        display: block !important;
+    }
+</style>
 
 <!-- SMS Confirmation Modal -->
 <div class="modal fade" id="smsModal" tabindex="-1" aria-labelledby="smsModalLabel" aria-hidden="true">
@@ -129,14 +141,6 @@ $userPhone = $pendingData['phone'] ?? '';
         </div>
     </div>
 </div>
-
-<style>
-    #otp {
-        font-size: 24px;
-        letter-spacing: 10px;
-        font-weight: bold;
-    }
-</style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -231,7 +235,18 @@ document.addEventListener('DOMContentLoaded', function() {
             sendSmsText.classList.remove('d-none');
             sendSmsSpinner.classList.add('d-none');
             sendSmsBtn.disabled = false;
-            bootstrap.Modal.getInstance(document.getElementById('smsModal')).hide();
+            document.getElementById('smsModal').classList.remove('show');
+            document.getElementById('smsModal').style.display = 'none';
+            document.getElementById('smsModal').setAttribute('aria-hidden', 'true');
+        });
+    });
+
+    // Close modal when close button is clicked
+    document.querySelectorAll('[data-bs-dismiss="modal"]').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.getElementById('smsModal').classList.remove('show');
+            document.getElementById('smsModal').style.display = 'none';
+            document.getElementById('smsModal').setAttribute('aria-hidden', 'true');
         });
     });
 });

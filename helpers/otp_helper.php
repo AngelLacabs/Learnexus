@@ -162,4 +162,29 @@ class OTPHelper
             return false;
         }
     }
+
+    // ========== CLEANUP FUNCTIONS ==========
+    public function deleteExpiredOTPs()
+    {
+        try {
+            // Delete OTPs that expired more than 1 hour ago
+            $oneHourAgo = date('Y-m-d H:i:s', strtotime('-1 hour'));
+            
+            // Delete expired email OTPs older than 1 hour
+            $emailStmt = $this->conn->prepare("DELETE FROM emailotp WHERE expiresAt < ?");
+            $emailStmt->execute([$oneHourAgo]);
+            $emailDeleted = $emailStmt->rowCount();
+
+            // Delete expired SMS OTPs older than 1 hour
+            $smsStmt = $this->conn->prepare("DELETE FROM smsotp WHERE expiresAt < ?");
+            $smsStmt->execute([$oneHourAgo]);
+            $smsDeleted = $smsStmt->rowCount();
+
+            error_log("OTP Cleanup - Deleted $emailDeleted email OTPs and $smsDeleted SMS OTPs that expired over 1 hour ago");
+            return ['success' => true, 'emailDeleted' => $emailDeleted, 'smsDeleted' => $smsDeleted];
+        } catch (PDOException $e) {
+            error_log("OTP Cleanup Error: " . $e->getMessage());
+            return ['success' => false, 'message' => 'Cleanup failed'];
+        }
+    }
 }

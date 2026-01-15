@@ -13,54 +13,63 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $stmt->execute([$identifier, $identifier, $identifier]);
         $user = $stmt->fetch();
 
-        if ($user && password_verify($password, $user['passwordHash'])) {
-            if (!$user['emailVerified']) {
-                $_SESSION['error'] = 'Please verify your email address before logging in.';
+        if ($user) {
+            // User exists, check password
+            if (password_verify($password, $user['passwordHash'])) {
+                if (!$user['emailVerified']) {
+                    $_SESSION['error'] = 'Please verify your email address before logging in.';
 
-                $otpHelper = new OTPHelper($conn);
-                $otpCode = $otpHelper->createEmailOTP($user['email']);
+                    $otpHelper = new OTPHelper($conn);
+                    $otpCode = $otpHelper->createEmailOTP($user['email']);
 
-                if ($otpCode) {
-                    $toName = $user['firstName'] . ' ' . $user['lastName'];
-                    sendEmailOTP($user['email'], $toName, $otpCode);
+                    if ($otpCode) {
+                        $toName = $user['firstName'] . ' ' . $user['lastName'];
+                        sendEmailOTP($user['email'], $toName, $otpCode);
+                    }
+
+                    $_SESSION['otp_email'] = $user['email'];
+                    $_SESSION['pending_verification_user'] = $user['userID'];
+                    header('Location: verify_email.php');
+                    exit();
                 }
 
-                $_SESSION['otp_email'] = $user['email'];
-                $_SESSION['pending_verification_user'] = $user['userID'];
-                header('Location: verify_email.php');
+                $_SESSION['user_id'] = $user['userID'];
+                $_SESSION['email'] = $user['email'];
+                $_SESSION['first_name'] = $user['firstName'];
+                $_SESSION['last_name'] = $user['lastName'];
+                $_SESSION['role'] = $user['role'];
+
+                if ($user['role'] == 'student' && $user['studentNumber']) {
+                    $_SESSION['student_number'] = $user['studentNumber'];
+                }
+                if ($user['role'] == 'instructor' && $user['teacherNumber']) {
+                    $_SESSION['teacher_number'] = $user['teacherNumber'];
+                }
+
+                switch ($user['role']) {
+                    case 'student':
+                        header('Location: student/dashboard.php');
+                        exit();
+                    case 'instructor':
+                        header('Location: teacher/dashboard.php');
+                        exit();
+                    case 'admin':
+                        header('Location: admin/dashboard.php');
+                        exit();
+                    default:
+                        $_SESSION['error'] = 'Invalid user role';
+                        header('Location: index.php');
+                        exit();
+                }
+            } else {
+                // User exists but password is wrong
+                $_SESSION['error'] = 'Invalid password. Please try again.';
+                header('Location: index.php');
                 exit();
             }
-
-            $_SESSION['user_id'] = $user['userID'];
-            $_SESSION['email'] = $user['email'];
-            $_SESSION['first_name'] = $user['firstName'];
-            $_SESSION['last_name'] = $user['lastName'];
-            $_SESSION['role'] = $user['role'];
-
-            if ($user['role'] == 'student' && $user['studentNumber']) {
-                $_SESSION['student_number'] = $user['studentNumber'];
-            }
-            if ($user['role'] == 'instructor' && $user['teacherNumber']) {
-                $_SESSION['teacher_number'] = $user['teacherNumber'];
-            }
-
-            switch ($user['role']) {
-                case 'student':
-                    header('Location: student/dashboard.php');
-                    exit();
-                case 'instructor':
-                    header('Location: teacher/dashboard.php');
-                    exit();
-                case 'admin':
-                    header('Location: admin/dashboard.php');
-                    exit();
-                default:
-                    $_SESSION['error'] = 'Invalid user role';
-                    header('Location: index.php');
-                    exit();
-            }
         } else {
-            $_SESSION['error'] = 'Invalid ID or password';
+            // User doesn't exist
+            $_SESSION['error'] = 'You don\'t have an account. Please register to get started!';
             header('Location: index.php');
             exit();
         }
