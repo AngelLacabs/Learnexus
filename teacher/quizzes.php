@@ -186,7 +186,7 @@ $courses = $stmt->fetchAll();
 
         /* Search Input */
         .search-input {
-            border: 1px solid #dee2e6;
+            border: 2px solid transparent;
             background: rgba(255, 255, 255, 0.9);
         }
 

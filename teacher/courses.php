@@ -14,22 +14,21 @@ $stmt = $conn->prepare("SELECT * FROM users WHERE userID = ?");
 $stmt->execute([$teacherID]);
 $user = $stmt->fetch();
 
-// Get all courses by teacher
+// Get all courses by teacher (excluding archived)
 $stmt = $conn->prepare("
     SELECT c.*, 
            (SELECT COUNT(*) FROM enrollments WHERE courseID = c.courseID) as studentCount,
            (SELECT COUNT(*) FROM lessons WHERE courseID = c.courseID) as moduleCount
     FROM courses c
-    WHERE c.teacherID = ?
+    WHERE c.teacherID = ? AND c.status != 'archived'
     ORDER BY c.createdAt DESC
 ");
 $stmt->execute([$teacherID]);
 $courses = $stmt->fetchAll();
 
-// Separate courses by status
+// Separate courses by status (excluding archived)
 $inProgress = array_filter($courses, fn($c) => $c['status'] == 'draft');
 $completed = array_filter($courses, fn($c) => $c['status'] == 'published');
-$approved = array_filter($courses, fn($c) => $c['status'] == 'archived');
 
 function calculateCompletion($moduleCount) {
     if ($moduleCount == 0) return 0;
@@ -190,14 +189,9 @@ $page_title = "My Courses - Learnexus";
             color: white;
         }
 
-        .badge-archived {
-            background: linear-gradient(135deg, #757575 0%, #9e9e9e 100%);
-            color: white;
-        }
-
         /* Search Input */
         .search-input {
-            border: 1px solid #dee2e6;
+            border: 2px solid transparent;
             background: rgba(255, 255, 255, 0.9);
         }
 
@@ -295,6 +289,39 @@ $page_title = "My Courses - Learnexus";
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
+
+        /* SweetAlert2 Button Styling */
+        .swal2-confirm.btn-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+            border: none !important;
+            color: white !important;
+            border-radius: 12px !important;
+            padding: 10px 24px !important;
+            font-weight: 500 !important;
+            transition: all 0.2s !important;
+            margin-left: 8px !important;
+        }
+
+        .swal2-confirm.btn-gradient:hover {
+            background: linear-gradient(135deg, #5a6fd8 0%, #6a4098 100%) !important;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3) !important;
+        }
+
+        .swal2-cancel.btn-cancel {
+            background: #6c757d !important;
+            border: none !important;
+            color: white !important;
+            border-radius: 12px !important;
+            padding: 10px 24px !important;
+            font-weight: 500 !important;
+            transition: all 0.2s !important;
+        }
+
+        .swal2-cancel.btn-cancel:hover {
+            background: #5a6268 !important;
+            transform: translateY(-2px) !important;
+        }
     </style>
 </head>
 <body>
@@ -384,9 +411,9 @@ $page_title = "My Courses - Learnexus";
                 </div>
             </div>
 
-            <!-- Stats Cards -->
+            <!-- Stats Cards - REMOVED archived card -->
             <div class="row g-3 mb-4">
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <div class="card stat-card">
                         <div class="card-body p-4">
                             <div class="d-flex align-items-center gap-3">
@@ -403,7 +430,7 @@ $page_title = "My Courses - Learnexus";
                     </div>
                 </div>
                 
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <div class="card stat-card">
                         <div class="card-body p-4">
                             <div class="d-flex align-items-center gap-3">
@@ -419,26 +446,9 @@ $page_title = "My Courses - Learnexus";
                         </div>
                     </div>
                 </div>
-                
-                <div class="col-md-4">
-                    <div class="card stat-card">
-                        <div class="card-body p-4">
-                            <div class="d-flex align-items-center gap-3">
-                                <div class="rounded-circle d-flex align-items-center justify-content-center" 
-                                     style="width: 60px; height: 60px; background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);">
-                                    <i class="bi bi-archive fs-4 text-warning"></i>
-                                </div>
-                                <div>
-                                    <h6 class="text-muted mb-1">Archived</h6>
-                                    <h3 class="fw-bold mb-0"><?php echo count($approved); ?></h3>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
 
-            <!-- Status Tabs -->
+            <!-- Status Tabs - REMOVED archived tab -->
             <div class="row mb-4">
                 <div class="col-12">
                     <div class="card border-0 rounded-4 shadow-sm">
@@ -447,7 +457,6 @@ $page_title = "My Courses - Learnexus";
                                 <button class="status-tab active" data-status="all">All Courses</button>
                                 <button class="status-tab" data-status="draft">In Progress (<?php echo count($inProgress); ?>)</button>
                                 <button class="status-tab" data-status="published">Published (<?php echo count($completed); ?>)</button>
-                                <button class="status-tab" data-status="archived">Archived (<?php echo count($approved); ?>)</button>
                             </div>
                         </div>
                     </div>
@@ -460,8 +469,8 @@ $page_title = "My Courses - Learnexus";
                     <?php foreach ($courses as $course): ?>
                         <?php 
                             $completion = calculateCompletion($course['moduleCount']);
-                            $statusClass = $course['status'] == 'published' ? 'published' : ($course['status'] == 'archived' ? 'archived' : 'draft');
-                            $statusText = $course['status'] == 'published' ? 'Published' : ($course['status'] == 'archived' ? 'Archived' : 'Draft');
+                            $statusClass = $course['status'] == 'published' ? 'published' : 'draft';
+                            $statusText = $course['status'] == 'published' ? 'Published' : 'Draft';
                         ?>
                         <div class="col-12 col-md-6 col-lg-4 course-column" data-course-status="<?php echo $statusClass; ?>">
                             <div class="card course-card">
@@ -577,7 +586,7 @@ document.getElementById('courseSearch').addEventListener('input', function() {
     });
 });
 
-// Status tab filtering - FIXED VERSION
+// Status tab filtering - UPDATED to exclude archived
 document.querySelectorAll('.status-tab').forEach(tab => {
     tab.addEventListener('click', function() {
         // Update active tab
@@ -664,7 +673,7 @@ function confirmDelete(courseID, courseTitle) {
     });
 }
 
-// Show create course modal (from original)
+// Show create course modal (UPDATED: Cancel on left, Create Course on right)
 function showCreateCourseModal() {
     Swal.fire({
         title: 'Create New Course',
@@ -697,6 +706,13 @@ function showCreateCourseModal() {
         `,
         showCancelButton: true,
         confirmButtonText: 'Create Course',
+        cancelButtonText: 'Cancel',
+        reverseButtons: true, // This swaps the button positions
+        customClass: {
+            confirmButton: 'btn-gradient',
+            cancelButton: 'btn-cancel'
+        },
+        buttonsStyling: false, // Disable default styling
         preConfirm: () => {
             const form = document.getElementById('createCourseForm');
             if (!form.title.value) Swal.showValidationMessage('Please enter a course title');

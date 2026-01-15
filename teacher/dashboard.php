@@ -177,6 +177,19 @@ $dailyMotivationTeacher = $teacherMotivations[$dayOfYear % count($teacherMotivat
             }
         }
 
+        /* Stats Cards - UPDATED to match courses.php */
+        .stat-card {
+            border-radius: 16px;
+            border: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transition: transform 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        }
+
         /* Search */
         .search-input {
             padding-left: 2.5rem;
@@ -358,41 +371,55 @@ $dailyMotivationTeacher = $teacherMotivations[$dayOfYear % count($teacherMotivat
                 </div>
             </div>
 
-            <!-- Stats Cards -->
-            <div class="row g-4 mb-4">
-                <div class="col-12 col-md-4">
-                    <div class="card border-0 rounded-4 shadow-sm card-hover h-100">
-                        <div class="card-body text-center p-4">
-                            <div class="bg-primary bg-opacity-10 text-primary rounded-3 d-flex align-items-center justify-content-center mx-auto mb-3" 
-                                 style="width: 56px; height: 56px; font-size: 1.5rem;">
-                                <i class="bi bi-book-fill"></i>
+            <!-- Stats Cards - UPDATED to match courses.php -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <div class="card stat-card">
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center" 
+                                     style="width: 60px; height: 60px; background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);">
+                                    <i class="bi bi-book-fill fs-4 text-primary"></i>
+                                </div>
+                                <div>
+                                    <h6 class="text-muted mb-1">Total Courses</h6>
+                                    <h3 class="fw-bold mb-0"><?php echo $totalCourses; ?></h3>
+                                </div>
                             </div>
-                            <p class="text-muted small mb-2">Total Courses</p>
-                            <h3 class="display-5 fw-bold mb-0"><?php echo $totalCourses; ?></h3>
                         </div>
                     </div>
                 </div>
-                <div class="col-12 col-md-4">
-                    <div class="card border-0 rounded-4 shadow-sm card-hover h-100">
-                        <div class="card-body text-center p-4">
-                            <div class="bg-success bg-opacity-10 text-success rounded-3 d-flex align-items-center justify-content-center mx-auto mb-3" 
-                                 style="width: 56px; height: 56px; font-size: 1.5rem;">
-                                <i class="bi bi-people-fill"></i>
+                
+                <div class="col-md-4">
+                    <div class="card stat-card">
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center" 
+                                     style="width: 60px; height: 60px; background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);">
+                                    <i class="bi bi-people-fill fs-4 text-success"></i>
+                                </div>
+                                <div>
+                                    <h6 class="text-muted mb-1">Total Students</h6>
+                                    <h3 class="fw-bold mb-0"><?php echo $totalStudents; ?></h3>
+                                </div>
                             </div>
-                            <p class="text-muted small mb-2">Total Students</p>
-                            <h3 class="display-5 fw-bold mb-0"><?php echo $totalStudents; ?></h3>
                         </div>
                     </div>
                 </div>
-                <div class="col-12 col-md-4">
-                    <div class="card border-0 rounded-4 shadow-sm card-hover h-100">
-                        <div class="card-body text-center p-4">
-                            <div class="bg-warning bg-opacity-10 text-warning rounded-3 d-flex align-items-center justify-content-center mx-auto mb-3" 
-                                 style="width: 56px; height: 56px; font-size: 1.5rem;">
-                                <i class="bi bi-currency-dollar"></i>
+                
+                <div class="col-md-4">
+                    <div class="card stat-card">
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center" 
+                                     style="width: 60px; height: 60px; background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);">
+                                    <i class="bi bi-currency-dollar fs-4 text-warning"></i>
+                                </div>
+                                <div>
+                                    <h6 class="text-muted mb-1">Total Revenue</h6>
+                                    <h3 class="fw-bold mb-0">₱<?php echo number_format($totalRevenue, 2); ?></h3>
+                                </div>
                             </div>
-                            <p class="text-muted small mb-2">Total Revenue</p>
-                            <h3 class="display-5 fw-bold mb-0">₱<?php echo number_format($totalRevenue, 2); ?></h3>
                         </div>
                     </div>
                 </div>
@@ -567,7 +594,6 @@ $dailyMotivationTeacher = $teacherMotivations[$dayOfYear % count($teacherMotivat
                 noResultsEl.classList.add('d-none');
                 if (emptyState) emptyState.style.display = totalCourses === 0 ? 'block' : 'none';
                 return;
-            }
             
             if (emptyState) emptyState.style.display = 'none';
             

@@ -190,7 +190,7 @@ $coursesWithEnrollees = count(array_filter($enrolleesByCourse, fn($data) => coun
 
         /* Search Input */
         .search-input {
-            border: 1px solid #dee2e6;
+            border: 2px solid transparent;
             background: rgba(255, 255, 255, 0.9);
         }
 
@@ -445,17 +445,17 @@ $coursesWithEnrollees = count(array_filter($enrolleesByCourse, fn($data) => coun
                 </div>
             </div>
 
-            <!-- Status Tabs -->
+            <!-- Status Tabs - UPDATED: All Enrollees first, then Per Courses -->
             <div class="row mb-4">
                 <div class="col-12">
                     <div class="card border-0 rounded-4 shadow-sm">
                         <div class="card-body p-3">
                             <div class="d-flex flex-wrap gap-2">
-                                <button class="status-tab active" onclick="showTab('per-courses')">
-                                    <i class="bi bi-grid me-1"></i> Per Courses
-                                </button>
-                                <button class="status-tab" onclick="showTab('all-enrollees')">
+                                <button class="status-tab active" onclick="showTab('all-enrollees')">
                                     <i class="bi bi-list-ul me-1"></i> All Enrollees
+                                </button>
+                                <button class="status-tab" onclick="showTab('per-courses')">
+                                    <i class="bi bi-grid me-1"></i> Per Courses
                                 </button>
                             </div>
                         </div>
@@ -463,8 +463,57 @@ $coursesWithEnrollees = count(array_filter($enrolleesByCourse, fn($data) => coun
                 </div>
             </div>
 
-            <!-- Per Courses Tab -->
-            <div class="row g-4" id="per-courses">
+            <!-- All Enrollees Tab - UPDATED: Now shown by default -->
+            <div class="row" id="all-enrollees">
+                <div class="col-12">
+                    <div class="card border-0 rounded-4 shadow-sm">
+                        <div class="card-body p-0">
+                            <div class="p-4 border-bottom">
+                                <h5 class="fw-bold mb-0"><i class="bi bi-list-ul me-2"></i> All Enrollees</h5>
+                                <p class="text-muted mb-0 small">Total: <?php echo $totalStudents; ?> students</p>
+                            </div>
+                            
+                            <?php if (count($allEnrollees) > 0): ?>
+                                <div class="table-responsive">
+                                    <table class="table table-hover enrollee-table mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th width="60">#</th>
+                                                <th>Student Name</th>
+                                                <th>Student Number</th>
+                                                <th>Course</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php foreach ($allEnrollees as $index => $student): ?>
+                                                <tr>
+                                                    <td class="text-muted"><?php echo $index + 1; ?></td>
+                                                    <td>
+                                                        <div class="fw-medium"><?php echo htmlspecialchars($student['firstName'] . ' ' . $student['lastName']); ?></div>
+                                                    </td>
+                                                    <td class="text-muted"><?php echo htmlspecialchars($student['studentNumber']); ?></td>
+                                                    <td>
+                                                        <div class="fw-medium"><?php echo htmlspecialchars($student['courseTitle']); ?></div>
+                                                    </td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            <?php else: ?>
+                                <div class="text-center py-5">
+                                    <i class="bi bi-people empty-state-icon mb-3"></i>
+                                    <h3 class="h5 fw-bold mb-3">No Enrollees Yet</h3>
+                                    <p class="text-muted mb-4">No students have enrolled in your courses yet.</p>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Per Courses Tab - UPDATED: Now hidden by default -->
+            <div class="row g-4 d-none" id="per-courses">
                 <?php if (count($enrolleesByCourse) > 0): ?>
                     <?php 
                     $hasEnrollees = false;
@@ -539,57 +588,6 @@ $coursesWithEnrollees = count(array_filter($enrolleesByCourse, fn($data) => coun
                     </div>
                 <?php endif; ?>
             </div>
-
-            <!-- All Enrollees Tab -->
-            <div class="row d-none" id="all-enrollees">
-                <div class="col-12">
-                    <div class="card border-0 rounded-4 shadow-sm">
-                        <div class="card-body p-0">
-                            <div class="p-4 border-bottom">
-                                <h5 class="fw-bold mb-0"><i class="bi bi-list-ul me-2"></i> All Enrollees</h5>
-                                <p class="text-muted mb-0 small">Total: <?php echo $totalStudents; ?> students</p>
-                            </div>
-                            
-                            <?php if (count($allEnrollees) > 0): ?>
-                                <div class="table-responsive">
-                                    <table class="table table-hover enrollee-table mb-0">
-                                        <thead>
-                                            <tr>
-                                                <th width="60">#</th>
-                                                <th>Student Name</th>
-                                                <th>Student Number</th>
-                                                <th>Course</th>
-                                                
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <?php foreach ($allEnrollees as $index => $student): ?>
-                                                <tr>
-                                                    <td class="text-muted"><?php echo $index + 1; ?></td>
-                                                    <td>
-                                                        <div class="fw-medium"><?php echo htmlspecialchars($student['firstName'] . ' ' . $student['lastName']); ?></div>
-                                                    </td>
-                                                    <td class="text-muted"><?php echo htmlspecialchars($student['studentNumber']); ?></td>
-                                                    <td>
-                                                        <div class="fw-medium"><?php echo htmlspecialchars($student['courseTitle']); ?></div>
-                                                    </td>
-                                                
-                                                </tr>
-                                            <?php endforeach; ?>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            <?php else: ?>
-                                <div class="text-center py-5">
-                                    <i class="bi bi-people empty-state-icon mb-3"></i>
-                                    <h3 class="h5 fw-bold mb-3">No Enrollees Yet</h3>
-                                    <p class="text-muted mb-4">No students have enrolled in your courses yet.</p>
-                                </div>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
     </main>
 
@@ -660,12 +658,12 @@ function showTab(tabId) {
     const perCoursesTab = document.getElementById('per-courses');
     const allEnrolleesTab = document.getElementById('all-enrollees');
     
-    if (tabId === 'per-courses') {
-        perCoursesTab.classList.remove('d-none');
-        allEnrolleesTab.classList.add('d-none');
-    } else {
-        perCoursesTab.classList.add('d-none');
+    if (tabId === 'all-enrollees') {
         allEnrolleesTab.classList.remove('d-none');
+        perCoursesTab.classList.add('d-none');
+    } else {
+        allEnrolleesTab.classList.add('d-none');
+        perCoursesTab.classList.remove('d-none');
     }
 }
 
