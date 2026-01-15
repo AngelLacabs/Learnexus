@@ -331,13 +331,6 @@ if ($currentLessonID) {
             display: flex;
             flex-direction: column;
         }
-        .top-bar {
-            background: white;
-            border-bottom: 2px solid #e0e0e0;
-            padding: 20px 40px;
-            flex-shrink: 0;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-        }
         .progress-bar-top {
             height: 6px;
             background: #e0e0e0;
@@ -517,8 +510,8 @@ if ($currentLessonID) {
         <!-- Sidebar -->
         <div class="sidebar">
             <div class="sidebar-header">
-                <a href="dashboard.php" class="back-btn">
-                    <i class="bi bi-arrow-left"></i> Back to Dashboard
+                <a href="my_courses.php" class="back-btn">
+                    <i class="bi bi-arrow-left"></i> Back
                 </a>
                 <div class="course-info">
                     <h6><?php echo htmlspecialchars($enrollment['courseTitle']); ?></h6>
@@ -592,15 +585,6 @@ if ($currentLessonID) {
         
         <!-- Main Content -->
         <div class="main-content">
-            <div class="top-bar">
-                <div class="progress-bar-top">
-                    <div class="progress" style="width: <?php echo $progressPercentage; ?>%"></div>
-                </div>
-                <div class="d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0 fw-bold"><?php echo htmlspecialchars($enrollment['courseTitle']); ?></h5>
-                    <span class="badge" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); font-size: 14px; padding: 8px 16px;"><?php echo $progressPercentage; ?>% Complete</span>
-                </div>
-            </div>
             
             <div class="content-area">
                 <?php if ($isCompleted): ?>
