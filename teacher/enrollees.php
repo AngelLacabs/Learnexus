@@ -402,7 +402,7 @@ $coursesWithEnrollees = count(array_filter($enrolleesByCourse, fn($data) => coun
                                     <i class="bi bi-people-fill fs-4 text-primary"></i>
                                 </div>
                                 <div>
-                                    <h6 class="text-muted mb-1">Total Students</h6>
+                                    <h6 class="text-muted mb-1">Total Enrollees</h6>
                                     <h3 class="fw-bold mb-0"><?php echo $totalStudents; ?></h3>
                                 </div>
                             </div>

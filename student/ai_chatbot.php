@@ -48,9 +48,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['prompt'])) {
         echo "You can ask me about:\n";
         echo "• Available courses\n";
         echo "• Course prices\n";
-        echo "• Course categories\n";
+        echo "• Course category\n";
         echo "• Specific course details\n";
-        echo "• Enrollment and lessons\n";
         echo "• Instructors";
         exit;
     }
@@ -307,7 +306,7 @@ function generateFallbackResponse($question, $courses)
     // Try direct answer first
     $direct_answer = getDirectAnswerFromDatabase($question, $courses);
     if ($direct_answer !== false) {
-        return $direct_answer . "\n\n*(Note: Ollama is currently unavailable)*";
+        return $direct_answer . "\n\n*(Note: Currently unavailable)*";
     }
 
     // Generic fallback
@@ -317,7 +316,7 @@ function generateFallbackResponse($question, $courses)
         "• Tell me about [course name]\n" .
         "• What are the cheapest/most expensive courses?\n" .
         "• Courses by category or instructor\n\n" .
-        "(Ollama is currently unavailable)";
+        "(Currently unavailable)";
 }
 ?>
 <!DOCTYPE html>
