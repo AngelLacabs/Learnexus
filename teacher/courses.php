@@ -663,7 +663,7 @@ $draftCourses = count(array_filter($courses, fn($c) => $c['status'] === 'draft')
                                         </div>
                                     </div>
                                     
-                                    <button class="btn btn-gradient w-100 rounded-pill fw-semibold" 
+                                    <button class="btn btn-gradient w-100 rounded-pill fw-semibold  justify-content-center" 
                                             onclick="window.location.href='manage_course.php?id=<?php echo $course['courseID']; ?>'">
                                         <i class="bi bi-gear me-2"></i>Manage Course
                                     </button>
