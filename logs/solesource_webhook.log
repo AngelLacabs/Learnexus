@@ -49,3 +49,15 @@
 [2026-01-15 15:01:42] Auth check | {"header":"Bearer learnexus_web..."}
 [2026-01-15 15:01:42] Processing redemption | {"code":"REWARD-W3QL","order":"SO-20260115150147-9075","student":"learnexus-3"}
 [2026-01-15 15:01:42] SUCCESS: Voucher redeemed | {"code":"REWARD-W3QL","order":"SO-20260115150147-9075","discount":1079.3999999999999}
+[2026-01-16 03:09:54] Webhook request received | {"method":"POST","ip":"::1","payload_size":216}
+[2026-01-16 03:09:54] Auth check | {"header":"Bearer learnexus_web..."}
+[2026-01-16 03:09:54] Processing redemption | {"code":"REWARD-HV2L","order":"SO-20260116031000-4221","student":"learnexus-3"}
+[2026-01-16 03:09:54] SUCCESS: Voucher redeemed | {"code":"REWARD-HV2L","order":"SO-20260116031000-4221","discount":826.8}
+[2026-01-16 06:01:05] Webhook request received | {"method":"POST","ip":"::1","payload_size":230}
+[2026-01-16 06:01:05] Auth check | {"header":"Bearer learnexus_web..."}
+[2026-01-16 06:01:05] Processing redemption | {"code":"GETSOLE-J5GW","order":"SO-20260116060105-1668","student":"learnexus-7"}
+[2026-01-16 06:01:05] SUCCESS: Voucher redeemed | {"code":"GETSOLE-J5GW","order":"SO-20260116060105-1668","discount":1079.3999999999999}
+[2026-01-16 08:19:52] Webhook request received | {"method":"POST","ip":"::1","payload_size":215}
+[2026-01-16 08:19:52] Auth check | {"header":"Bearer learnexus_web..."}
+[2026-01-16 08:19:52] Processing redemption | {"code":"REWARD-57FX","order":"SO-20260116081953-9073","student":"learnexus-5"}
+[2026-01-16 08:19:52] SUCCESS: Voucher redeemed | {"code":"REWARD-57FX","order":"SO-20260116081953-9073","discount":1260}

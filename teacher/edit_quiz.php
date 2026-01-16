@@ -784,11 +784,7 @@ if (isset($_SESSION['success'])) {
                                     <label class="form-label">Passing Score (%)</label>
                                     <input type="number" name="passingScore" class="form-control" min="0" max="100" value="<?php echo isset($quiz['passingScore']) ? $quiz['passingScore'] : 70; ?>" required>
                                 </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Time Limit (minutes)</label>
-                                    <input type="number" name="timeLimitMinutes" class="form-control" min="0" value="<?php echo isset($quiz['timeLimitMinutes']) ? $quiz['timeLimitMinutes'] : 0; ?>">
-                                    <small class="text-muted">Set to 0 for no time limit</small>
-                                </div>
+                        
                             </div>
                             
                             <button type="submit" class="btn-gradient w-100">

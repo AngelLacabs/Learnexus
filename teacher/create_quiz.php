@@ -480,27 +480,10 @@ if (isset($_SESSION['error'])) {
                                         <i class="bi bi-percent me-1"></i> Minimum score required to pass
                                     </small>
                                 </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Time Limit (minutes, optional)</label>
-                                    <input type="number" name="timeLimitMinutes" class="form-control" 
-                                           min="1" placeholder="Leave blank for unlimited time">
-                                    <small class="text-muted mt-2 d-block">
-                                        <i class="bi bi-clock me-1"></i> Optional time limit for completing the quiz
-                                    </small>
-                                </div>
+                                
                             </div>
 
-                            <div class="mb-4">
-                                <div class="form-check">
-                                    <input type="checkbox" name="allowRetake" class="form-check-input" id="allowRetake" checked>
-                                    <label class="form-check-label" for="allowRetake">
-                                        <i class="bi bi-check-circle me-2"></i> Allow students to retake this quiz
-                                    </label>
-                                    <small class="text-muted d-block mt-1">
-                                        Students can retake the quiz if they don't pass on the first attempt
-                                    </small>
-                                </div>
-                            </div>
+                        
 
                             <div class="d-flex gap-3 justify-content-end">
                                 <a href="quizzes.php" class="btn btn-outline-secondary">

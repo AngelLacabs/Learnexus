@@ -58,3 +58,45 @@
 [2026-01-15 20:28:36] SMS Feedback webhook request received | {"method":"POST","ip":"192.168.18.217","user_agent":"SMS Forwarder App","payload_size":58,"raw_payload":"{\"from\":\"+639913487886\",\"text\":\"aray kooooo\",\"sim\":\"sim1\"}"}
 [2026-01-15 20:28:36] Processing SMS feedback | {"from":"+639913487886","message_length":11,"sim":"sim1"}
 [2026-01-15 20:28:36] SUCCESS: SMS feedback saved | {"feedback_id":"20","from":"+639913487886","sim":"sim1"}
+[2026-01-15 20:29:25] SMS Feedback webhook request received | {"method":"POST","ip":"192.168.18.217","user_agent":"SMS Forwarder App","payload_size":70,"raw_payload":"{\"from\":\"+639913487886\",\"text\":\"GALING IM SO PROUD OF U\",\"sim\":\"sim1\"}"}
+[2026-01-15 20:29:25] Processing SMS feedback | {"from":"+639913487886","message_length":23,"sim":"sim1"}
+[2026-01-15 20:29:25] SUCCESS: SMS feedback saved | {"feedback_id":"21","from":"+639913487886","sim":"sim1"}
+[2026-01-15 20:31:35] SMS Feedback webhook request received | {"method":"POST","ip":"192.168.18.217","user_agent":"SMS Forwarder App","payload_size":70,"raw_payload":"{\"from\":\"+639913487886\",\"text\":\"GALING IM SO PROUD OF U\",\"sim\":\"sim1\"}"}
+[2026-01-15 20:31:35] Processing SMS feedback | {"from":"+639913487886","message_length":23,"sim":"sim1"}
+[2026-01-15 20:31:35] SUCCESS: SMS feedback saved | {"feedback_id":"22","from":"+639913487886","sim":"sim1"}
+[2026-01-15 20:57:24] SMS Feedback webhook request received | {"method":"POST","ip":"192.168.18.217","user_agent":"SMS Forwarder App","payload_size":53,"raw_payload":"{\"from\":\"+639940695628\",\"text\":\"Nahaha\",\"sim\":\"sim1\"}"}
+[2026-01-15 20:57:24] Processing SMS feedback | {"from":"+639940695628","message_length":6,"sim":"sim1"}
+[2026-01-15 20:57:25] SUCCESS: SMS feedback saved | {"feedback_id":"23","from":"+639940695628","sim":"sim1"}
+[2026-01-16 02:40:46] SMS Feedback webhook request received | {"method":"POST","ip":"192.168.18.217","user_agent":"SMS Forwarder App","payload_size":498,"raw_payload":"{\"from\":\"+639770280975\",\"text\":\"Good day! \\uD83D\\uDE0A\\nThis is South Smile Dental Care Co. reminding you of your upcoming dental appointment on january  16,,2026\\n\\n\\uD83D\\uDCCD Clinic Location:\\nSouth Smile Dental Care Co.\\nPoblacion, Sto. Tomas, Batangas\\n(Landmark: Above Metrobank Hiway)\\n\\nPlease confirm your appointment at your earliest convenience.\\n\\n\\uD83D\\uDCB3 We accept: Cash \\u2022 GCash \\u2022 \\n\\nThank you and see you soon!\\n\\uD83E\\uDDB7 South Smile Dental Care Co.\",\"sim\":\"sim1\"}"}
+[2026-01-16 02:40:46] Processing SMS feedback | {"from":"+639770280975","message_length":400,"sim":"sim1"}
+[2026-01-16 02:40:46] SUCCESS: SMS feedback saved | {"feedback_id":"24","from":"+639770280975","sim":"sim1"}
+[2026-01-16 05:00:07] SMS Feedback webhook request received | {"method":"POST","ip":"192.168.8.131","user_agent":"SMS Forwarder App","payload_size":55,"raw_payload":"{\"from\":\"123456789\",\"text\":\"test message\",\"sim\":\"sim1\"}"}
+[2026-01-16 05:00:07] Processing SMS feedback | {"from":"123456789","message_length":12,"sim":"sim1"}
+[2026-01-16 05:00:07] SUCCESS: SMS feedback saved | {"feedback_id":"25","from":"123456789","sim":"sim1"}
+[2026-01-16 05:00:30] SMS Feedback webhook request received | {"method":"POST","ip":"192.168.8.131","user_agent":"SMS Forwarder App","payload_size":57,"raw_payload":"{\"from\":\"+639913487886\",\"text\":\"thank you \",\"sim\":\"sim1\"}"}
+[2026-01-16 05:00:30] Processing SMS feedback | {"from":"+639913487886","message_length":9,"sim":"sim1"}
+[2026-01-16 05:00:30] SUCCESS: SMS feedback saved | {"feedback_id":"26","from":"+639913487886","sim":"sim1"}
+[2026-01-16 05:53:00] SMS Feedback webhook request received | {"method":"POST","ip":"192.168.8.131","user_agent":"SMS Forwarder App","payload_size":52,"raw_payload":"{\"from\":\"+639940286393\",\"text\":\"Hello\",\"sim\":\"sim1\"}"}
+[2026-01-16 05:53:00] Processing SMS feedback | {"from":"+639940286393","message_length":5,"sim":"sim1"}
+[2026-01-16 05:53:00] SUCCESS: SMS feedback saved | {"feedback_id":"27","from":"+639940286393","sim":"sim1"}
+[2026-01-16 05:53:00] SMS Feedback webhook request received | {"method":"POST","ip":"192.168.8.131","user_agent":"SMS Forwarder App","payload_size":52,"raw_payload":"{\"from\":\"+639940286393\",\"text\":\"Hiiii\",\"sim\":\"sim1\"}"}
+[2026-01-16 05:53:00] Processing SMS feedback | {"from":"+639940286393","message_length":5,"sim":"sim1"}
+[2026-01-16 05:53:00] SUCCESS: SMS feedback saved | {"feedback_id":"28","from":"+639940286393","sim":"sim1"}
+[2026-01-16 07:30:41] SMS Feedback webhook request received | {"method":"POST","ip":"192.168.8.131","user_agent":"SMS Forwarder App","payload_size":53,"raw_payload":"{\"from\":\"+639940286393\",\"text\":\"auq na\",\"sim\":\"sim1\"}"}
+[2026-01-16 07:30:41] Processing SMS feedback | {"from":"+639940286393","message_length":6,"sim":"sim1"}
+[2026-01-16 07:30:41] SUCCESS: SMS feedback saved | {"feedback_id":"29","from":"+639940286393","sim":"sim1"}
+[2026-01-16 07:31:41] SMS Feedback webhook request received | {"method":"POST","ip":"192.168.8.131","user_agent":"SMS Forwarder App","payload_size":53,"raw_payload":"{\"from\":\"+639940286393\",\"text\":\"Helppp\",\"sim\":\"sim1\"}"}
+[2026-01-16 07:31:41] Processing SMS feedback | {"from":"+639940286393","message_length":6,"sim":"sim1"}
+[2026-01-16 07:31:41] SUCCESS: SMS feedback saved | {"feedback_id":"30","from":"+639940286393","sim":"sim1"}
+[2026-01-16 07:45:09] SMS Feedback webhook request received | {"method":"POST","ip":"192.168.8.131","user_agent":"SMS Forwarder App","payload_size":65,"raw_payload":"{\"from\":\"+639940286393\",\"text\":\"Learnexus is good!\",\"sim\":\"sim1\"}"}
+[2026-01-16 07:45:09] Processing SMS feedback | {"from":"+639940286393","message_length":18,"sim":"sim1"}
+[2026-01-16 07:45:09] SUCCESS: SMS feedback saved | {"feedback_id":"31","from":"+639940286393","sim":"sim1"}
+[2026-01-16 08:12:46] SMS Feedback webhook request received | {"method":"POST","ip":"192.168.8.131","user_agent":"SMS Forwarder App","payload_size":64,"raw_payload":"{\"from\":\"+639940286393\",\"text\":\"I love learnexus!\",\"sim\":\"sim1\"}"}
+[2026-01-16 08:12:46] Processing SMS feedback | {"from":"+639940286393","message_length":17,"sim":"sim1"}
+[2026-01-16 08:12:46] SUCCESS: SMS feedback saved | {"feedback_id":"32","from":"+639940286393","sim":"sim1"}
+[2026-01-16 08:12:47] SMS Feedback webhook request received | {"method":"POST","ip":"192.168.8.131","user_agent":"SMS Forwarder App","payload_size":63,"raw_payload":"{\"from\":\"+639913487886\",\"text\":\"I love learnexus\",\"sim\":\"sim1\"}"}
+[2026-01-16 08:12:47] Processing SMS feedback | {"from":"+639913487886","message_length":16,"sim":"sim1"}
+[2026-01-16 08:12:47] SUCCESS: SMS feedback saved | {"feedback_id":"33","from":"+639913487886","sim":"sim1"}
+[2026-01-16 08:21:00] SMS Feedback webhook request received | {"method":"POST","ip":"192.168.8.131","user_agent":"SMS Forwarder App","payload_size":297,"raw_payload":"{\"from\":\"GLOBEREWARD\",\"text\":\"Start earning points when you buying your favorite promos via the GlobeOne app! Once you reach 2 points, you can instantly redeem an extra 100MB for 1 day (SURF100MB) in the Rewards section of GlobeOne! It's the easiest way to stay connected. REF# LS\\r\",\"sim\":\"sim1\"}"}
+[2026-01-16 08:21:00] Processing SMS feedback | {"from":"","message_length":250,"sim":"sim1"}
+[2026-01-16 08:21:00] SUCCESS: SMS feedback saved | {"feedback_id":"34","from":"","sim":"sim1"}
