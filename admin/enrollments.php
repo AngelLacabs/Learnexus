@@ -335,19 +335,30 @@ include 'includes/sidebar.php';
                                 ?>
                                     <tr>
                                         <td>
-                                            <div class="d-flex align-items-center">
-                                                <div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2">
-                                                    <?php echo strtoupper(substr($enrollment['firstName'], 0, 1)); ?>
-                                                </div>
-                                                <div>
-                                                    <h6 class="mb-0"><?php echo htmlspecialchars($enrollment['firstName'] . ' ' . $enrollment['lastName']); ?></h6>
-                                                    <small class="text-muted d-block"><?php echo htmlspecialchars($enrollment['email']); ?></small>
-                                                    <?php if (!empty($enrollment['phone'])): ?>
-                                                        <small class="text-muted"><?php echo htmlspecialchars($enrollment['phone']); ?></small>
-                                                    <?php endif; ?>
-                                                </div>
-                                            </div>
-                                        </td>
+    <div class="d-flex align-items-center">
+        <?php if (!empty($enrollment['avatar']) && file_exists($enrollment['avatar'])): ?>
+            <!-- May avatar image -->
+            <div class="me-2" style="width: 40px; height: 40px;">
+                <img src="<?php echo htmlspecialchars($enrollment['avatar']); ?>" 
+                     alt="Avatar" 
+                     class="w-100 h-100 rounded-circle object-fit-cover">
+            </div>
+        <?php else: ?>
+            <!-- Walang avatar - show initial -->
+            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" 
+                 style="width: 40px; height: 40px;">
+                <?php echo strtoupper(substr($enrollment['firstName'], 0, 1)); ?>
+            </div>
+        <?php endif; ?>
+        <div class="flex-grow-1">
+            <h6 class="mb-0"><?php echo htmlspecialchars($enrollment['firstName'] . ' ' . $enrollment['lastName']); ?></h6>
+            <small class="text-muted d-block"><?php echo htmlspecialchars($enrollment['email']); ?></small>
+            <?php if (!empty($enrollment['phone'])): ?>
+                <small class="text-muted"><?php echo htmlspecialchars($enrollment['phone']); ?></small>
+            <?php endif; ?>
+        </div>
+    </div>
+</td>
                                         <td>
                                             <h6 class="mb-0"><?php echo htmlspecialchars($enrollment['courseTitle']); ?></h6>
                                             <small class="text-muted">ID: <?php echo $enrollment['courseID']; ?></small>
@@ -394,12 +405,21 @@ include 'includes/sidebar.php';
                                                 </small>
                                             <?php endif; ?>
                                         </td>
-                                        <td>
+                                       <td>
                                             <div class="d-flex align-items-center">
-                                                <div class="avatar-sm bg-info text-white rounded-circle d-flex align-items-center justify-content-center me-2">
-                                                    <?php echo strtoupper(substr($enrollment['teacherFirstName'], 0, 1)); ?>
-                                                </div>
-                                                <div>
+                                                <?php if (!empty($enrollment['teacherAvatar']) && file_exists($enrollment['teacherAvatar'])): ?>
+                                                    <div class="me-2" style="width: 40px; height: 40px;">
+                                                        <img src="<?php echo htmlspecialchars($enrollment['teacherAvatar']); ?>" 
+                                                            alt="Teacher Avatar" 
+                                                            class="w-100 h-100 rounded-circle object-fit-cover">
+                                                    </div>
+                                                <?php else: ?>
+                                                    <div class="bg-info text-white rounded-circle d-flex align-items-center justify-content-center me-2" 
+                                                        style="width: 40px; height: 40px;">
+                                                        <?php echo strtoupper(substr($enrollment['teacherFirstName'], 0, 1)); ?>
+                                                    </div>
+                                                <?php endif; ?>
+                                                <div class="flex-grow-1">
                                                     <h6 class="mb-0"><?php echo htmlspecialchars($enrollment['teacherFirstName'] . ' ' . $enrollment['teacherLastName']); ?></h6>
                                                 </div>
                                             </div>

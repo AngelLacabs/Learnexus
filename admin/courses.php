@@ -320,21 +320,25 @@ include 'includes/sidebar.php';
                                             </div>
                                         </td>
                                         <td>
-                                            <div class="d-flex align-items-center">
-                                                <div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="overflow: hidden;">
+                                                <div class="d-flex align-items-center">
                                                     <?php if (!empty($course['teacherAvatar']) && file_exists($course['teacherAvatar'])): ?>
-                                                        <img src="<?php echo htmlspecialchars($course['teacherAvatar']); ?>" alt="Avatar" 
-                                                             class="w-100 h-100 rounded-circle object-fit-cover">
+                                                        <div class="me-2" style="width: 40px; height: 40px;">
+                                                            <img src="<?php echo htmlspecialchars($course['teacherAvatar']); ?>" 
+                                                                alt="Avatar" 
+                                                                class="w-100 h-100 rounded-circle object-fit-cover">
+                                                        </div>
                                                     <?php else: ?>
-                                                        <?php echo strtoupper(substr($course['teacherFirstName'], 0, 1)); ?>
+                                                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" 
+                                                            style="width: 40px; height: 40px;">
+                                                            <?php echo strtoupper(substr($course['teacherFirstName'], 0, 1)); ?>
+                                                        </div>
                                                     <?php endif; ?>
+                                                    <div class="flex-grow-1">
+                                                        <h6 class="mb-0"><?php echo htmlspecialchars($course['teacherFirstName'] . ' ' . $course['teacherLastName']); ?></h6>
+                                                        <small class="text-muted"><?php echo htmlspecialchars($course['teacherEmail']); ?></small>
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <h6 class="mb-0"><?php echo htmlspecialchars($course['teacherFirstName'] . ' ' . $course['teacherLastName']); ?></h6>
-                                                    <small class="text-muted"><?php echo htmlspecialchars($course['teacherEmail']); ?></small>
-                                                </div>
-                                            </div>
-                                        </td>
+                                            </td>
                                         <td>
                                             <span class="badge bg-info">
                                                 <?php echo !empty($course['category']) ? htmlspecialchars($course['category']) : 'Uncategorized'; ?>

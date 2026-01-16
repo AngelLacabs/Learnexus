@@ -371,10 +371,11 @@ include 'includes/sidebar.php';
                                         </td>
                                         <td>
                                             <div class="d-flex align-items-center">
-                                                <div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2">
+                                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" 
+                                                    style="width: 40px; height: 40px;">
                                                     <?php echo strtoupper(substr($payment['firstName'], 0, 1)); ?>
                                                 </div>
-                                                <div>
+                                                <div class="flex-grow-1">
                                                     <h6 class="mb-0"><?php echo htmlspecialchars($payment['firstName'] . ' ' . $payment['lastName']); ?></h6>
                                                     <small class="text-muted d-block"><?php echo htmlspecialchars($payment['email']); ?></small>
                                                     <?php if (!empty($payment['phone'])): ?>

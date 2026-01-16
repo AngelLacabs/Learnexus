@@ -173,89 +173,111 @@ include $header_path;
 include $sidebar_path;
 ?>
 
-<div class="main-content">
+<div class="main-content pb-3 pb-lg-4 ps-3 ps-lg-4 pe-3 pe-lg-4 pt-3">
     <div class="container-fluid">
-        <!-- Page Header -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h1 class="h3 mb-0">Certificate Management</h1>
-                <p class="text-muted mb-0">Manage and view all issued certificates</p>
+        <!-- Success/Error Messages -->
+        <?php if (isset($_SESSION['success'])): ?>
+            <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+                <?php echo $_SESSION['success']; ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
-        </div>
+            <?php unset($_SESSION['success']); ?>
+        <?php endif; ?>
+        
+        <?php if (isset($_SESSION['error'])): ?>
+            <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+                <?php echo $_SESSION['error']; ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            <?php unset($_SESSION['error']); ?>
+        <?php endif; ?>
 
-        <!-- Statistics Cards -->
-        <div class="row g-3 mb-4">
-            <div class="col-lg-3 col-md-6">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="text-muted mb-1">Total Certificates</h6>
-                                <h3 class="mb-0"><?php echo number_format($total_certificates); ?></h3>
-                            </div>
-                            <div class="text-primary">
-                                <i class="bi bi-award-fill fs-2"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-lg-3 col-md-6">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="text-muted mb-1">This Month</h6>
-                                <h3 class="mb-0"><?php echo number_format($this_month); ?></h3>
-                            </div>
-                            <div class="text-success">
-                                <i class="bi bi-calendar-month-fill fs-2"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-lg-3 col-md-6">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="text-muted mb-1">Today</h6>
-                                <h3 class="mb-0"><?php echo number_format($today); ?></h3>
-                            </div>
-                            <div class="text-warning">
-                                <i class="bi bi-calendar-day-fill fs-2"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-lg-3 col-md-6">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="text-muted mb-1">Active Courses</h6>
-                                <h3 class="mb-0"><?php echo number_format($courses_count); ?></h3>
-                            </div>
-                            <div class="text-danger">
-                                <i class="bi bi-book-fill fs-2"></i>
-                            </div>
-                        </div>
+        <!-- Box 1: Page Header -->
+        <div class="card border-0 rounded-4 shadow-sm mb-5">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="h3 mb-0">Certificate Management</h1>
+                        <p class="text-muted mb-0">Manage and view all issued certificates</p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Search & Filter Card -->
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-white">
-                <h5 class="mb-0"><i class="bi bi-funnel me-2"></i> Filter Certificates</h5>
+        <!-- Box 2: Statistics Cards - Separate Boxes with gradient styling -->
+        <div class="row g-4 mb-5">
+            <!-- Total Certificates -->
+            <div class="col-lg-3 col-md-6">
+                <div class="card border-0 rounded-4 h-100 text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15), 0 4px 8px rgba(0, 0, 0, 0.1);">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-2 text-white-50" style="font-size: 0.875rem; font-weight: 500;">Total Certificates</h6>
+                                <h2 class="mb-0 text-white fw-bold" style="font-size: 2rem;"><?php echo number_format($total_certificates); ?></h2>
+                            </div>
+                            <div class="ms-3" style="opacity: 0.9;">
+                                <i class="bi bi-award-fill" style="font-size: 2.5rem;"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="card-body">
+            
+            <!-- This Month -->
+            <div class="col-lg-3 col-md-6">
+                <div class="card border-0 rounded-4 h-100 text-white" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15), 0 4px 8px rgba(0, 0, 0, 0.1);">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-2 text-white-50" style="font-size: 0.875rem; font-weight: 500;">This Month</h6>
+                                <h2 class="mb-0 text-white fw-bold" style="font-size: 2rem;"><?php echo number_format($this_month); ?></h2>
+                            </div>
+                            <div class="ms-3" style="opacity: 0.9;">
+                                <i class="bi bi-calendar-month-fill" style="font-size: 2.5rem;"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Today -->
+            <div class="col-lg-3 col-md-6">
+                <div class="card border-0 rounded-4 h-100 text-white" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15), 0 4px 8px rgba(0, 0, 0, 0.1);">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-2 text-white-50" style="font-size: 0.875rem; font-weight: 500;">Today</h6>
+                                <h2 class="mb-0 text-white fw-bold" style="font-size: 2rem;"><?php echo number_format($today); ?></h2>
+                            </div>
+                            <div class="ms-3" style="opacity: 0.9;">
+                                <i class="bi bi-calendar-day-fill" style="font-size: 2.5rem;"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Active Courses -->
+            <div class="col-lg-3 col-md-6">
+                <div class="card border-0 rounded-4 h-100 text-white" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15), 0 4px 8px rgba(0, 0, 0, 0.1);">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-2 text-white-50" style="font-size: 0.875rem; font-weight: 500;">Active Courses</h6>
+                                <h2 class="mb-0 text-white fw-bold" style="font-size: 2rem;"><?php echo number_format($courses_count); ?></h2>
+                            </div>
+                            <div class="ms-3" style="opacity: 0.9;">
+                                <i class="bi bi-book-fill" style="font-size: 2.5rem;"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Box 3: Filters Card -->
+        <div class="card border-0 rounded-4 shadow-sm mb-5">
+            <div class="card-body p-4">
                 <form method="GET" action="" class="row g-3">
                     <div class="col-md-4">
                         <label class="form-label">Search</label>
@@ -297,7 +319,7 @@ include $sidebar_path;
                     
                     <div class="col-md-1 d-flex align-items-end">
                         <div class="d-flex gap-2 w-100">
-                            <button type="submit" class="btn btn-primary w-100">
+                            <button type="submit" class="btn w-100 text-white border-0" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                                 <i class="bi bi-search"></i>
                             </button>
                             <a href="certificates.php" class="btn btn-outline-secondary">
@@ -320,23 +342,25 @@ include $sidebar_path;
             </div>
         </div>
 
-        <!-- Certificates Table -->
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
-                <div>
-                    <h5 class="mb-0">Issued Certificates</h5>
-                    <small class="text-muted"><?php echo number_format($total_filtered); ?> total certificates found</small>
-                </div>
-                <div>
-                    <button class="btn btn-sm btn-outline-primary me-2" onclick="exportToExcel()">
-                        <i class="bi bi-file-earmark-excel me-1"></i> Export
-                    </button>
-                    <button class="btn btn-sm btn-success" onclick="refreshPage()">
-                        <i class="bi bi-arrow-clockwise me-1"></i> Refresh
-                    </button>
+        <!-- Box 4: Certificates Table -->
+        <div class="card border-0 rounded-4 shadow-sm">
+            <div class="card-header bg-white border-0 py-3 px-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-0">Issued Certificates</h5>
+                        <small class="text-muted"><?php echo number_format($total_filtered); ?> total certificates found</small>
+                    </div>
+                    <div>
+                        <button class="btn btn-sm btn-outline-primary me-2" onclick="exportToExcel()">
+                            <i class="bi bi-file-earmark-excel me-1"></i> Export
+                        </button>
+                        <button class="btn btn-sm btn-success" onclick="refreshPage()">
+                            <i class="bi bi-arrow-clockwise me-1"></i> Refresh
+                        </button>
+                    </div>
                 </div>
             </div>
-            <div class="card-body">
+            <div class="card-body px-4">
                 <?php if (empty($certificates)): ?>
                     <div class="text-center py-5">
                         <i class="bi bi-award fs-1 text-muted"></i>
@@ -351,7 +375,7 @@ include $sidebar_path;
                         <table class="table table-hover" id="certificatesTable">
                             <thead>
                                 <tr>
-                                    <th width="50">ID</th>
+                                    <th width="60">ID</th>
                                     <th>Student</th>
                                     <th>Course</th>
                                     <th>Instructor</th>
@@ -383,7 +407,7 @@ include $sidebar_path;
                                         </td>
                                         <td><?php echo htmlspecialchars($instructorName); ?></td>
                                         <td>
-                                            <div><?php echo $issueDate; ?></div>
+                                            <div class="fw-bold"><?php echo $issueDate; ?></div>
                                             <small class="text-muted"><?php echo $issueTime; ?></small>
                                         </td>
                                         <td>
@@ -392,7 +416,7 @@ include $sidebar_path;
                                             </code>
                                         </td>
                                         <td>
-                                            <div class="action-buttons">
+                                            <div class="action-buttons d-flex gap-2">
                                                 <button onclick="copyUUID('<?php echo htmlspecialchars($cert['certificateUUID']); ?>')" 
                                                         class="btn btn-sm btn-outline-secondary"
                                                         title="Copy UUID"
@@ -461,7 +485,7 @@ include $sidebar_path;
         <!-- Quick Stats Footer -->
         <div class="row mt-4">
             <div class="col-md-12">
-                <div class="card border-0 shadow-sm">
+                <div class="card border-0 rounded-4 shadow-sm">
                     <div class="card-body">
                         <div class="row text-center">
                             <div class="col-md-3 border-end">
@@ -606,6 +630,43 @@ function printCertificateList() {
     padding: 5px 10px;
     font-size: 0.875rem;
 }
+
+.card {
+    transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+.table th {
+    font-weight: 600;
+    background-color: #f8f9fa;
+    padding: 12px 16px;
+}
+
+.table td {
+    vertical-align: middle;
+    padding: 12px 16px;
+}
+
+.table tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+.badge {
+    font-size: 0.85em;
+    padding: 5px 10px;
+}
+
+.table-responsive {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.table-hover tbody tr {
+    transition: background-color 0.2s ease;
+}
 </style>
 
 <script>
@@ -617,10 +678,14 @@ $(document).ready(function() {
         info: false,
         paging: false,
         ordering: true,
-        order: [[4, 'desc']],
+        order: [[4, 'desc']], // Order by issued date (column index 4)
         language: {
             emptyTable: "No certificates found"
-        }
+        },
+        columnDefs: [
+            { width: "60px", targets: 0 }, // ID column
+            { width: "120px", targets: 6 } // Actions column
+        ]
     });
 });
 </script>

@@ -68,109 +68,94 @@ if ($search) {
     $vouchers = $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
+// Get statistics
+$totalVouchers = count($vouchers);
+$activeCount = count(array_filter($vouchers, fn($v) => $v['voucherStatus'] === 'active'));
+$redeemedCount = count(array_filter($vouchers, fn($v) => $v['voucherStatus'] === 'redeemed'));
+$expiredCount = count(array_filter($vouchers, fn($v) => $v['voucherStatus'] === 'expired'));
+
 include 'includes/header.php';
 include 'includes/sidebar.php';
 ?>
 
-<div class="main-content">
+<div class="main-content pb-3 pb-lg-4 ps-3 ps-lg-4 pe-3 pe-lg-4 pt-3">
     <div class="container-fluid">
-        <!-- Page Header -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h1 class="h3 mb-0">Manage Vouchers</h1>
-                <p class="text-muted mb-0">View and manage all voucher codes issued to students</p>
-            </div>
-            <div class="d-flex align-items-center gap-2">
-                <form method="GET" class="d-flex">
-                    <div class="input-group">
-                        <input type="text" 
-                               class="form-control" 
-                               placeholder="Search vouchers..." 
-                               name="search"
-                               value="<?php echo htmlspecialchars($search); ?>">
-                        <button class="btn btn-outline-secondary" type="submit">
-                            <i class="bi bi-search"></i>
-                        </button>
+        <!-- Box 1: Page Header -->
+        <div class="card border-0 rounded-4 shadow-sm mb-5">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="h3 mb-0">Manage Vouchers</h1>
+                        <p class="text-muted mb-0">View and manage all voucher codes issued to students</p>
                     </div>
-                </form>
+                </div>
             </div>
         </div>
 
-        <!-- Statistics Cards -->
-        <div class="row g-3 mb-4">
-            <div class="col-xl-3 col-md-6">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
+        <!-- Box 2: Statistics Cards - Separate Boxes with gradient styling -->
+        <div class="row g-4 mb-5">
+            <!-- Total Vouchers -->
+            <div class="col-lg-3 col-md-6">
+                <div class="card border-0 rounded-4 h-100 text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15), 0 4px 8px rgba(0, 0, 0, 0.1);">
+                    <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="text-muted mb-1">Total Vouchers</h6>
-                                <h3 class="mb-0"><?php echo count($vouchers); ?></h3>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-2 text-white-50" style="font-size: 0.875rem; font-weight: 500;">Total Vouchers</h6>
+                                <h2 class="mb-0 text-white fw-bold" style="font-size: 2rem;"><?php echo number_format($totalVouchers); ?></h2>
                             </div>
-                            <div class="bg-primary bg-opacity-10 p-3 rounded">
-                                <i class="bi bi-ticket-perforated text-primary" style="font-size: 24px;"></i>
+                            <div class="ms-3" style="opacity: 0.9;">
+                                <i class="bi bi-ticket-perforated" style="font-size: 2.5rem;"></i>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
             
-            <div class="col-xl-3 col-md-6">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
+            <!-- Active Vouchers -->
+            <div class="col-lg-3 col-md-6">
+                <div class="card border-0 rounded-4 h-100 text-white" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15), 0 4px 8px rgba(0, 0, 0, 0.1);">
+                    <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="text-muted mb-1">Active</h6>
-                                <h3 class="mb-0 text-success">
-                                    <?php 
-                                        $activeCount = count(array_filter($vouchers, fn($v) => $v['voucherStatus'] === 'active'));
-                                        echo $activeCount;
-                                    ?>
-                                </h3>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-2 text-white-50" style="font-size: 0.875rem; font-weight: 500;">Active</h6>
+                                <h2 class="mb-0 text-white fw-bold" style="font-size: 2rem;"><?php echo number_format($activeCount); ?></h2>
                             </div>
-                            <div class="bg-success bg-opacity-10 p-3 rounded">
-                                <i class="bi bi-check-circle text-success" style="font-size: 24px;"></i>
+                            <div class="ms-3" style="opacity: 0.9;">
+                                <i class="bi bi-check-circle" style="font-size: 2.5rem;"></i>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
             
-            <div class="col-xl-3 col-md-6">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
+            <!-- Redeemed Vouchers -->
+            <div class="col-lg-3 col-md-6">
+                <div class="card border-0 rounded-4 h-100 text-white" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15), 0 4px 8px rgba(0, 0, 0, 0.1);">
+                    <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="text-muted mb-1">Redeemed</h6>
-                                <h3 class="mb-0 text-secondary">
-                                    <?php 
-                                        $redeemedCount = count(array_filter($vouchers, fn($v) => $v['voucherStatus'] === 'redeemed'));
-                                        echo $redeemedCount;
-                                    ?>
-                                </h3>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-2 text-white-50" style="font-size: 0.875rem; font-weight: 500;">Redeemed</h6>
+                                <h2 class="mb-0 text-white fw-bold" style="font-size: 2rem;"><?php echo number_format($redeemedCount); ?></h2>
                             </div>
-                            <div class="bg-secondary bg-opacity-10 p-3 rounded">
-                                <i class="bi bi-gift text-secondary" style="font-size: 24px;"></i>
+                            <div class="ms-3" style="opacity: 0.9;">
+                                <i class="bi bi-gift" style="font-size: 2.5rem;"></i>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
             
-            <div class="col-xl-3 col-md-6">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
+            <!-- Expired Vouchers -->
+            <div class="col-lg-3 col-md-6">
+                <div class="card border-0 rounded-4 h-100 text-white" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15), 0 4px 8px rgba(0, 0, 0, 0.1);">
+                    <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="text-muted mb-1">Expired</h6>
-                                <h3 class="mb-0 text-danger">
-                                    <?php 
-                                        $expiredCount = count(array_filter($vouchers, fn($v) => $v['voucherStatus'] === 'expired'));
-                                        echo $expiredCount;
-                                    ?>
-                                </h3>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-2 text-white-50" style="font-size: 0.875rem; font-weight: 500;">Expired</h6>
+                                <h2 class="mb-0 text-white fw-bold" style="font-size: 2rem;"><?php echo number_format($expiredCount); ?></h2>
                             </div>
-                            <div class="bg-danger bg-opacity-10 p-3 rounded">
-                                <i class="bi bi-x-circle text-danger" style="font-size: 24px;"></i>
+                            <div class="ms-3" style="opacity: 0.9;">
+                                <i class="bi bi-x-circle" style="font-size: 2.5rem;"></i>
                             </div>
                         </div>
                     </div>
@@ -178,22 +163,73 @@ include 'includes/sidebar.php';
             </div>
         </div>
 
-        <!-- Vouchers Table -->
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white border-0 py-3">
-                <h5 class="mb-0">All Vouchers</h5>
+        <!-- Box 3: Search & Filter Card -->
+        <div class="card border-0 rounded-4 shadow-sm mb-5">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-funnel me-2"></i> Filter Vouchers</h5>
             </div>
             <div class="card-body">
+                <form method="GET" action="" class="row g-3">
+                    <div class="col-md-10">
+                        <label class="form-label">Search</label>
+                        <input type="text" 
+                               class="form-control" 
+                               name="search" 
+                               placeholder="Voucher Code, Student, Email, or Course..."
+                               value="<?php echo htmlspecialchars($search); ?>">
+                    </div>
+                    
+                    <div class="col-md-2 d-flex align-items-end">
+                        <div class="d-flex gap-2 w-100">
+                            <button type="submit" class="btn w-100 text-white border-0" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                <i class="bi bi-search"></i>
+                            </button>
+                            <a href="vouchers.php" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-clockwise"></i>
+                            </a>
+                        </div>
+                    </div>
+                </form>
+                
+                <?php if (!empty($search)): ?>
+                    <div class="mt-3">
+                        <a href="vouchers.php" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-x-circle me-1"></i> Clear Filters
+                        </a>
+                        <span class="ms-2 text-muted">
+                            Showing <?php echo count($vouchers); ?> of <?php echo number_format($totalVouchers); ?> vouchers
+                        </span>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <!-- Box 4: Vouchers Table -->
+        <div class="card border-0 rounded-4 shadow-sm">
+            <div class="card-header bg-white border-0 py-3 px-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-0">All Vouchers</h5>
+                        <small class="text-muted"><?php echo number_format($totalVouchers); ?> total vouchers found</small>
+                    </div>
+                    <div>
+                        <button class="btn btn-sm btn-outline-primary" onclick="exportToCSV()">
+                            <i class="bi bi-download me-1"></i> Export CSV
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body px-4">
                 <?php if (empty($vouchers)): ?>
                     <div class="text-center py-5">
-                        <i class="bi bi-inbox" style="font-size: 48px; color: #ccc;"></i>
-                        <h4 class="mt-3">No Vouchers Found</h4>
+                        <i class="bi bi-inbox fs-1 text-muted"></i>
+                        <h5 class="mt-3">No vouchers found</h5>
                         <p class="text-muted">
                             <?php echo $search ? 'No vouchers match your search criteria.' : 'No vouchers have been generated yet.'; ?>
                         </p>
                         <?php if ($search): ?>
                             <a href="vouchers.php" class="btn btn-primary">
-                                <i class="bi bi-arrow-left"></i> View All Vouchers
+                                <i class="bi bi-arrow-left me-1"></i> View All Vouchers
                             </a>
                         <?php endif; ?>
                     </div>
@@ -209,7 +245,7 @@ include 'includes/sidebar.php';
                                     <th>Status</th>
                                     <th>Generated Date</th>
                                     <th>Expiry Date</th>
-                                    <th>Actions</th>
+                                    <th width="60">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -220,8 +256,8 @@ include 'includes/sidebar.php';
                                         </td>
                                         <td>
                                             <?php if ($voucher['firstName']): ?>
-                                                <div><?php echo htmlspecialchars($voucher['firstName'] . ' ' . $voucher['lastName']); ?></div>
-                                                <small class="text-muted"><?php echo htmlspecialchars($voucher['email']); ?></small>
+                                                <div class="fw-bold"><?php echo htmlspecialchars($voucher['firstName'] . ' ' . $voucher['lastName']); ?></div>
+                                                <small class="text-muted d-block"><?php echo htmlspecialchars($voucher['email']); ?></small>
                                             <?php else: ?>
                                                 <span class="text-muted">N/A</span>
                                             <?php endif; ?>
@@ -256,10 +292,8 @@ include 'includes/sidebar.php';
                                             <?php endif; ?>
                                         </td>
                                         <td>
-                                            <?php 
-                                                $generatedDate = strtotime($voucher['generatedAt']);
-                                                echo date('M d, Y', $generatedDate);
-                                            ?>
+                                            <div class="fw-bold"><?php echo date('M d, Y', strtotime($voucher['generatedAt'])); ?></div>
+                                            <small class="text-muted"><?php echo date('h:i A', strtotime($voucher['generatedAt'])); ?></small>
                                         </td>
                                         <td>
                                             <?php 
@@ -268,30 +302,30 @@ include 'includes/sidebar.php';
                                                 $daysLeft = ceil(($expiryDate - $today) / (60 * 60 * 24));
                                                 
                                                 if ($voucher['voucherStatus'] === 'expired') {
-                                                    echo '<span class="text-danger">';
+                                                    echo '<div class="fw-bold text-danger">';
                                                     echo date('M d, Y', $expiryDate);
-                                                    echo '</span>';
+                                                    echo '</div>';
                                                 } elseif ($daysLeft <= 7) {
-                                                    echo '<span class="text-warning" title="Expires in ' . $daysLeft . ' days">';
+                                                    echo '<div class="fw-bold text-warning" title="Expires in ' . $daysLeft . ' days">';
                                                     echo date('M d, Y', $expiryDate);
-                                                    echo ' <i class="bi bi-exclamation-triangle"></i>';
-                                                    echo '</span>';
+                                                    echo '</div>';
+                                                    echo '<small class="text-warning"><i class="bi bi-exclamation-triangle me-1"></i>Expires soon</small>';
                                                 } else {
-                                                    echo '<span class="text-muted">';
+                                                    echo '<div class="fw-bold">';
                                                     echo date('M d, Y', $expiryDate);
-                                                    echo '</span>';
+                                                    echo '</div>';
+                                                    echo '<small class="text-muted">' . $daysLeft . ' days left</small>';
                                                 }
                                             ?>
                                         </td>
                                         <td>
-                                            <div class="btn-group btn-group-sm">
-                                                <button type="button" 
-                                                        class="btn btn-outline-primary" 
-                                                        onclick="copyToClipboard('<?php echo htmlspecialchars($voucher['voucherCode']); ?>')"
-                                                        title="Copy code">
-                                                    <i class="bi bi-clipboard"></i>
-                                                </button>
-                                            </div>
+                                            <button type="button" 
+                                                    class="btn btn-sm btn-outline-primary" 
+                                                    onclick="copyToClipboard('<?php echo htmlspecialchars($voucher['voucherCode']); ?>')"
+                                                    title="Copy voucher code"
+                                                    data-bs-toggle="tooltip">
+                                                <i class="bi bi-clipboard"></i>
+                                            </button>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -300,12 +334,12 @@ include 'includes/sidebar.php';
                     </div>
                     
                     <!-- Export Option -->
-                    <div class="mt-3 d-flex justify-content-between align-items-center">
+                    <div class="mt-4 d-flex justify-content-between align-items-center">
                         <small class="text-muted">
                             Showing <?php echo count($vouchers); ?> voucher<?php echo count($vouchers) !== 1 ? 's' : ''; ?>
                         </small>
-                        <button class="btn btn-sm btn-outline-secondary" onclick="exportToCSV()">
-                            <i class="bi bi-download"></i> Export CSV
+                        <button class="btn btn-sm btn-outline-primary" onclick="exportToCSV()">
+                            <i class="bi bi-download me-1"></i> Export CSV
                         </button>
                     </div>
                 <?php endif; ?>
@@ -317,32 +351,30 @@ include 'includes/sidebar.php';
 <?php include 'includes/footer.php'; ?>
 
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+
 // Copy voucher code to clipboard
 function copyToClipboard(text) {
     navigator.clipboard.writeText(text).then(() => {
-        // Show toast notification
-        const toast = document.createElement('div');
-        toast.className = 'position-fixed top-0 end-0 p-3';
-        toast.style.zIndex = '9999';
-        toast.innerHTML = `
-            <div class="toast show" role="alert">
-                <div class="toast-header bg-success text-white">
-                    <i class="bi bi-check-circle-fill me-2"></i>
-                    <strong class="me-auto">Copied!</strong>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
-                </div>
-                <div class="toast-body">
-                    Voucher code <strong>${text}</strong> copied to clipboard!
-                </div>
-            </div>
-        `;
-        document.body.appendChild(toast);
-        
-        setTimeout(() => {
-            toast.remove();
-        }, 2000);
+        Swal.fire({
+            icon: 'success',
+            title: 'Copied!',
+            text: 'Voucher code copied to clipboard',
+            timer: 1500,
+            showConfirmButton: false
+        });
     }).catch(err => {
-        alert('Failed to copy: ' + err);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Failed to copy: ' + err
+        });
     });
 }
 
@@ -375,5 +407,61 @@ function exportToCSV() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    
+    // Show success message
+    Swal.fire({
+        icon: 'success',
+        title: 'Exported!',
+        text: 'Voucher data exported to CSV',
+        timer: 2000,
+        showConfirmButton: false
+    });
 }
 </script>
+
+<style>
+.card {
+    transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+.table th {
+    font-weight: 600;
+    background-color: #f8f9fa;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+.table tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+.badge {
+    font-size: 0.85em;
+    padding: 5px 10px;
+}
+
+.table-responsive {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.table-hover tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+code {
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+    color: #667eea;
+    background: #f8f9fa;
+    padding: 2px 6px;
+    border-radius: 3px;
+    border: 1px solid #dee2e6;
+}
+</style>

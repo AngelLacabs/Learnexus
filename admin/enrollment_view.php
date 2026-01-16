@@ -290,7 +290,7 @@ include 'includes/sidebar.php';
                             
                             <div class="col-md-3">
                                 <div class="text-center p-3 rounded-3" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-                                    <span class="badge text-dark fs-5 px-3 py-2">
+                                    <span class="badge text-white fs-5 px-3 py-2">
                                         <?php echo ucfirst($enrollment['status']); ?>
                                     </span>
                                     <small class="text-white-50 d-block mt-1">Status</small>
