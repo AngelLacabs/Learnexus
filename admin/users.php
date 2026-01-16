@@ -293,25 +293,25 @@ include 'includes/sidebar.php';
                                 <?php foreach ($users as $user): ?>
                                     <tr>
                                         <td>
-    <div class="d-flex align-items-center">
-        <?php if (!empty($user['avatar']) && file_exists($user['avatar'])): ?>
-            <div class="me-2" style="width: 40px; height: 40px;">
-                <img src="<?php echo htmlspecialchars($user['avatar']); ?>" 
-                     class="w-100 h-100 rounded-circle object-fit-cover"
-                     alt="Avatar">
-            </div>
-        <?php else: ?>
-            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" 
-                 style="width: 40px; height: 40px;">
-                <?php echo strtoupper(substr($user['firstName'], 0, 1)); ?>
-            </div>
-        <?php endif; ?>
-        <div>
-            <h6 class="mb-0"><?php echo htmlspecialchars($user['firstName'] . ' ' . $user['lastName']); ?></h6>
-            <small class="text-muted">ID: <?php echo $user['userID']; ?></small>
-        </div>
-    </div>
-</td>
+                                                <div class="d-flex align-items-center">
+                                                    <?php if (!empty($user['avatar']) && file_exists($user['avatar'])): ?>
+                                                        <div class="me-2" style="width: 40px; height: 40px;">
+                                                            <img src="<?php echo htmlspecialchars($user['avatar']); ?>" 
+                                                                class="w-100 h-100 rounded-circle object-fit-cover"
+                                                                alt="Avatar">
+                                                        </div>
+                                                    <?php else: ?>
+                                                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" 
+                                                            style="width: 40px; height: 40px;">
+                                                            <?php echo strtoupper(substr($user['firstName'], 0, 1)); ?>
+                                                        </div>
+                                                    <?php endif; ?>
+                                                    <div>
+                                                        <h6 class="mb-0"><?php echo htmlspecialchars($user['firstName'] . ' ' . $user['lastName']); ?></h6>
+                                                        <small class="text-muted">ID: <?php echo $user['userID']; ?></small>
+                                                    </div>
+                                                </div>
+                                            </td>
                                         <td>
                                             <div>
                                                 <small class="text-muted d-block"><?php echo htmlspecialchars($user['email']); ?></small>
