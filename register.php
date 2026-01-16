@@ -360,6 +360,10 @@ if (isset($_SESSION['error'])) unset($_SESSION['error']);
         color: #667eea;
         transform: translateY(-50%) scale(1.1);
     }
+    .password-input-group .form-control.is-invalid {
+        background-image: none !important;
+        padding-right: 0.75rem;
+    }
     .password-input-group {
         position: relative;
     }
