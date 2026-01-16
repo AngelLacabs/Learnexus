@@ -14,8 +14,8 @@ $page_title = "SMS Feedback - Admin Panel";
 $statusFilter = isset($_GET['status']) ? trim($_GET['status']) : 'all';
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
 
-// Validate status filter - Add 'archived' to the allowed statuses
-$allowedStatuses = ['all', 'unread', 'read', 'archived', 'sent', 'failed'];
+// Validate status filter - Only allow all, unread, and read
+$allowedStatuses = ['all', 'unread', 'read'];
 if (!in_array($statusFilter, $allowedStatuses)) {
     $statusFilter = 'all';
 }
@@ -42,8 +42,8 @@ $params = [];
 
 // Apply status filter if not 'all'
 if ($statusFilter !== 'all') {
-    // Remove BINARY - use regular comparison for ENUM fields
-    $whereConditions[] = "status = ?";
+    // Use table alias for status field to avoid ambiguity
+    $whereConditions[] = "f.status = ?";
     $params[] = $statusFilter;
     error_log("Adding status filter: '$statusFilter'");
 }
@@ -119,20 +119,16 @@ try {
 }
 
 // Get statistics - count ALL messages in database
-// Include 'archived' in the statistics query
 try {
     $statsStmt = $conn->query("
         SELECT 
             COUNT(*) as total,
             COALESCE(SUM(CASE WHEN status = 'unread' THEN 1 ELSE 0 END), 0) as unread,
-            COALESCE(SUM(CASE WHEN status = 'read' THEN 1 ELSE 0 END), 0) as read_count,
-            COALESCE(SUM(CASE WHEN status = 'archived' THEN 1 ELSE 0 END), 0) as archived,
-            COALESCE(SUM(CASE WHEN status = 'sent' THEN 1 ELSE 0 END), 0) as sent,
-            COALESCE(SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END), 0) as failed
+            COALESCE(SUM(CASE WHEN status = 'read' THEN 1 ELSE 0 END), 0) as read_count
         FROM sms_feedback
     ");
     $stats = $statsStmt->fetch(PDO::FETCH_ASSOC);
-    error_log("Statistics - Total: {$stats['total']}, Unread: {$stats['unread']}, Read: {$stats['read_count']}, Archived: {$stats['archived']}");
+    error_log("Statistics - Total: {$stats['total']}, Unread: {$stats['unread']}, Read: {$stats['read_count']}");
 } catch (PDOException $e) {
     error_log("Statistics Query Error: " . $e->getMessage());
     $stats = null;
@@ -142,15 +138,12 @@ error_log("=== FEEDBACK DEBUG END ===");
 
 // Ensure stats always has all required keys with integer values
 if (!isset($stats) || !is_array($stats)) {
-    $stats = ['total' => 0, 'unread' => 0, 'read_count' => 0, 'archived' => 0, 'sent' => 0, 'failed' => 0];
+    $stats = ['total' => 0, 'unread' => 0, 'read_count' => 0];
 } else {
     $stats = array_merge([
         'total' => 0,
         'unread' => 0,
-        'read_count' => 0,
-        'archived' => 0,
-        'sent' => 0,
-        'failed' => 0
+        'read_count' => 0
     ], $stats);
 }
 
@@ -184,71 +177,52 @@ include 'includes/sidebar.php';
         </div>
 
         <!-- Statistics Cards -->
-        <div class="row g-3 mb-4">
-            <div class="col-xl-3 col-md-6">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
+        <div class="row g-4 mb-4">
+            <!-- Total Feedback -->
+            <div class="col-lg-4 col-md-6">
+                <div class="card border-0 rounded-4 h-100 text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15), 0 4px 8px rgba(0, 0, 0, 0.1);">
+                    <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="text-muted mb-1">Total Feedback</h6>
-                                <h3 class="mb-0"><?php echo $stats['total']; ?></h3>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-2 text-white-50" style="font-size: 0.875rem; font-weight: 500;">Total Feedback</h6>
+                                <h2 class="mb-0 text-white fw-bold" style="font-size: 2rem;"><?php echo number_format($stats['total']); ?></h2>
                             </div>
-                            <div class="bg-primary bg-opacity-10 p-3 rounded">
-                                <i class="bi bi-chat-dots text-primary" style="font-size: 24px;"></i>
+                            <div class="ms-3" style="opacity: 0.9;">
+                                <i class="bi bi-chat-dots-fill" style="font-size: 2.5rem;"></i>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
             
-            <div class="col-xl-3 col-md-6">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
+            <!-- Unread -->
+            <div class="col-lg-4 col-md-6">
+                <div class="card border-0 rounded-4 h-100 text-white" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15), 0 4px 8px rgba(0, 0, 0, 0.1);">
+                    <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="text-muted mb-1">Unread</h6>
-                                <h3 class="mb-0 text-warning">
-                                    <?php echo $stats['unread']; ?>
-                                </h3>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-2 text-white-50" style="font-size: 0.875rem; font-weight: 500;">Unread</h6>
+                                <h2 class="mb-0 text-white fw-bold" style="font-size: 2rem;"><?php echo number_format($stats['unread']); ?></h2>
                             </div>
-                            <div class="bg-warning bg-opacity-10 p-3 rounded">
-                                <i class="bi bi-envelope text-warning" style="font-size: 24px;"></i>
+                            <div class="ms-3" style="opacity: 0.9;">
+                                <i class="bi bi-envelope-fill" style="font-size: 2.5rem;"></i>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
             
-            <div class="col-xl-3 col-md-6">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
+            <!-- Read -->
+            <div class="col-lg-4 col-md-6">
+                <div class="card border-0 rounded-4 h-100 text-white" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15), 0 4px 8px rgba(0, 0, 0, 0.1);">
+                    <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="text-muted mb-1">Read</h6>
-                                <h3 class="mb-0 text-info">
-                                    <?php echo $stats['read_count']; ?>
-                                </h3>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-2 text-white-50" style="font-size: 0.875rem; font-weight: 500;">Read</h6>
+                                <h2 class="mb-0 text-white fw-bold" style="font-size: 2rem;"><?php echo number_format($stats['read_count']); ?></h2>
                             </div>
-                            <div class="bg-info bg-opacity-10 p-3 rounded">
-                                <i class="bi bi-envelope-open text-info" style="font-size: 24px;"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-xl-3 col-md-6">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="text-muted mb-1">Archived</h6>
-                                <h3 class="mb-0 text-secondary">
-                                    <?php echo $stats['archived']; ?>
-                                </h3>
-                            </div>
-                            <div class="bg-secondary bg-opacity-10 p-3 rounded">
-                                <i class="bi bi-archive text-secondary" style="font-size: 24px;"></i>
+                            <div class="ms-3" style="opacity: 0.9;">
+                                <i class="bi bi-envelope-open-fill" style="font-size: 2.5rem;"></i>
                             </div>
                         </div>
                     </div>
@@ -279,8 +253,7 @@ include 'includes/sidebar.php';
                                 <button type="button" 
                                         class="btn btn-danger" 
                                         onclick="deleteSelectedFeedback()"
-                                        id="deleteBtn"
-                                        style="display: none;">
+                                        id="deleteBtn">
                                     <i class="bi bi-trash"></i> Delete Selected (<span id="selectedCount">0</span>)
                                 </button>
                             <?php endif; ?>
@@ -293,14 +266,14 @@ include 'includes/sidebar.php';
         <!-- Filter Tabs -->
         <div class="card border-0 rounded-4 shadow-sm mb-4">
             <div class="card-body p-0">
-                <ul class="nav nav-tabs border-0 px-3 pt-3" role="tablist">
-                    <li class="nav-item" role="presentation">
+                <ul class="nav nav-tabs border-0 px-3 pt-3" role="tablist" style="gap: 10px;">
+                    <li class="nav-item" role="presentation" style="margin-right: 10px;">
                         <a class="nav-link <?php echo $statusFilter === 'all' ? 'active' : ''; ?>" 
                            href="?status=all<?php echo $search ? '&search=' . urlencode($search) : ''; ?>">
                             All (<?php echo $stats['total']; ?>)
                         </a>
                     </li>
-                    <li class="nav-item" role="presentation">
+                    <li class="nav-item" role="presentation" style="margin-right: 10px;">
                         <a class="nav-link <?php echo $statusFilter === 'unread' ? 'active' : ''; ?>" 
                            href="?status=unread<?php echo $search ? '&search=' . urlencode($search) : ''; ?>">
                             Unread (<?php echo $stats['unread']; ?>)
@@ -312,12 +285,6 @@ include 'includes/sidebar.php';
                             Read (<?php echo $stats['read_count']; ?>)
                         </a>
                     </li>
-                    <li class="nav-item" role="presentation">
-                        <a class="nav-link <?php echo $statusFilter === 'archived' ? 'active' : ''; ?>" 
-                           href="?status=archived<?php echo $search ? '&search=' . urlencode($search) : ''; ?>">
-                            Archived (<?php echo $stats['archived']; ?>)
-                        </a>
-                    </li>
                 </ul>
             </div>
         </div>
@@ -325,7 +292,21 @@ include 'includes/sidebar.php';
         <!-- Feedback List -->
         <div class="card border-0 rounded-4 shadow-sm">
             <div class="card-header bg-white border-0 px-4 py-3">
-                <h5 class="mb-0">Feedback Messages</h5>
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Feedback Messages</h5>
+                    <?php if (!empty($feedbackList)): ?>
+                        <div class="form-check">
+                            <input class="form-check-input" 
+                                   type="checkbox" 
+                                   id="selectAllCheckbox"
+                                   onchange="toggleSelectAll()"
+                                   style="border-color: #495057; width: 18px; height: 18px; cursor: pointer;">
+                            <label class="form-check-label ms-2" for="selectAllCheckbox" style="cursor: pointer; user-select: none;">
+                                <i class="bi bi-check-all me-1"></i> Select All
+                            </label>
+                        </div>
+                    <?php endif; ?>
+                </div>
             </div>
             <div class="card-body px-4">
                 <?php if (empty($feedbackList)): ?>
@@ -373,7 +354,8 @@ include 'includes/sidebar.php';
                                         <input class="form-check-input feedback-checkbox" 
                                                type="checkbox" 
                                                value="<?php echo $feedback['feedbackID']; ?>"
-                                               onchange="updateDeleteButton()">
+                                               onchange="updateDeleteButton(); updateSelectAllCheckbox();"
+                                               style="border-color: #495057; width: 18px; height: 18px; cursor: pointer;">
                                     </div>
                                     <div class="flex-grow-1">
                                         <div class="d-flex align-items-center mb-2">
@@ -410,9 +392,6 @@ include 'includes/sidebar.php';
                                                 $status = strtolower($feedback['status']);
                                                 if ($status === 'unread') echo 'warning';
                                                 elseif ($status === 'read') echo 'info';
-                                                elseif ($status === 'archived') echo 'secondary';
-                                                elseif ($status === 'sent') echo 'success';
-                                                elseif ($status === 'failed') echo 'danger';
                                                 else echo 'secondary';
                                             ?>">
                                                 <?php echo htmlspecialchars($feedback['status']); ?>
@@ -443,7 +422,7 @@ include 'includes/sidebar.php';
                                     <div class="d-flex gap-2 ms-3 me-3" style="flex-shrink: 0;">
                                         <?php 
                                         $status = strtolower($feedback['status']);
-                                        $canUpdateStatus = in_array($status, ['unread', 'read', 'archived']);
+                                        $canUpdateStatus = in_array($status, ['unread', 'read']);
                                         ?>
                                         <?php if ($canUpdateStatus && $status === 'unread'): ?>
                                             <button type="button" 
@@ -454,28 +433,6 @@ include 'includes/sidebar.php';
                                                 Mark as Read
                                             </button>
                                         <?php elseif ($canUpdateStatus && $status === 'read'): ?>
-                                            <button type="button" 
-                                                    class="btn btn-sm" 
-                                                    onclick="updateFeedbackStatus(<?php echo $feedback['feedbackID']; ?>, 'archived')"
-                                                    title="Mark as archived"
-                                                    style="background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%); border: none; color: white; padding: 0.25rem 0.75rem; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                                                Archive
-                                            </button>
-                                            <button type="button" 
-                                                    class="btn btn-sm" 
-                                                    onclick="updateFeedbackStatus(<?php echo $feedback['feedbackID']; ?>, 'unread')"
-                                                    title="Mark as unread"
-                                                    style="background: linear-gradient(135deg, #fadb61 0%, #f093fb 100%); border: none; color: white; padding: 0.25rem 0.75rem; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                                                Mark as Unread
-                                            </button>
-                                        <?php elseif ($canUpdateStatus && $status === 'archived'): ?>
-                                            <button type="button" 
-                                                    class="btn btn-sm" 
-                                                    onclick="updateFeedbackStatus(<?php echo $feedback['feedbackID']; ?>, 'read')"
-                                                    title="Mark as read"
-                                                    style="background: linear-gradient(135deg,rgb(251, 187, 235) 0%,rgb(160, 67, 180) 100%); border: none; color: white; padding: 0.25rem 0.75rem; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                                                Mark as Read
-                                            </button>
                                             <button type="button" 
                                                     class="btn btn-sm" 
                                                     onclick="updateFeedbackStatus(<?php echo $feedback['feedbackID']; ?>, 'unread')"
@@ -511,16 +468,91 @@ include 'includes/sidebar.php';
     </div>
 </div>
 
+<style>
+/* Make checkboxes darker and more visible */
+.feedback-checkbox,
+#selectAllCheckbox {
+    border-color: #495057 !important;
+    border-width: 2px !important;
+    width: 18px !important;
+    height: 18px !important;
+    cursor: pointer;
+    accent-color: #667eea;
+}
+
+.feedback-checkbox:checked,
+#selectAllCheckbox:checked {
+    background-color: #667eea;
+    border-color: #667eea;
+}
+
+.feedback-checkbox:hover,
+#selectAllCheckbox:hover {
+    border-color: #667eea !important;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.feedback-checkbox:focus,
+#selectAllCheckbox:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+/* Indeterminate state for select all */
+#selectAllCheckbox:indeterminate {
+    background-color: #667eea;
+    border-color: #667eea;
+}
+</style>
+
 <script>
 function updateDeleteButton() {
     const checkboxes = document.querySelectorAll('.feedback-checkbox:checked');
     const deleteBtn = document.getElementById('deleteBtn');
     const selectedCount = document.getElementById('selectedCount');
     if (deleteBtn) {
-        deleteBtn.style.display = checkboxes.length > 0 ? 'inline-block' : 'none';
+        // Always show the button, but disable it when nothing is selected
+        deleteBtn.disabled = checkboxes.length === 0;
+        if (checkboxes.length === 0) {
+            deleteBtn.style.opacity = '0.6';
+            deleteBtn.style.cursor = 'not-allowed';
+        } else {
+            deleteBtn.style.opacity = '1';
+            deleteBtn.style.cursor = 'pointer';
+        }
     }
     if (selectedCount) {
         selectedCount.textContent = checkboxes.length;
+    }
+}
+
+function toggleSelectAll() {
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    const feedbackCheckboxes = document.querySelectorAll('.feedback-checkbox');
+    
+    feedbackCheckboxes.forEach(checkbox => {
+        checkbox.checked = selectAllCheckbox.checked;
+    });
+    
+    updateDeleteButton();
+}
+
+function updateSelectAllCheckbox() {
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    const feedbackCheckboxes = document.querySelectorAll('.feedback-checkbox');
+    const checkedCount = document.querySelectorAll('.feedback-checkbox:checked').length;
+    
+    if (selectAllCheckbox) {
+        if (checkedCount === 0) {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = false;
+        } else if (checkedCount === feedbackCheckboxes.length) {
+            selectAllCheckbox.checked = true;
+            selectAllCheckbox.indeterminate = false;
+        } else {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = true;
+        }
     }
 }
 
@@ -670,58 +702,75 @@ function deleteSelectedFeedback() {
 }
 
 function updateFeedbackStatus(feedbackID, status) {
-    if (!confirm(`Are you sure you want to mark this feedback as ${status}?`)) {
-        return;
-    }
-    
-    fetch('feedback_action.php', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: `action=update_status&feedback_id=${feedbackID}&status=${status}`
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Show success message
-            Swal.fire({
-                icon: 'success',
-                title: 'Success',
-                text: data.message,
-                timer: 1500,
-                showConfirmButton: false
-            }).then(() => {
-                // Reload page to reflect changes, preserving current filters
-                const urlParams = new URLSearchParams(window.location.search);
-                const status = urlParams.get('status') || 'all';
-                const search = urlParams.get('search') || '';
-                
-                let reloadUrl = 'feedback.php';
-                const params = [];
-                if (status !== 'all') params.push('status=' + encodeURIComponent(status));
-                if (search) params.push('search=' + encodeURIComponent(search));
-                if (params.length > 0) reloadUrl += '?' + params.join('&');
-                
-                window.location.href = reloadUrl;
-            });
-        } else {
+    Swal.fire({
+        icon: 'question',
+        title: 'Confirm Action',
+        text: `Are you sure you want to mark this feedback as ${status}?`,
+        showCancelButton: true,
+        confirmButtonColor: '#667eea',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, mark it!',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (!result.isConfirmed) {
+            return;
+        }
+        
+        fetch('feedback_action.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `action=update_status&feedback_id=${feedbackID}&status=${status}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Show success message
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: data.message,
+                    timer: 1500,
+                    showConfirmButton: false
+                }).then(() => {
+                    // Reload page to reflect changes, preserving current filters
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const status = urlParams.get('status') || 'all';
+                    const search = urlParams.get('search') || '';
+                    
+                    let reloadUrl = 'feedback.php';
+                    const params = [];
+                    if (status !== 'all') params.push('status=' + encodeURIComponent(status));
+                    if (search) params.push('search=' + encodeURIComponent(search));
+                    if (params.length > 0) reloadUrl += '?' + params.join('&');
+                    
+                    window.location.href = reloadUrl;
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.message || 'Failed to update feedback status'
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: data.message || 'Failed to update feedback status'
+                text: 'An error occurred while updating feedback status'
             });
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'An error occurred while updating feedback status'
         });
     });
 }
+
+// Initialize select all checkbox state and delete button on page load
+document.addEventListener('DOMContentLoaded', function() {
+    updateSelectAllCheckbox();
+    updateDeleteButton();
+});
 </script>
 
 <?php include 'includes/footer.php'; ?>
