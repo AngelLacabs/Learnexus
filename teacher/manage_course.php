@@ -937,7 +937,6 @@ if (isset($_SESSION['error'])) {
                                     <select name="status" class="form-control" required>
                                         <option value="draft" <?php echo $course['status'] == 'draft' ? 'selected' : ''; ?>>Draft</option>
                                         <option value="published" <?php echo $course['status'] == 'published' ? 'selected' : ''; ?>>Published</option>
-                                        <option value="archived" <?php echo $course['status'] == 'archived' ? 'selected' : ''; ?>>Archived</option>
                                     </select>
                                 </div>
                             </div>
@@ -1085,7 +1084,7 @@ if (isset($_SESSION['error'])) {
         }
 
         <?php if (isset($success)): ?>
-        // Updated to use toast notification
+        // Toast notification for success
         Swal.fire({
             icon: 'success',
             title: 'Success!',
@@ -1099,7 +1098,7 @@ if (isset($_SESSION['error'])) {
         <?php endif; ?>
 
         <?php if (isset($error)): ?>
-        // Updated to use toast notification
+        // Toast notification for error
         Swal.fire({
             icon: 'error',
             title: 'Error',
@@ -1125,6 +1124,7 @@ if (isset($_SESSION['error'])) {
                 reverseButtons: true
             }).then((result) => {
                 if (result.isConfirmed) {
+                    // Redirect to delete_lesson.php which will handle deletion and show toast notification
                     window.location.href = 'delete_lesson.php?id=' + lessonID + '&course_id=<?php echo $courseID; ?>&tab=lessons';
                 }
             });
