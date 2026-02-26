@@ -1,10 +1,11 @@
 <?php
 // database/db_connect.php
+require_once __DIR__ . '/../helpers/env.php';
 
-$host = 'localhost';
-$dbname = 'lmslearnexus';
-$username = 'root';
-$password = '';
+$host = getenv('DB_HOST') ?: 'localhost';
+$dbname = getenv('DB_NAME') ?: 'lmslearnexus';
+$username = getenv('DB_USER') ?: 'root';
+$password = getenv('DB_PASS') ?: '';
 
 try {
     $conn = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password);

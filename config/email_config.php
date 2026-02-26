@@ -6,6 +6,7 @@ use PHPMailer\PHPMailer\SMTP;
 use PHPMailer\PHPMailer\Exception;
 
 require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/../helpers/env.php';
 
 class EmailSender
 {
@@ -16,14 +17,14 @@ class EmailSender
         $this->mail = new PHPMailer(true);
 
         $this->mail->isSMTP();
-        $this->mail->Host       = 'smtp.gmail.com';
+        $this->mail->Host       = getenv('SMTP_HOST') ?: 'smtp.gmail.com';
         $this->mail->SMTPAuth   = true;
-        $this->mail->Username   = 'antonettemorway01@gmail.com';
-        $this->mail->Password   = 'gtor qxro wmye agty';
-        $this->mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-        $this->mail->Port       = 587;
+        $this->mail->Username   = getenv('SMTP_USER') ?: 'antonettemorway01@gmail.com';
+        $this->mail->Password   = getenv('SMTP_PASS') ?: 'gtor qxro wmye agty';
+        $this->mail->SMTPSecure = getenv('SMTP_SECURE') ?: PHPMailer::ENCRYPTION_STARTTLS;
+        $this->mail->Port       = getenv('SMTP_PORT') ? (int)getenv('SMTP_PORT') : 587;
 
-        $this->mail->setFrom('antonettemorway01@gmail.com', 'Learnexus');
+        $this->mail->setFrom(getenv('SMTP_FROM') ?: 'antonettemorway01@gmail.com', getenv('SMTP_FROM_NAME') ?: 'Learnexus');
         $this->mail->isHTML(true);
     }
 

@@ -1,10 +1,11 @@
 <?php
 // SMS Gateway Configuration
-define('SMS_GATEWAY_URL', 'http://192.168.8.131:8080');
-define('SMS_USERNAME', 'sms');
-define('SMS_PASSWORD', 'OBRAuro1');
-define('SMS_DEVICE_ID', '0000000055ecf0860000019ba379');
-define('SMS_SENDER_NUMBER', '09954778940');
+require_once __DIR__ . '/../helpers/env.php';
+define('SMS_GATEWAY_URL', getenv('SMS_GATEWAY_URL') ?: 'http://192.168.8.131:8080');
+define('SMS_USERNAME', getenv('SMS_USERNAME') ?: 'sms');
+define('SMS_PASSWORD', getenv('SMS_PASSWORD') ?: 'OBRAuro1');
+define('SMS_DEVICE_ID', getenv('SMS_DEVICE_ID') ?: '0000000055ecf0860000019ba379');
+define('SMS_SENDER_NUMBER', getenv('SMS_SENDER_NUMBER') ?: '09954778940');
 
 function sendSMSOTP($phoneNumber, $userName, $otpCode)
 {
